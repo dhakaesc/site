@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  --bg-void: #1B0609;
+  --bg-surface: #2B0D12;
+  --bg-surface-2: #3A131A;
+  --border-hair: rgba(232, 180, 172, 0.14);
+  --border-hair-2: rgba(232, 180, 172, 0.28);
+  --blush: #E8B4AC;
+  --blush-bright: #F3D2CB;
+  --rose: #A62639;
+  --rose-bright: #C7364B;
+  --gold: #C9A66B;
+  --gold-bright: #E4C892;
+  --ivory: #F3E6E1;
+  --stone: #C9A79E;
+  --stone-dim: #7A5A54;
+  --success: #8FBF9F;
+  --danger: #E08585;
+}
+
+@theme inline {
+  --color-void: var(--bg-void);
+  --color-surface: var(--bg-surface);
+  --color-surface-2: var(--bg-surface-2);
+  --color-border-hair: var(--border-hair);
+  --color-border-hair-2: var(--border-hair-2);
+  --color-blush: var(--blush);
+  --color-blush-bright: var(--blush-bright);
+  --color-rose: var(--rose);
+  --color-rose-bright: var(--rose-bright);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-ivory: var(--ivory);
+  --color-stone: var(--stone);
+  --color-stone-dim: var(--stone-dim);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains), monospace;
+}
+
+body {
+  background: linear-gradient(160deg, #2B0D12 0%, #170608 60%, #0d0304 100%);
+  color: var(--ivory);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--rose);
+  color: #fff;
+}
+
+.field-input {
+  width: 100%;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-hair);
+  color: var(--ivory);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+}
+
+.field-input::placeholder {
+  color: var(--stone-dim);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--border-hair-2);
+}
