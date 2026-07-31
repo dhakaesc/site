@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AMOURA — Design Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-void:#1B0609; --bg-surface:#2B0D12; --bg-surface-2:#3A131A;
+  --bg-glass:rgba(43,13,18,0.62); --border-hair:rgba(232,180,172,0.14);
+  --border-hair-2:rgba(232,180,172,0.28);
+  --blush:#E8B4AC; --blush-bright:#F3D2CB; --rose:#A62639; --rose-bright:#C7364B;
+  --gold:#C9A66B; --gold-bright:#E4C892;
+  --ivory:#F3E6E1; --stone:#C9A79E; --stone-dim:#7A5A54;
+  --success:#8FBF9F; --danger:#E08585; --info:#B7A7D9;
+  --radius:22px; --radius-sm:14px; --radius-pill:999px;
+  --serif:'Playfair Display',Georgia,serif; --sans:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{background:linear-gradient(160deg,#2B0D12 0%,#170608 60%,#0d0304 100%); color:var(--ivory); font-family:var(--sans); height:100%;}
+::selection{background:var(--rose); color:#fff;}
+::-webkit-scrollbar{width:8px; height:8px;}
+::-webkit-scrollbar-thumb{background:var(--border-hair-2); border-radius:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+a{color:inherit; text-decoration:none;}
+button{font-family:var(--sans); cursor:pointer;}
+
+#chrome{position:sticky; top:0; z-index:100; display:flex; align-items:center; gap:16px;
+  padding:10px 18px; background:#000; border-bottom:1px solid #2a1013; font-size:12px; color:#a08a86; flex-wrap:wrap;}
+#chrome b{color:var(--gold-bright); font-family:var(--mono); letter-spacing:.5px;}
+.device-toggle{display:flex; gap:4px; background:#20090c; border-radius:999px; padding:3px; margin-left:auto;}
+.device-toggle button{background:none; border:none; color:#a08a86; padding:6px 14px; border-radius:999px; font-size:12px; transition:.15s;}
+.device-toggle button.active{background:var(--rose-bright); color:#fff; font-weight:600;}
+select#pageSelect{background:#20090c; color:var(--ivory); border:1px solid #3a1a1e; border-radius:8px; padding:6px 10px; font-size:12px; font-family:var(--sans);}
+
+#stage{display:flex; justify-content:center; padding:28px 16px 60px; background:
+  radial-gradient(ellipse at 50% -10%, rgba(166,38,57,0.10), transparent 60%), #0d0304;
+  min-height:calc(100vh - 46px);}
+#frame{width:100%; max-width:1440px; background:radial-gradient(ellipse 900px 700px at 85% -10%,#5a1a24 0%,transparent 60%), linear-gradient(165deg,#2B0D12 0%,#170608 55%,#0d0304 100%); border-radius:20px; overflow:hidden;
+  border:1px solid #29080c; box-shadow:0 40px 100px -20px rgba(0,0,0,0.85); transition:max-width .35s ease;}
+#frame.tablet{max-width:834px;}
+#frame.mobile{max-width:390px;}
+#frameInner{max-height:82vh; overflow-y:auto;}
+.screen{animation:rise .28s ease both;}
+@keyframes rise{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:var(--gold-bright);}
+h1,h2,h3{font-family:var(--serif); font-weight:600; line-height:1.12; letter-spacing:-.01em;}
+em{font-style:italic; color:var(--blush-bright);}
+.glass{background:var(--bg-glass); backdrop-filter:blur(20px); border:1px solid var(--border-hair); border-radius:var(--radius);}
+.card{background:var(--bg-surface); border:1px solid var(--border-hair); border-radius:var(--radius); position:relative; transition:.18s ease;}
+.card.hoverable:hover{transform:translateY(-3px); border-color:var(--border-hair-2); box-shadow:0 0 0 1px var(--rose), 0 20px 40px -20px rgba(166,38,57,0.25);}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:13px; font-weight:600; border-radius:var(--radius-sm); padding:12px 24px; border:1px solid transparent; transition:.15s;}
+.btn-rose{background:linear-gradient(180deg,var(--rose-bright),var(--rose)); color:#fff;}
+.btn-rose:hover{filter:brightness(1.08);}
+.btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold)); color:#2a1c05;}
+.btn-ghost{background:rgba(255,255,255,0.03); color:var(--ivory); border-color:var(--border-hair);}
+.btn-ghost:hover{border-color:var(--border-hair-2); background:rgba(255,255,255,0.06);}
+.btn-sm{padding:8px 16px; font-size:12px;}
+.pill{display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; font-size:11px; font-weight:600; letter-spacing:.3px;}
+.pill.rose{background:rgba(166,38,57,0.16); color:#F3B4BE; border:1px solid rgba(166,38,57,0.35);}
+.pill.gold{background:rgba(201,166,107,0.14); color:var(--gold-bright); border:1px solid rgba(201,166,107,0.35);}
+.pill.success{background:rgba(143,191,159,0.1); color:var(--success); border:1px solid rgba(143,191,159,0.25);}
+.pill.stone{background:rgba(255,255,255,0.04); color:var(--stone); border:1px solid rgba(255,255,255,0.08);}
+.mono{font-family:var(--mono);}
+.stone{color:var(--stone);}
+.avatar{border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:var(--serif); color:#2a0a0f; font-weight:600; flex-shrink:0;}
+.p1{background:linear-gradient(135deg,#F3D2CB,#C97D74);} .p2{background:linear-gradient(135deg,#E4C892,#9C7B3C);}
+.p3{background:linear-gradient(135deg,#D9A7B0,#8C4B5A);} .p4{background:linear-gradient(135deg,#C9A7D9,#6B4B8C);}
+.p5{background:linear-gradient(135deg,#A7C9D9,#4B7A8C);} .p6{background:linear-gradient(135deg,#D9C2A7,#8C6B4B);}
+.cover{background:linear-gradient(120deg,#2B0D12,#3A131A,#210A0E); position:relative;}
+.cover::after{content:'';position:absolute; inset:0; background:radial-gradient(circle at 30% 20%,rgba(201,166,107,0.14),transparent 60%);}
+
+.navbar{display:flex; align-items:center; gap:28px; padding:18px 48px; position:sticky; top:0; z-index:10; background:rgba(27,6,9,0.78); backdrop-filter:blur(16px); border-bottom:1px solid var(--border-hair);}
+.logo{font-family:var(--serif); font-size:21px; letter-spacing:.5px; font-style:italic; display:flex; align-items:center; gap:8px;}
+.logo .dot{color:var(--rose-bright); font-style:normal;}
+.navbar .links{display:flex; gap:26px; margin-left:12px; font-size:13px; color:var(--stone);}
+.navbar .links a:hover{color:var(--ivory);}
+.navbar .spacer{flex:1;}
+
+.grid{display:grid; gap:20px;}
+.g-4{grid-template-columns:repeat(4,1fr);} .g-3{grid-template-columns:repeat(3,1fr);}
+.g-2{grid-template-columns:repeat(2,1fr);}
+@media(max-width:900px){.g-4{grid-template-columns:repeat(2,1fr);} .g-3{grid-template-columns:repeat(2,1fr);}}
+
+input,select.field,textarea{width:100%; background:var(--bg-surface-2); border:1px solid var(--border-hair); color:var(--ivory); border-radius:12px; padding:12px 14px; font-size:13px; font-family:var(--sans);}
+input::placeholder{color:var(--stone-dim);}
+label.field-label{font-size:12px; color:var(--stone); margin-bottom:6px; display:block;}
+.field-wrap{margin-bottom:16px;}
+.section-title{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;}
+.section-title h2{font-size:24px;}
+.divider{height:1px; background:var(--border-hair); margin:28px 0;}
+footer.site{padding:48px; border-top:1px solid var(--border-hair); display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:32px; font-size:13px; color:var(--stone);}
+@media(max-width:700px){footer.site{grid-template-columns:1fr;}}
+
+/* gender CTA */
+.gender-cta{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+@media(max-width:700px){.gender-cta{grid-template-columns:1fr;}}
+.gender-card{padding:30px; border-radius:24px; position:relative; overflow:hidden; cursor:pointer; transition:.2s;}
+.gender-card:hover{transform:translateY(-4px);}
+.gender-card.women{background:linear-gradient(135deg,#3A131A,#2B0D12); border:1px solid var(--border-hair-2);}
+.gender-card.men{background:linear-gradient(135deg,#4A1620,#2B0D12); border:1px solid rgba(201,166,107,0.32);}
+
+/* paywall grid */
+.photo-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+@media(max-width:700px){.photo-grid{grid-template-columns:repeat(3,1fr);}}
+.photo-tile{aspect-ratio:1; border-radius:14px; position:relative; overflow:hidden;}
+.photo-tile.locked::before{content:'';position:absolute; inset:0; background:rgba(10,3,4,0.72); backdrop-filter:blur(6px);}
+.photo-tile .lockbadge{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--gold-bright); z-index:2; font-size:11px; text-align:center;}
+.video-row{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px;}
+.video-tile{flex-shrink:0; width:140px; aspect-ratio:9/13; border-radius:16px; position:relative; overflow:hidden;}
+.video-tile.locked::before{content:'';position:absolute; inset:0; background:rgba(10,3,4,0.75); backdrop-filter:blur(5px);}
+.video-tile .lockbadge{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--gold-bright); z-index:2; font-size:10px; text-align:center;}
+.play-btn{width:38px; height:38px; border-radius:50%; background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.3); display:flex; align-items:center; justify-content:center;}
+
+.meter{display:flex; align-items:center; gap:10px; font-size:12px;}
+.meter-bar{width:110px; height:6px; border-radius:6px; background:rgba(255,255,255,.08); overflow:hidden;}
+.meter-fill{height:100%; background:linear-gradient(90deg,var(--rose),var(--gold));}
+
+.topbanner{background:linear-gradient(90deg,#4A1620,#3A131A,#4A1620); border-bottom:1px solid rgba(201,166,107,.25); padding:9px 20px; text-align:center; font-size:12.5px; color:var(--gold-bright);}
+.pulse-dot{width:7px; height:7px; border-radius:50%; background:var(--success); display:inline-block; box-shadow:0 0 0 0 rgba(143,191,159,.6); animation:pulse 1.8s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(143,191,159,.5)} 70%{box-shadow:0 0 0 8px rgba(143,191,159,0)} 100%{box-shadow:0 0 0 0 rgba(143,191,159,0)}}
+#paywallModal{display:none; position:fixed; inset:0; z-index:200; background:rgba(10,3,4,0.7); backdrop-filter:blur(4px); align-items:center; justify-content:center;}
+#paywallModal.open{display:flex;}
+#paywallModal .box{max-width:380px; width:90%; background:var(--bg-surface); border:1px solid var(--border-hair-2); border-radius:24px; padding:32px; text-align:center;}
+
+.dash-shell{display:flex; height:82vh; min-height:640px; overflow:hidden;}
+.sidebar{width:250px; flex-shrink:0; background:var(--bg-surface); border-right:1px solid var(--border-hair); padding:22px 16px; display:flex; flex-direction:column; gap:4px; overflow-y:auto; overscroll-behavior:contain;}
+.sidebar .logo{padding:0 10px 18px; font-size:18px;}
+.side-item{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; font-size:13px; color:var(--stone); transition:.15s; position:relative;}
+.side-item:hover{background:rgba(255,255,255,0.03); color:var(--ivory);}
+.side-item.active{background:rgba(201,166,107,.1); color:var(--gold-bright); border:1px solid var(--border-hair-2);}
+.side-item.locked{opacity:.55;}
+.side-group-label{font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--stone-dim); padding:14px 12px 4px;}
+.side-item .lockmini{margin-left:auto; opacity:.7;}
+.dmain{flex:1; min-width:0; padding:28px 36px; overflow-y:auto; overscroll-behavior:contain;}
+.dtopbar{display:flex; align-items:center; gap:16px; margin-bottom:26px; flex-wrap:wrap;}
+.tier-switch{display:flex; gap:4px; background:var(--bg-surface); border:1px solid var(--border-hair); border-radius:999px; padding:3px; margin-bottom:20px; width:fit-content;}
+.tier-switch a{padding:7px 16px; border-radius:999px; font-size:12px; color:var(--stone);}
+.tier-switch a.active{background:var(--gold); color:#2a1c05; font-weight:600;}
+.dstat{background:var(--bg-surface); border:1px solid var(--border-hair); border-radius:18px; padding:18px; position:relative;}
+.dstat .dlabel{font-size:11.5px; color:var(--stone); margin-top:10px;}
+.dstat .dvalue{font-family:var(--mono); font-size:22px; margin-top:4px;}
+.toggle{width:38px; height:22px; border-radius:999px; background:rgba(255,255,255,0.08); position:relative; flex-shrink:0; cursor:pointer;}
+.toggle.on{background:var(--gold);}
+.toggle::after{content:'';position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.15s;}
+.toggle.on::after{left:18px; background:#2a1c05;}
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th{text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; color:var(--stone-dim); font-weight:500; padding:10px 14px; border-bottom:1px solid var(--border-hair);}
+td{padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle;}
+tr:hover td{background:rgba(255,255,255,.015);}
+.inbox-shell{display:flex; height:600px; border:1px solid var(--border-hair); border-radius:18px; overflow:hidden; background:var(--bg-surface);}
+.convo-list{width:290px; flex-shrink:0; border-right:1px solid var(--border-hair); overflow-y:auto;}
+.convo-search{padding:14px; border-bottom:1px solid var(--border-hair);}
+.convo-item{display:flex; gap:10px; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.04); cursor:pointer; position:relative;}
+.convo-item:hover{background:rgba(255,255,255,.02);}
+.convo-item.active{background:rgba(201,166,107,.09); border-left:2px solid var(--gold);}
+.convo-item.locked{opacity:.45; cursor:default;}
+.convo-item .cname{font-size:13px; font-weight:600; display:flex; justify-content:space-between; gap:6px;}
+.convo-item .cpreview{font-size:11.5px; color:var(--stone); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px;}
+.unread-dot{width:8px; height:8px; border-radius:50%; background:var(--rose-bright); flex-shrink:0; margin-top:4px;}
+.chat-pane{flex:1; display:flex; flex-direction:column; min-width:0;}
+.chat-header{padding:14px 20px; border-bottom:1px solid var(--border-hair); display:flex; align-items:center; gap:12px;}
+.chat-messages{flex:1; padding:22px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;}
+.bubble{max-width:62%; padding:10px 15px; border-radius:16px; font-size:13px; line-height:1.5;}
+.bubble.them{background:var(--bg-surface-2); align-self:flex-start; border-bottom-left-radius:4px; border:1px solid var(--border-hair);}
+.bubble.me{background:linear-gradient(135deg,var(--rose-bright),var(--rose)); color:#fff; align-self:flex-end; border-bottom-right-radius:4px;}
+.bubble-time{font-size:10px; color:var(--stone-dim); margin-top:3px; text-align:right;}
+.chat-input-row{padding:14px 18px; border-top:1px solid var(--border-hair); display:flex; gap:10px; align-items:center;}
+.chat-input-row input{flex:1;}
+.badge-count{position:absolute; top:-4px; right:-4px; min-width:20px; height:20px; padding:0 4px; border-radius:999px; background:var(--rose-bright); color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid var(--bg-surface);}
+.contact-panel{width:230px; flex-shrink:0; border-left:1px solid var(--border-hair); padding:18px; overflow-y:auto;}
+.profile-inbox-card{padding:18px; text-align:center; cursor:pointer;}
+.editor-shell{display:flex; height:680px; border:1px solid var(--border-hair); border-radius:18px; overflow:hidden; background:var(--bg-void);}
+.editor-canvas{flex:1; overflow-y:auto; position:relative;}
+.editable-section{position:relative; cursor:pointer; transition:.15s; border:2px solid transparent; border-radius:8px;}
+.editable-section:hover{border-color:var(--gold); background:rgba(201,166,107,.04);}
+.editable-section:hover .edit-badge{opacity:1; transform:translateY(0);}
+.edit-badge{position:absolute; top:10px; right:10px; background:var(--gold); color:#2a1c05; font-size:11px; font-weight:700; padding:6px 12px; border-radius:8px; opacity:0; transform:translateY(-4px); transition:.15s; display:flex; gap:6px; align-items:center; z-index:5; pointer-events:none;}
+.editor-drawer{width:320px; flex-shrink:0; background:var(--bg-surface); border-left:1px solid var(--border-hair); padding:22px; display:none; flex-direction:column; overflow-y:auto;}
+.editor-drawer.open{display:flex;}
+.editor-toolbar{display:flex; align-items:center; gap:10px; padding:12px 18px; border-bottom:1px solid var(--border-hair); background:var(--bg-surface);}
+</style>
+</head>
+<body>
+
+<div id="chrome">
+  <span><b>♥ AMOURA</b> — design prototype</span>
+  <select id="pageSelect" onchange="render(this.value)"></select>
+  <div class="device-toggle" id="deviceToggle">
+    <button data-d="desktop" class="active">Desktop</button>
+    <button data-d="tablet">Tablet</button>
+    <button data-d="mobile">Mobile</button>
+  </div>
+</div>
+
+<div id="stage"><div id="frame"><div id="frameInner"></div></div></div>
+
+<div id="paywallModal">
+  <div class="box">
+    <div style="width:52px;height:52px;border-radius:50%;background:rgba(201,166,107,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--gold-bright)">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 11V8a6 6 0 1 1 12 0v3M5 11h14v10H5zM12 15v3"/></svg>
+    </div>
+    <h3 style="font-size:20px">You've reached your free limit</h3>
+    <p class="stone" style="font-size:13px;margin-top:8px">Free members can send 5 messages to up to 5 people. Upgrade to message anyone, unlimited, plus unlock all photos and videos.</p>
+    <button class="btn btn-gold" style="width:100%;margin-top:20px" onclick="closePaywall();render('pricing');">See Premium plans</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="closePaywall()">Not now</button>
+  </div>
+</div>
+
+<script>
+function icon(name){
+  const p = {
+    heart:'M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z',
+    msg:'M4 5h16v11H8l-4 4z',
+    lock:'M6 11V8a6 6 0 1 1 12 0v3M5 11h14v10H5zM12 15v3',
+    crown:'M4 18h16l-1.6-8-4 3.4L12 8l-2.4 5.4-4-3.4z',
+    check:'M20 6 9 17l-5-5',
+    shield:'M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5z',
+    search:'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm10 17-5.6-5.6',
+    filter:'M4 6h16M7 12h10M10 18h4',
+    star:'M12 2l3.1 6.3 7 1-5 4.9 1.2 7-6.3-3.3L5.7 21l1.2-7-5-4.9 7-1z',
+    map:'M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3zM9 3v15M15 6v15',
+    bolt:'M13 2 4 14h6l-1 8 9-12h-6z',
+    bell:'M6 9a6 6 0 1 1 12 0v5l2 3H4l2-3zM10 20a2 2 0 0 0 4 0',
+    video:'M4 7h11v10H4zM15 10l5-3v10l-5-3z',
+    film:'M4 4h16v16H4zM4 8h16M4 16h16M8 4v4M8 16v4M16 4v4M16 16v4',
+    user:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8a7 7 0 0 1 14 0',
+    inbox:'M4 4h16v16H4zM4 14h5l1 3h4l1-3h5',
+    grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+    logout:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+    sparkle:'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6',
+    send:'M22 2 11 13M22 2l-7 20-4-9-9-4z',
+    edit:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',
+    trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6',
+    plus:'M12 5v14M5 12h14',
+    image:'M4 4h16v16H4zM8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM4 17l5-5 4 4 3-3 4 4',
+    upload:'M12 3v13m0 0-4-4m4 4 4-4M4 21h16',
+    users:'M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-6 8a6 6 0 0 1 12 0M17 8a4 4 0 0 1 0 8m3 4a6 6 0 0 0-4-5.6',
+    layout:'M4 4h16v4H4zM4 12h7v8H4zM13 12h7v8h-7z',
+    globe:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2c2.5 2.7 4 6.2 4 10s-1.5 7.3-4 10c-2.5-2.7-4-6.2-4-10s1.5-7.3 4-10z',
+    dollar:'M12 2v20M17 6.5c0-1.9-2.2-3.5-5-3.5S7 4.6 7 6.5 9.2 10 12 10s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5',
+    chart:'M4 20V10M11 20V4M18 20v-7',
+    flag:'M5 3v18M5 4h13l-3 4 3 4H5',
+    ban:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM5 5l14 14',
+    ticket:'M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z',
+    userlock:'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-6 9a6 6 0 0 1 8.5-5.4M15 17v-2a2 2 0 1 1 4 0v2m-5 0h6v4h-6z',
+    trend:'M4 15l5-6 4 3 7-9M15 3h5v5'
+  }[name] || '';
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p.split('M').filter(Boolean).map(d=>`<path d="M${d}"/>`).join('')}</svg>`;
+}
+function av(initials,cls,size=40){return `<div class="avatar ${cls}" style="width:${size}px;height:${size}px;font-size:${size*0.38}px">${initials}</div>`}
+function stars(n){let s=''; for(let i=0;i<5;i++) s+= i<Math.round(n)? '★':'☆'; return `<span style="color:var(--gold-bright);font-size:12px">${s}</span>`}
+function openPaywall(){document.getElementById('paywallModal').classList.add('open');}
+function pickAgePreset(el){
+  document.querySelectorAll('.agePreset').forEach(p=>{p.classList.remove('gold'); p.classList.add('stone');});
+  el.classList.remove('stone'); el.classList.add('gold');
+}
+const cmsContent = {
+  promoBanner: '✦ Limited time — 20% off your first month of Premium · ends Sunday',
+  genderWomenTitle: 'Looking for men?', genderWomenDesc: 'Browse verified male profiles near you, free to start.',
+  genderMenTitle: 'Looking for women?', genderMenDesc: 'Browse verified female profiles near you, free to start.',
+  ageSearchLabel: 'Or jump straight to an age range',
+  heroEyebrow: 'Real people. Real matches.',
+  heroHeadline: 'Find someone worth texting back.',
+  heroSub: 'AMOURA is built around genuine, verified profiles and conversations that actually go somewhere.',
+  trustLine: '100% ID-verified community',
+  pressStripLabel: 'Trusted & featured in',
+  trustSectionTitle: 'Why members trust AMOURA',
+  verifySectionTitle: 'How we keep AMOURA real',
+  verifyStat: '98.6% of fake profiles caught pre-launch',
+  peopleNearTitle: 'People near you',
+  audienceTitle: 'Who you will meet here',
+  editorsPickTitle: "Editor's picks this week",
+  step1: 'Create your profile — Add photos, a short bio, and what you are looking for.',
+  step2: 'Browse & connect — Visit up to 20 profiles free, and like who catches your eye.',
+  step3: 'Message & upgrade — Free members can message up to 5 people (5 messages total) — go Plus for unlimited chat.',
+  successTitle: 'Real connections, real stories',
+  reviewsTitle: 'What our members say', reviewsRating: '4.8 · 12,400 reviews',
+  premiumDiveTitle: 'See the difference Premium makes',
+  comparisonTitle: 'AMOURA vs. typical dating apps',
+  privacyTitle: 'Your privacy, our promise',
+  privacyIntro: 'Being on a dating platform is personal. Here is exactly how we protect that — no vague promises, just the specifics.',
+  founderQuote: '"We built AMOURA because we were tired of apps full of fake profiles and empty conversations. Verification is not a feature here — it is the entire point."',
+  founderName: 'Sara Alam', founderRole: 'Co-founder, AMOURA',
+  faqTitle: 'Quick answers',
+  guaranteeBadge: '7-day money-back guarantee',
+  guaranteeTitle: 'Not feeling it? Get every taka back, no questions asked.',
+  guaranteeSub: 'Try Premium risk-free — if it is not for you within 7 days, we refund you in full.',
+  appSocialLine: 'Sign in with Google, Apple, or Facebook — verified in seconds',
+  bottomCtaEyebrow: 'Ready when you are', bottomCtaTitle: 'Choose who you would like to meet',
+  footerTagline: 'A modern space to meet people who are actually looking for the same thing you are.'
+};
+const cmsLabels = {
+  promoBanner:'Top promo banner',
+  genderWomenTitle:'Gender CTA — women card title', genderWomenDesc:'Gender CTA — women card text',
+  genderMenTitle:'Gender CTA — men card title', genderMenDesc:'Gender CTA — men card text',
+  ageSearchLabel:'Age quick-search label',
+  heroEyebrow:'Hero eyebrow', heroHeadline:'Hero headline', heroSub:'Hero subtext',
+  trustLine:'Verified badge text', pressStripLabel:'Press strip label',
+  trustSectionTitle:'Trust badges — section title', verifySectionTitle:'Verification — section title', verifyStat:'Verification — stat badge',
+  peopleNearTitle:'People near you — title', audienceTitle:'Audience section — title', editorsPickTitle:"Editor's picks — title",
+  step1:'How it works — step 1', step2:'How it works — step 2', step3:'How it works — step 3',
+  successTitle:'Success stories — title', reviewsTitle:'Reviews — title', reviewsRating:'Reviews — rating badge',
+  premiumDiveTitle:'Premium comparison — title', comparisonTitle:'Comparison table — title',
+  privacyTitle:'Privacy section — title', privacyIntro:'Privacy section — intro',
+  founderQuote:'Founder quote', founderName:'Founder name', founderRole:'Founder role',
+  faqTitle:'FAQ — title', guaranteeBadge:'Guarantee — badge', guaranteeTitle:'Guarantee — title', guaranteeSub:'Guarantee — subtext',
+  appSocialLine:'App/social trust line', bottomCtaEyebrow:'Bottom CTA — eyebrow', bottomCtaTitle:'Bottom CTA — title',
+  footerTagline:'Footer tagline'
+};
+function esec(key,html){ return `<div class="editable-section" onclick="openSectionEditor('${key}')" style="padding:10px 8px"><span class="edit-badge">${icon('edit')} Edit</span>${html}</div>`; }
+function renderEditorCanvas(){
+  return `
+    ${esec('promoBanner', `<div style="padding:2px 12px;background:linear-gradient(90deg,#4A1620,#3A131A,#4A1620);text-align:center;font-size:12px;color:var(--gold-bright);border-radius:8px">${cmsContent.promoBanner}</div>`)}
+
+    <div style="padding:16px 32px 6px">
+      <div class="stone" style="font-size:10.5px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Gender selection cards</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px">${esec('genderWomenTitle', `<div style="font-size:14px;font-weight:600">${cmsContent.genderWomenTitle}</div>`)}${esec('genderWomenDesc', `<div class="stone" style="font-size:11.5px">${cmsContent.genderWomenDesc}</div>`)}</div>
+        <div style="flex:1;min-width:180px">${esec('genderMenTitle', `<div style="font-size:14px;font-weight:600">${cmsContent.genderMenTitle}</div>`)}${esec('genderMenDesc', `<div class="stone" style="font-size:11.5px">${cmsContent.genderMenDesc}</div>`)}</div>
+      </div>
+      ${esec('ageSearchLabel', `<div class="stone" style="font-size:11.5px">${cmsContent.ageSearchLabel}</div>`)}
+    </div>
+
+    <div style="padding:8px 32px 20px;border-top:1px solid var(--border-hair)">
+      ${esec('heroEyebrow', `<div class="eyebrow">${cmsContent.heroEyebrow}</div>`)}
+      ${esec('heroHeadline', `<h1 style="font-size:28px;max-width:440px">${cmsContent.heroHeadline}</h1>`)}
+      ${esec('heroSub', `<p class="stone" style="max-width:380px;font-size:13px">${cmsContent.heroSub}</p>`)}
+      ${esec('trustLine', `<span class="pill gold">${icon('shield')} ${cmsContent.trustLine}</span>`)}
+    </div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('pressStripLabel', `<div class="stone" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">${cmsContent.pressStripLabel}</div>`)}</div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('trustSectionTitle', `<h2 style="font-size:18px">${cmsContent.trustSectionTitle}</h2>`)}</div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">
+      ${esec('verifySectionTitle', `<h2 style="font-size:18px">${cmsContent.verifySectionTitle}</h2>`)}
+      ${esec('verifyStat', `<span class="pill success">${icon('shield')} ${cmsContent.verifyStat}</span>`)}
+    </div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('peopleNearTitle', `<h2 style="font-size:18px">${cmsContent.peopleNearTitle}</h2>`)}<div class="grid g-4" style="margin-top:8px">${['p1','p5','p3','p4'].map(c=>`<div class="card ${c}" style="height:60px"></div>`).join('')}</div></div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('audienceTitle', `<h2 style="font-size:18px">${cmsContent.audienceTitle}</h2>`)}</div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('editorsPickTitle', `<h2 style="font-size:18px">${cmsContent.editorsPickTitle}</h2>`)}</div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">
+      <div class="stone" style="font-size:10.5px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">How it works</div>
+      ${esec('step1', `<div style="font-size:12.5px">${cmsContent.step1}</div>`)}
+      ${esec('step2', `<div style="font-size:12.5px">${cmsContent.step2}</div>`)}
+      ${esec('step3', `<div style="font-size:12.5px">${cmsContent.step3}</div>`)}
+    </div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('successTitle', `<h2 style="font-size:18px">${cmsContent.successTitle}</h2>`)}</div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">
+      ${esec('reviewsTitle', `<h2 style="font-size:18px">${cmsContent.reviewsTitle}</h2>`)}
+      ${esec('reviewsRating', `<span class="pill gold">${cmsContent.reviewsRating}</span>`)}
+    </div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('premiumDiveTitle', `<h2 style="font-size:18px">${cmsContent.premiumDiveTitle}</h2>`)}</div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('comparisonTitle', `<h2 style="font-size:18px">${cmsContent.comparisonTitle}</h2>`)}</div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">
+      ${esec('privacyTitle', `<h2 style="font-size:18px">${cmsContent.privacyTitle}</h2>`)}
+      ${esec('privacyIntro', `<p class="stone" style="font-size:12.5px;max-width:400px">${cmsContent.privacyIntro}</p>`)}
+    </div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">
+      ${esec('founderQuote', `<p style="font-family:var(--serif);font-style:italic;font-size:16px;max-width:420px">${cmsContent.founderQuote}</p>`)}
+      <div style="display:flex;gap:8px">${esec('founderName', `<div style="font-size:12.5px;font-weight:600">${cmsContent.founderName}</div>`)}${esec('founderRole', `<div class="stone" style="font-size:11px">${cmsContent.founderRole}</div>`)}</div>
+    </div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('faqTitle', `<h2 style="font-size:18px">${cmsContent.faqTitle}</h2>`)}</div>
+
+    <div style="padding:16px 32px;border-top:1px solid var(--border-hair)">
+      ${esec('guaranteeBadge', `<span class="pill gold">${icon('check')} ${cmsContent.guaranteeBadge}</span>`)}
+      ${esec('guaranteeTitle', `<h2 style="font-size:18px;max-width:420px">${cmsContent.guaranteeTitle}</h2>`)}
+      ${esec('guaranteeSub', `<p class="stone" style="font-size:12.5px">${cmsContent.guaranteeSub}</p>`)}
+    </div>
+
+    <div style="padding:14px 32px;border-top:1px solid var(--border-hair)">${esec('appSocialLine', `<div class="stone" style="font-size:12px">${cmsContent.appSocialLine}</div>`)}</div>
+
+    <div style="padding:16px 32px;border-top:1px solid var(--border-hair)">
+      ${esec('bottomCtaEyebrow', `<div class="eyebrow" style="text-align:center;display:block">${cmsContent.bottomCtaEyebrow}</div>`)}
+      ${esec('bottomCtaTitle', `<h2 style="font-size:18px;text-align:center">${cmsContent.bottomCtaTitle}</h2>`)}
+    </div>
+
+    <div style="padding:20px 32px;border-top:1px solid var(--border-hair)">${esec('footerTagline', `<div class="logo" style="margin-bottom:8px">♥ AMOURA</div><p class="stone" style="font-size:12px;max-width:320px">${cmsContent.footerTagline}</p>`)}</div>
+  `;
+}
+function openSectionEditor(key){
+  document.getElementById('editorDrawer').classList.add('open');
+  document.getElementById('editorDrawerLabel').textContent = cmsLabels[key];
+  document.getElementById('editorDrawerTextarea').value = cmsContent[key];
+  window._editingKey = key;
+}
+function closeSectionEditor(){
+  document.getElementById('editorDrawer').classList.remove('open');
+}
+function discardSectionEditor(){
+  closeSectionEditor();
+  showToast('Changes discarded — nothing was saved');
+}
+function saveSectionEditor(){
+  const key = window._editingKey;
+  cmsContent[key] = document.getElementById('editorDrawerTextarea').value;
+  document.getElementById('editorCanvasInner').innerHTML = renderEditorCanvas();
+  closeSectionEditor();
+  showToast('Saved — live site updated ✓');
+}
+function showToast(msg){
+  let t=document.getElementById('cmsToast');
+  if(!t){
+    t=document.createElement('div');
+    t.id='cmsToast';
+    t.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--gold);color:#2a1c05;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 10px 30px rgba(0,0,0,.4)';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;
+  t.style.opacity='1';
+  clearTimeout(window._toastTimer);
+  window._toastTimer=setTimeout(()=>{t.style.opacity='0';},2200);
+}
+function closePaywall(){document.getElementById('paywallModal').classList.remove('open');}
+
+/* ---- Admin Open Inbox data ---- */
+const inboxData={
+  nadia:{ name:'Nadia', cls:'p3', conversations:[
+    {name:'Rafi, 26',cls:'p4',time:'2h',unread:true,email:'rafi.k@gmail.com',phone:'+880 1893-221190',ip:'43.245.118.9',location:'Chattogram, BD',msgs:[
+      {t:'Hey! How was your weekend?',mine:false,time:'Fri 6:14pm'},
+      {t:'Pretty good, mostly recovering from work honestly 😅',mine:true,time:'Fri 6:20pm'},
+      {t:'Same! We should grab coffee sometime',mine:false,time:'Fri 6:22pm'},
+      {t:'I would like that, when are you free?',mine:true,time:'Fri 6:25pm'},
+      {t:'How about this Saturday afternoon?',mine:false,time:'Today 2:10pm'}]},
+    {name:'Tanvir, 29',cls:'p5',time:'5h',unread:false,email:'tanvir.a@gmail.com',phone:'+880 1611-908877',ip:'27.147.203.61',location:'Sylhet, BD',msgs:[
+      {t:'Hi Nadia, loved your profile',mine:false,time:'Today 9:02am'},
+      {t:'Thank you! Nice to meet you',mine:true,time:'Today 9:10am'}]},
+    {name:'Imran, 31',cls:'p2',time:'1d',unread:false,email:'imran.c@gmail.com',phone:'+880 1712-990011',ip:'103.148.22.90',location:'Dhaka, BD',msgs:[
+      {t:'Would you like to do a video call sometime?',mine:false,time:'Yesterday 8:40pm'},
+      {t:'Maybe once we chat a bit more 🙂',mine:true,time:'Yesterday 9:00pm'}]},
+    {name:'Sabbir, 26',cls:'p6',time:'2d',unread:false,email:'sabbir.h@gmail.com',phone:'+880 1522-345501',ip:'45.115.90.3',location:'Khulna, BD',msgs:[
+      {t:'Hey, how are you?',mine:false,time:'Jul 5, 7:15pm'}]},
+    {name:'Nayeem, 30',cls:'p1',time:'3d',unread:false,email:'nayeem.r@gmail.com',phone:'+880 1633-201188',ip:'103.98.44.12',location:'Rajshahi, BD',msgs:[
+      {t:'Nice profile! Where in Dhaka are you based?',mine:false,time:'Jul 4, 6:20pm'},
+      {t:'Gulshan area, and you?',mine:true,time:'Jul 4, 6:45pm'}]},
+    {name:'Emon, 25',cls:'p4',time:'5d',unread:false,email:'emon.s@gmail.com',phone:'+880 1911-772233',ip:'103.230.12.5',location:'Dhaka, BD',msgs:[
+      {t:'Hi 👋',mine:false,time:'Jul 2, 4:00pm'}]}
+  ], more:41},
+  tanjila:{ name:'Tanjila', cls:'p1', conversations:[
+    {name:'Imran, 31',cls:'p2',time:'12m',unread:true,email:'imran.c@gmail.com',phone:'+880 1712-990011',ip:'103.148.22.90',location:'Dhaka, BD',msgs:[
+      {t:'Hi Tanjila, huge fan of your work',mine:false,time:'Today 3:30pm'},
+      {t:'That is so sweet, thank you!',mine:true,time:'Today 3:41pm'}]},
+    {name:'Arman, 28',cls:'p5',time:'1h',unread:true,email:'arman.f@gmail.com',phone:'+880 1811-556677',ip:'103.4.66.21',location:'Dhaka, BD',msgs:[
+      {t:'Would love to connect sometime',mine:false,time:'Today 2:00pm'}]},
+    {name:'Nayeem, 30',cls:'p6',time:'3h',unread:false,email:'nayeem.r@gmail.com',phone:'+880 1633-201188',ip:'103.98.44.12',location:'Rajshahi, BD',msgs:[
+      {t:'Hello 🙂',mine:false,time:'Today 12:00pm'}]}
+  ], more:129},
+  meherin:{ name:'Meherin', cls:'p2', conversations:[
+    {name:'Rakib, 27',cls:'p4',time:'1h',unread:true,email:'rakib.t@gmail.com',phone:'+880 1755-334422',ip:'103.87.19.44',location:'Chattogram, BD',msgs:[
+      {t:'That call was fun 😄',mine:true,time:'Today 1:00pm'},
+      {t:'It really was, we should do it again',mine:false,time:'Today 1:05pm'}]},
+    {name:'Shovon, 24',cls:'p3',time:'4h',unread:false,email:'shovon.k@gmail.com',phone:'+880 1966-112233',ip:'103.11.201.9',location:'Khulna, BD',msgs:[
+      {t:'Hey, saw your latest post',mine:false,time:'Today 9:00am'}]}
+  ], more:74},
+  rafi:{ name:'Rafi', cls:'p4', conversations:[
+    {name:'Nadia, 23',cls:'p3',time:'2h',unread:false,email:'nadia.h@gmail.com',phone:'+880 1712-345678',ip:'103.148.22.4',location:'Dhaka, BD',msgs:[
+      {t:'How about this Saturday afternoon?',mine:false,time:'Today 2:10pm'},
+      {t:'Free coffee sometime? ☕',mine:true,time:'Today 2:15pm'}]}
+  ], more:10},
+  farzana:{ name:'Farzana', cls:'p6', conversations:[
+    {name:'Arman, 28',cls:'p5',time:'5h',unread:false,email:'arman.f@gmail.com',phone:'+880 1811-556677',ip:'103.4.66.21',location:'Dhaka, BD',msgs:[
+      {t:'Nice to meet you!',mine:false,time:'Today 9:00am'}]}
+  ], more:1},
+  arman:{ name:'Arman', cls:'p5', conversations:[], more:0}
+};
+function filterInboxGender(g, el){
+  document.querySelectorAll('#genderTabAll,#genderTabFemale,#genderTabMale').forEach(t=>{t.classList.remove('rose'); t.classList.add('stone');});
+  el.classList.remove('stone'); el.classList.add('rose');
+  document.querySelectorAll('#inboxProfileGrid .profile-inbox-card').forEach(card=>{
+    const match = g==='all' || card.dataset.gender===g;
+    card.style.display = match ? '' : 'none';
+  });
+}
+function openProfileInbox(key){
+  const p = inboxData[key];
+  document.getElementById('inboxLevel1').style.display='none';
+  document.getElementById('inboxLevel2').style.display='block';
+  const listHtml = p.conversations.map((c,i)=>convoItem(c.name,'',c.msgs[c.msgs.length-1].t,c.time,c.cls,c.unread,i===0,false,false,`openConversation('${key}',${i})`)).join('')
+    + (p.more>0 ? `<div class="stone" style="font-size:11px;text-align:center;padding:14px">+${p.more} more conversations not shown in this demo</div>` : (p.conversations.length===0 ? `<div class="stone" style="font-size:12px;text-align:center;padding:30px 14px">No conversations yet</div>` : ''));
+  document.getElementById('convoListArea').innerHTML = listHtml;
+  window._currentInboxProfile = key;
+  if(p.conversations.length>0) openConversation(key,0);
+  else { document.getElementById('chatPaneArea').innerHTML=''; document.getElementById('contactPanelArea').innerHTML=''; }
+}
+function closeProfileInbox(){
+  document.getElementById('inboxLevel1').style.display='block';
+  document.getElementById('inboxLevel2').style.display='none';
+}
+function openConversation(key, idx){
+  const p = inboxData[key];
+  const c = p.conversations[idx];
+  document.querySelectorAll('#convoListArea .convo-item').forEach((el,i)=>el.classList.toggle('active', i===idx));
+  const initials = c.name[0];
+  document.getElementById('chatPaneArea').innerHTML = `
+    <div class="chat-header">
+      ${av(initials,c.cls,42)}
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${c.name}</div>
+        <div class="stone" style="font-size:11px">${c.email} · ${c.phone}</div>
+      </div>
+      <span class="pill stone">messaging ${p.name}</span>
+    </div>
+    <div class="chat-messages">${c.msgs.map(m=>chatBubble(m.t,m.mine,m.time)).join('')}</div>
+    <div class="chat-input-row">
+      <input placeholder="Admin view is read-only" disabled>
+      <button class="btn btn-ghost btn-sm" disabled style="opacity:.4">${icon('send')} Send</button>
+    </div>`;
+  document.getElementById('contactPanelArea').innerHTML = `
+    <div style="text-align:center;margin-bottom:14px">${av(initials,c.cls,54)}<div style="font-weight:600;font-size:13px;margin-top:8px">${c.name}</div><div class="stone" style="font-size:11px">${c.email}</div></div>
+    <div class="divider"></div>
+    <div class="stone" style="font-size:10.5px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Phone</div>
+    <div class="mono" style="font-size:12.5px;margin-bottom:14px">${c.phone}</div>
+    <div class="stone" style="font-size:10.5px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Location</div>
+    <div style="font-size:12.5px;margin-bottom:14px">${c.location}</div>
+    <div class="stone" style="font-size:10.5px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">IP address</div>
+    <div class="mono" style="font-size:12.5px;margin-bottom:14px">${c.ip}</div>
+    <button class="btn btn-ghost btn-sm" style="width:100%" onclick="render('admin-profile-detail');return false;">${icon('user')} View full profile</button>`;
+}
+
+function navbar(active){
+  const links=['How it works','Reviews','Premium'];
+  return `<div class="navbar">
+    <div class="logo"><span class="dot">♥</span> AMOURA</div>
+    <div class="links">${links.map(l=>`<a href="#">${l}</a>`).join('')}</div>
+    <div class="spacer"></div>
+    <a class="btn btn-ghost btn-sm" href="#" onclick="render('login');return false;">Log in</a>
+    <a class="btn btn-rose btn-sm" href="#" onclick="render('register');return false;">Join free</a>
+  </div>`;
+}
+function navbarLoggedIn(){
+  const links=['Discover','Matches','Messages'];
+  const linkTarget={'Discover':'browse','Matches':'member-home','Messages':'inbox-free'};
+  return `<div class="navbar">
+    <div class="logo"><span class="dot">♥</span> AMOURA</div>
+    <div class="links">${links.map(l=>`<a href="#" onclick="render('${linkTarget[l]}');return false;">${l}</a>`).join('')}</div>
+    <div class="spacer"></div>
+    <div class="bell" style="width:36px;height:36px;border-radius:50%;background:var(--bg-surface);border:1px solid var(--border-hair);display:flex;align-items:center;justify-content:center">${icon('bell')}</div>
+    <span class="pill stone">Free member</span>
+    <a href="#" onclick="render('dash-free');return false;" style="cursor:pointer">${av('T','p4',36)}</a>
+  </div>`;
+}
+function siteFooter(){
+  return `<footer class="site">
+    <div><div class="logo" style="margin-bottom:10px">♥ AMOURA</div><p class="stone" style="max-width:280px">A modern space to meet people who are actually looking for the same thing you are.</p></div>
+    <div><b style="font-size:12px">Company</b><br><br>About<br>Careers<br>Press</div>
+    <div><b style="font-size:12px">Support</b><br><br>Safety Tips<br>Help Center<br>Contact</div>
+    <div><b style="font-size:12px">Legal</b><br><br>Terms<br>Privacy<br>Community Guidelines</div>
+  </footer>`;
+}
+function genderCTA(){
+  return `<div class="gender-cta">
+    <div class="gender-card men card hoverable" onclick="render('browse');return false;">
+      <span class="pill gold" style="margin-bottom:14px">For men</span>
+      <h3 style="font-size:24px">Looking for women?</h3>
+      <p class="stone" style="font-size:13px;margin-top:8px">Browse verified female profiles near you, free to start.</p>
+      <div class="btn btn-gold btn-sm" style="margin-top:18px">Find women ${icon('heart')}</div>
+    </div>
+    <div class="gender-card women card hoverable" onclick="render('browse');return false;">
+      <span class="pill rose" style="margin-bottom:14px">For women</span>
+      <h3 style="font-size:24px">Looking for men?</h3>
+      <p class="stone" style="font-size:13px;margin-top:8px">Browse verified male profiles near you, free to start.</p>
+      <div class="btn btn-rose btn-sm" style="margin-top:18px">Find men ${icon('heart')}</div>
+    </div>
+  </div>`;
+}
+function reviewCard(name,age,quote,rating,cls){
+  return `<div class="card" style="padding:22px">
+    <div style="color:var(--gold-bright)">${stars(rating)}</div>
+    <p style="font-size:14px;line-height:1.65;margin-top:10px">"${quote}"</p>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:16px">${av(name[0],cls,34)}<div><div style="font-size:13px;font-weight:600">${name}, ${age}</div><div class="stone" style="font-size:11px">Verified member</div></div></div>
+  </div>`;
+}
+function profileCard(name,age,loc,cls,online){
+  return `<div class="card hoverable" style="overflow:hidden;cursor:pointer" onclick="render('profile');return false;">
+    <div class="cover" style="height:200px;position:relative">
+      ${online?`<span class="pill success" style="position:absolute;top:12px;left:12px">● Online</span>`:''}
+    </div>
+    <div style="padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;font-size:14px">${name}, ${age}</span>
+        <span style="color:var(--rose-bright)">${icon('heart')}</span>
+      </div>
+      <div class="stone" style="font-size:12px;margin-top:2px">${icon('map')} ${loc}</div>
+    </div>
+  </div>`;
+}
+function usageMeter(used,total){
+  const pct=Math.round(used/total*100);
+  return `<div class="meter"><span class="stone">${used}/${total} free views</span><div class="meter-bar"><div class="meter-fill" style="width:${pct}%"></div></div></div>`;
+}
+function msgMeter(usedMsgs,totalMsgs,usedPeople,totalPeople){
+  const pct=Math.round(usedMsgs/totalMsgs*100);
+  return `<div class="meter"><span class="stone">${usedMsgs}/${totalMsgs} free messages · ${usedPeople}/${totalPeople} people</span><div class="meter-bar"><div class="meter-fill" style="width:${pct}%"></div></div></div>`;
+}
+function photoGrid(unlocked,total,cls1,cls2,cls3){
+  const arr=[cls1,cls2,cls3,'p2','p4','p5','p6','p1'];
+  let html='';
+  for(let i=0;i<8;i++){
+    if(i<unlocked){ html+=`<div class="photo-tile ${arr[i%arr.length]}"></div>`; }
+    else if(i===unlocked){ html+=`<div class="photo-tile ${arr[i%arr.length]} locked"><div class="lockbadge">${icon('lock')}<b style="font-family:var(--sans);font-size:12px">+${total-unlocked} more</b><span>Unlock with Premium</span></div></div>`; }
+    else { html+=`<div class="photo-tile ${arr[i%arr.length]} locked"></div>`; }
+  }
+  return `<div class="photo-grid">${html}</div>`;
+}
+function videoRow(unlocked,total){
+  let html='';
+  const clsArr=['p3','p5','p2','p1','p4','p6','p3','p5','p2','p1'];
+  for(let i=0;i<total;i++){
+    if(i<unlocked){ html+=`<div class="video-tile ${clsArr[i]}"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div class="play-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M6 4l14 8-14 8z"/></svg></div></div><span class="pill success" style="position:absolute;bottom:8px;left:8px">Free</span></div>`; }
+    else { html+=`<div class="video-tile ${clsArr[i]} locked"><div class="lockbadge">${icon('lock')}<span>Premium</span></div></div>`; }
+  }
+  return `<div class="video-row">${html}</div>`;
+}
+
+function trustBadge(ic,label){
+  return `<div style="display:flex;gap:10px;align-items:center;padding:14px 16px;background:rgba(255,255,255,0.02);border:1px solid var(--border-hair);border-radius:14px">
+    <div style="width:34px;height:34px;border-radius:10px;background:rgba(201,166,107,.12);display:flex;align-items:center;justify-content:center;color:var(--gold-bright);flex-shrink:0">${icon(ic)}</div>
+    <span style="font-size:12.5px;line-height:1.4">${label}</span>
+  </div>`;
+}
+function pressLogo(name){
+  return `<span style="font-family:var(--serif);font-style:italic;font-size:17px;color:var(--stone);opacity:.8">${name}</span>`;
+}
+function verificationStep(n,ic,title,desc){
+  return `<div class="card" style="padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(201,166,107,.12);display:flex;align-items:center;justify-content:center;color:var(--gold-bright)">${icon(ic)}</div>
+      <span class="mono stone" style="font-size:11px">0${n}</span>
+    </div>
+    <h3 style="font-size:16px;margin-top:16px">${title}</h3>
+    <p class="stone" style="font-size:12.5px;margin-top:6px;line-height:1.6">${desc}</p>
+  </div>`;
+}
+function successStoryCard(n1,n2,quote,cls1,cls2,tag){
+  return `<div class="card hoverable" style="overflow:hidden">
+    <div style="display:flex;height:150px">
+      <div class="${cls1}" style="flex:1"></div>
+      <div class="${cls2}" style="flex:1"></div>
+    </div>
+    <div style="padding:18px">
+      <span class="pill rose">${tag}</span>
+      <div style="font-weight:600;font-size:14px;margin-top:10px">${n1} &amp; ${n2}</div>
+      <p class="stone" style="font-size:12.5px;margin-top:6px;line-height:1.6">"${quote}"</p>
+    </div>
+  </div>`;
+}
+function compareRow(feature,amoura,others){
+  return `<div style="display:grid;grid-template-columns:2fr 1fr 1fr;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px">
+    <span>${feature}</span>
+    <span style="text-align:center;color:var(--gold-bright)">${amoura?'✓':'—'}</span>
+    <span style="text-align:center;color:var(--stone-dim)">${others?'✓':'—'}</span>
+  </div>`;
+}
+
+function audienceCard(ic,title,desc,cls){
+  return `<div class="card hoverable ${cls}" style="padding:26px;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;opacity:.9"></div>
+    <div style="position:relative">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;color:var(--gold-bright)">${icon(ic)}</div>
+      <h3 style="font-size:17px;margin-top:16px">${title}</h3>
+      <p style="font-size:12.5px;margin-top:8px;line-height:1.6;color:rgba(243,230,225,.85)">${desc}</p>
+    </div>
+  </div>`;
+}
+function tierCard(name,price,badge,feats,highlight){
+  return `<div class="card ${highlight?'hoverable':''}" style="padding:28px; ${highlight?'border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)':''}">
+    ${badge?`<span class="pill gold" style="position:absolute;top:-12px;right:20px">${badge}</span>`:''}
+    <div style="font-size:14px;color:var(--stone)">${name}</div>
+    <div class="mono" style="font-size:30px;margin:10px 0">${price}</div>
+    ${feats.map(f=>`<div style="font-size:12.5px;padding:6px 0;display:flex;gap:8px"><span style="color:var(--gold-bright)">✓</span>${f}</div>`).join('')}
+    <button class="btn ${highlight?'btn-gold':'btn-ghost'} btn-sm" style="width:100%;margin-top:18px" onclick="render('pricing');return false;">Choose ${name}</button>
+  </div>`;
+}
+function cityChip(city,count){
+  return `<span class="pill stone" style="padding:9px 16px;cursor:pointer">${city} <span style="color:var(--gold-bright)">· ${count}</span></span>`;
+}
+function dSidebar(tier,active){
+  // tier: 'free' | 'plus' | 'vip'
+  const items=[
+    ['Dashboard','home',null,`dash-${tier}`],
+    ['Discover','grid',null,'browse'],
+    ['Matches','heart',null,null],
+    ['Messages','inbox',null,`inbox-${tier}`],
+    ['Who Liked You','star', tier==='free',null],
+    ['Video Call','video', tier!=='vip',null],
+    ['My Profile','user',null,'profile'],
+    ['Subscription','crown',null,'pricing'],
+    ['Settings','filter',null,null]
+  ];
+  return `<div class="sidebar">
+    <div class="logo">♥ AMOURA</div>
+    ${items.map(([l,ic,locked,go])=>`<a class="side-item ${l===active?'active':''} ${locked?'locked':''}" href="#" ${go?`onclick="render('${go}');return false;"`:''}>${icon(ic)}<span>${l}</span>${locked?`<span class="lockmini">${icon('lock')}</span>`:''}</a>`).join('')}
+    <div style="flex:1"></div>
+    <a class="side-item" href="#" onclick="render('home');return false;">${icon('logout')}<span>Log out</span></a>
+  </div>`;
+}
+function dTopbar(name,tier){
+  const badge = tier==='vip' ? `<span class="pill gold">${icon('crown')} VIP member</span>`
+              : tier==='plus' ? `<span class="pill gold">${icon('sparkle')} Plus member</span>`
+              : `<span class="pill stone">Free member</span>`;
+  return `<div class="dtopbar">
+    <div>
+      <div class="eyebrow">Welcome back</div>
+      <h2 style="font-size:24px">${name}</h2>
+    </div>
+    ${badge}
+    <div style="flex:1"></div>
+    <div class="bell" style="width:36px;height:36px;border-radius:50%;background:var(--bg-surface);border:1px solid var(--border-hair);display:flex;align-items:center;justify-content:center">${icon('bell')}</div>
+    ${av(name[0],'p2',36)}
+  </div>`;
+}
+function tierSwitch(active,base){
+  base = base || 'dash';
+  const tabs=['free','plus','vip'];
+  return `<div class="tier-switch">${tabs.map(t=>`<a href="#" class="${t===active?'active':''}" onclick="render('${base}-${t}');return false;">${t.toUpperCase()}</a>`).join('')}</div>`;
+}
+function dStat(ic,label,value,locked){
+  return `<div class="dstat">
+    <div style="width:32px;height:32px;border-radius:9px;background:rgba(201,166,107,.12);display:flex;align-items:center;justify-content:center;color:var(--gold-bright)">${icon(ic)}</div>
+    <div class="dvalue" style="${locked?'filter:blur(4px)':''}">${value}</div>
+    <div class="dlabel">${label}</div>
+    ${locked?`<span class="pill gold" style="position:absolute;top:14px;right:14px;font-size:9px">${icon('lock')}</span>`:''}
+  </div>`;
+}
+function convoItem(name,age,preview,time,cls,unread,active,locked,online,onclickJs){
+  return `<div class="convo-item ${active?'active':''} ${locked?'locked':''}" ${onclickJs?`onclick="${onclickJs}"`:''}>
+    <div style="position:relative">${av(name[0],cls,42)}${online&&!locked?'<span class="pulse-dot" style="position:absolute;bottom:0;right:0;border:2px solid var(--bg-surface);border-radius:50%"></span>':''}</div>
+    <div style="flex:1;min-width:0">
+      <div class="cname"><span>${name}${age?', '+age:''}</span><span class="stone" style="font-size:10.5px">${time}</span></div>
+      <div class="cpreview">${locked?'Upgrade to see this conversation':preview}</div>
+    </div>
+    ${unread&&!locked?'<span class="unread-dot"></span>':''}
+    ${locked?`<span style="color:var(--gold-bright)">${icon('lock')}</span>`:''}
+  </div>`;
+}
+function profileInboxCard(key,name,cls,count,gender){
+  const badge = count>0 ? `<span class="badge-count">${count>99?'99+':count}</span>` : '';
+  return `<div class="card hoverable profile-inbox-card" data-gender="${gender}" onclick="openProfileInbox('${key}')">
+    <div style="position:relative;display:inline-block">${av(name[0],cls,56)}${badge}</div>
+    <div style="font-weight:600;font-size:13px;margin-top:10px">${name}</div>
+    <div class="stone" style="font-size:11px">${count} message${count===1?'':'s'}</div>
+  </div>`;
+}
+function chatBubble(text,mine,time){
+  return `<div class="bubble ${mine?'me':'them'}">${text}<div class="bubble-time" style="color:${mine?'rgba(255,255,255,.7)':'var(--stone-dim)'}">${time}</div></div>`;
+}
+function adminSidebar(active){
+  const groups=[
+    ['Overview',[['Dashboard','home','admin-dashboard'],['Analytics','chart','admin-analytics']]],
+    ['Content',[['Model Profiles','crown','admin-model-profiles'],['Users Profile','users','admin-user-profiles']]],
+    ['Trust & Safety',[['Verification','shield','admin-verification'],['Reports & Moderation','flag','admin-reports'],['Banned Users','ban','admin-banned'],['Open Inbox','inbox','admin-inbox']]],
+    ['Support',[['Support Tickets','ticket','admin-tickets']]],
+    ['Money',[['Payments & Coupons','dollar','admin-payments']]],
+    ['Marketing',[['Notifications & Campaigns','bell','admin-campaigns']]],
+    ['Team & System',[['Admin Team & Roles','userlock','admin-team'],['Security Logs','lock','admin-logs'],['Edit Site (CMS)','layout','admin-cms'],['Settings','filter','admin-settings']]]
+  ];
+  return `<div class="sidebar">
+    <div class="logo">♥ AMOURA <span class="pill gold" style="margin-left:6px;font-size:9px">ADMIN</span></div>
+    ${groups.map(([g,items])=>`
+      <div class="side-group-label">${g}</div>
+      ${items.map(([l,ic,go])=>`<a class="side-item ${l===active?'active':''}" href="#" onclick="render('${go}');return false;">${icon(ic)}<span>${l}</span></a>`).join('')}
+    `).join('')}
+    <div style="flex:1"></div>
+    <a class="side-item" href="#" onclick="render('home');return false;">${icon('logout')}<span>Exit to site</span></a>
+  </div>`;
+}
+function profileRow(name,age,type,typeColor,status,statusColor,cls,phone,ip,city){
+  phone = phone || '+880 1' + Math.floor(700000000+Math.random()*99999999);
+  ip = ip || '103.'+Math.floor(Math.random()*250)+'.x.x';
+  city = city || 'Dhaka';
+  return `<tr>
+    <td><input type="checkbox"></td>
+    <td style="display:flex;gap:8px;align-items:center;cursor:pointer" onclick="render('admin-profile-detail');return false;">${av(name[0],cls,30)}<div><div style="font-weight:600">${name}, ${age}</div><div class="stone" style="font-size:11px">ID #${Math.floor(1000+Math.random()*9000)}</div></div></td>
+    <td><span class="pill ${typeColor}">${type}</span></td>
+    <td class="mono stone" style="font-size:11.5px">${phone}</td>
+    <td><div class="mono stone" style="font-size:11px">${ip}</div><div class="stone" style="font-size:10.5px">${city}</div></td>
+    <td><span class="pill ${statusColor}">${status}</span></td>
+    <td style="display:flex;gap:8px"><a class="stone" style="font-size:12px;cursor:pointer" onclick="render('admin-profile-detail');return false;">${icon('edit')} View</a><a class="stone" style="font-size:12px;cursor:pointer">${icon('trash')}</a></td>
+  </tr>`;
+}
+function cmsBlock(id,label,current){
+  return `<div class="card" style="padding:18px 20px;margin-bottom:12px" id="cms-${id}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span class="pill stone">${label}</span>
+      <button class="btn btn-ghost btn-sm" onclick="toggleCmsEdit('${id}')">${icon('edit')} Edit</button>
+    </div>
+    <div class="cms-view" id="cms-view-${id}" style="font-size:13.5px;line-height:1.6">${current}</div>
+    <div class="cms-edit" id="cms-edit-${id}" style="display:none">
+      <textarea rows="3" style="margin-bottom:10px">${current}</textarea>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-gold btn-sm" onclick="saveCms('${id}')">${icon('check')} Save &amp; publish</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleCmsEdit('${id}')">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ================= PAGES ================= */
+const pages={};
+
+pages['home']={group:'Public',title:'Home', render:(loggedIn)=>`
+<div class="topbanner">✦ Limited time — 20% off your first month of Premium · ends Sunday</div>
+${loggedIn?navbarLoggedIn():navbar()}
+${loggedIn?`<div class="card glass" style="margin:20px 48px 0;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+  <div style="font-size:14px">Welcome back, <b>Tanvir</b> — here is who is new since your last visit.</div>
+  <a class="btn btn-ghost btn-sm" href="#" onclick="render('dash-free');return false;">Go to my dashboard →</a>
+</div>`:''}
+<section style="padding:26px 48px 10px">
+  <div class="eyebrow" style="text-align:center;display:block">Start here</div>
+  <h2 style="font-size:20px;text-align:center;margin-top:6px;margin-bottom:18px">Tell us who you are looking for</h2>
+  ${genderCTA()}
+  <div style="max-width:560px;margin:20px auto 0;text-align:center">
+    <div class="stone" style="font-size:12px;margin-bottom:10px">Or jump straight to an age range</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      ${['18–24','25–30','31–40','41+'].map(a=>`<span class="pill stone" style="padding:8px 18px;cursor:pointer" onclick="render('browse');return false;">${a}</span>`).join('')}
+    </div>
+  </div>
+</section>
+
+<section style="padding:70px 48px 30px;position:relative;overflow:hidden">
+  <div style="position:absolute;top:-100px;right:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(166,38,57,.16),transparent 70%)"></div>
+  <div style="position:absolute;top:120px;left:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,166,107,.10),transparent 70%)"></div>
+  <span class="pill gold" style="margin-bottom:16px">${icon('shield')} 100% ID-verified community</span>
+  <div class="eyebrow" style="margin-top:10px">Real people. Real matches.</div>
+  <h1 style="font-size:clamp(34px,5.5vw,58px);max-width:760px;margin-top:12px">Find someone worth <em>texting back.</em></h1>
+  <p class="stone" style="max-width:520px;margin-top:16px;font-size:15px">AMOURA is built around genuine, verified profiles and conversations that actually go somewhere — not endless swiping into the void.</p>
+  <div style="display:flex;gap:14px;margin-top:28px;flex-wrap:wrap">
+    <a class="btn btn-rose" href="#" onclick="render('register');return false;">Create free profile</a>
+    <a class="btn btn-ghost" href="#" onclick="render('pricing');return false;">See Premium</a>
+  </div>
+  <div style="display:flex;gap:28px;margin-top:32px;flex-wrap:wrap;align-items:center">
+    ${[['210k+','active members'],['18k','matches this week'],['4.8★','app rating']].map(([v,l])=>`<div><span class="mono" style="color:var(--gold-bright);font-size:17px">${v}</span> <span class="stone" style="font-size:12px">${l}</span></div>`).join('')}
+    <div style="display:flex;gap:7px;align-items:center;font-size:12px" class="stone"><span class="pulse-dot"></span> 1,204 people online right now</div>
+  </div>
+</section>
+
+<!-- COMPATIBILITY QUIZ -->
+<section class="glass" style="margin:0 48px 40px;padding:26px 30px;border-radius:20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+  <div style="width:46px;height:46px;border-radius:14px;background:rgba(201,166,107,.14);display:flex;align-items:center;justify-content:center;color:var(--gold-bright);flex-shrink:0">${icon('bolt')}</div>
+  <div style="flex:1;min-width:220px">
+    <div style="font-weight:600;font-size:15px">Take the 2-minute compatibility quiz</div>
+    <div class="stone" style="font-size:12px;margin-top:2px">Get a smart match score with every profile you visit — free.</div>
+  </div>
+  <button class="btn btn-gold btn-sm" onclick="render('register');return false;">Start the quiz →</button>
+</section>
+
+<!-- PRESS / TRUST STRIP -->
+<section style="padding:24px 48px;border-top:1px solid var(--border-hair);border-bottom:1px solid var(--border-hair)">
+  <div class="stone" style="font-size:11px;text-align:center;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px">Trusted &amp; featured in</div>
+  <div style="display:flex;justify-content:center;gap:40px;flex-wrap:wrap;opacity:.75">
+    ${['The Daily Mirror','Metro Living','Voguelist','TechPulse','Herald & Co.'].map(pressLogo).join('')}
+  </div>
+</section>
+
+<!-- TRUST BADGES -->
+<section style="padding:50px 48px">
+  <div class="section-title"><h2 style="font-size:22px">Why members trust AMOURA</h2></div>
+  <div class="grid g-4">
+    ${trustBadge('shield','Every profile passes ID + selfie verification before going live')}
+    ${trustBadge('lock','Bank-grade encryption on all personal data and payments')}
+    ${trustBadge('bell','Human moderation team reviews reports within hours, not days')}
+    ${trustBadge('check','Discreet billing — nothing dating-related appears on your statement')}
+  </div>
+</section>
+
+<!-- AUDIENCE -->
+<section style="padding:10px 48px 56px">
+  <div class="section-title"><h2 style="font-size:22px">Who you will meet here</h2><span class="pill gold">${icon('shield')} Every tier, verified</span></div>
+  <div class="grid g-3">
+    ${audienceCard('film','Bangladeshi drama models','Verified profiles of familiar faces from television and web dramas, here for real conversations, not fan mail.','p1')}
+    ${audienceCard('bolt','Instagram & TikTok influencers','Content creators and social personalities with verified profiles, looking for something genuine off-camera.','p6')}
+    ${audienceCard('heart','Divorced & single parents welcome','A judgment-free space for divorced members and single mothers ready to date again — no assumptions, no awkward questions.','p4')}
+    ${audienceCard('shield','Verified professionals','Occupation and, optionally, income verification for members who want to signal they are serious and established.','p2')}
+    ${audienceCard('check','College/University students','Valid student ID verification opens a safe, age-appropriate space to meet people on and off campus.','p5')}
+    ${audienceCard('star','News presenters (women)','Verified profiles of familiar broadcast faces, here for genuine conversations away from the camera.','p3')}
+  </div>
+</section>
+
+<!-- VERIFICATION PROCESS -->
+<section style="padding:10px 48px 56px;background:var(--bg-surface);border-top:1px solid var(--border-hair);border-bottom:1px solid var(--border-hair)">
+  <div class="section-title" style="padding-top:40px"><h2 style="font-size:22px">How we keep AMOURA real</h2><span class="pill success">${icon('shield')} 98.6% of fake profiles caught pre-launch</span></div>
+  <div class="grid g-4">
+    ${verificationStep(1,'shield','Selfie match','A live selfie is matched against profile photos using face verification.')}
+    ${verificationStep(2,'check','ID confirmation','Government ID is checked privately — never shown on your public profile.')}
+    ${verificationStep(3,'search','Manual review','A real reviewer checks every new profile before it appears in search.')}
+    ${verificationStep(4,'bell','Ongoing moderation','Our safety team monitors reports and removes bad actors around the clock.')}
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px">
+    <span class="pill gold">${icon('crown')} Optional income &amp; occupation verification for Elite members</span>
+    <span class="pill gold">${icon('shield')} Optional criminal background check add-on</span>
+    <span class="pill gold">${icon('check')} LinkedIn-verified professionals badge</span>
+  </div>
+</section>
+
+<section style="padding:56px 48px 0">
+  <div class="section-title"><h2 style="font-size:22px">People near you</h2><a class="stone" href="#" onclick="render('browse');return false;" style="font-size:13px">Browse all →</a></div>
+  <div class="grid g-4">
+    ${profileCard('Ayesha','24','Dhaka','p1',true)}
+    ${profileCard('Farhan','27','Chattogram','p5',false)}
+    ${profileCard('Nadia','23','Dhaka','p3',true)}
+    ${profileCard('Rafi','26','Sylhet','p4',false)}
+  </div>
+</section>
+
+<!-- CITY EXPLORER -->
+<section style="padding:40px 48px 0">
+  <div class="section-title"><h2 style="font-size:22px">Popular cities</h2></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    ${cityChip('Dhaka','62k members')}${cityChip('Chattogram','21k members')}${cityChip('Sylhet','12k members')}${cityChip('Khulna','9k members')}${cityChip('Rajshahi','7k members')}${cityChip('Rangpur','5k members')}
+  </div>
+</section>
+
+<!-- EDITOR'S PICK -->
+<section style="padding:50px 48px 56px">
+  <div class="section-title"><h2 style="font-size:22px">Editor's picks this week</h2><span class="pill gold">${icon('crown')} Handpicked</span></div>
+  <div class="grid g-4">
+    ${profileCard('Meherin','26','Dhaka','p3',true)}
+    ${profileCard('Arman','28','Dhaka','p5',false)}
+    ${profileCard('Shovon','24','Khulna','p2',true)}
+    ${profileCard('Tanvir','29','Dhaka','p1',false)}
+  </div>
+</section>
+
+<section style="padding:56px 48px;background:var(--bg-surface);border-top:1px solid var(--border-hair);border-bottom:1px solid var(--border-hair)">
+  <div class="grid g-3">
+    ${[['01','Create your profile','Add photos, a short bio, and what you are looking for.'],
+       ['02','Browse & connect','Visit up to 20 profiles free, and like who catches your eye.'],
+       ['03','Message & upgrade','Free members can message up to 5 people (5 messages total) — go Plus for unlimited chat.']]
+       .map(([n,t,d])=>`<div><div class="mono" style="color:var(--rose-bright);font-size:13px">${n}</div><h3 style="font-size:19px;margin:10px 0 8px">${t}</h3><p class="stone" style="font-size:13px">${d}</p></div>`).join('')}
+  </div>
+</section>
+
+<!-- SUCCESS STORIES -->
+<section style="padding:56px 48px">
+  <div class="section-title"><h2 style="font-size:22px">Real connections, real stories</h2></div>
+  <div class="grid g-3">
+    ${successStoryCard('Rina','Kabir','We matched over both hating pineapple on pizza. Six months later, still arguing about toppings — happily.','p3','p5','Together 6 mo')}
+    ${successStoryCard('Alia','Noman','I upgraded to Premium mostly out of curiosity. Messaged three people that first night — met Noman the following week.','p1','p4','Together 1 yr')}
+    ${successStoryCard('Farzana','Imran','The verification badge made me feel safe enough to actually say yes to a first date. Best decision this year.','p6','p2','Engaged')}
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section style="padding:0 48px 56px">
+  <div class="section-title">
+    <h2 style="font-size:22px">What our members say</h2>
+    <span class="pill gold">${stars(4.8)} 4.8 · 12,400 reviews</span>
+  </div>
+  <div class="grid g-3">
+    ${reviewCard('Nusrat','25','I matched with someone genuine in my first week. The verification badge actually means something here.',5,'p3')}
+    ${reviewCard('Tanvir','29','Free browsing let me get a feel for the app before I paid for anything. No pressure, just an easy upgrade when I was ready.',5,'p5')}
+    ${reviewCard('Meherin','26','Video profiles helped me get a real sense of personality before we even chatted.',4,'p1')}
+  </div>
+</section>
+
+<!-- PREMIUM DEEP DIVE -->
+<section style="padding:0 48px 56px">
+  <div class="section-title"><h2 style="font-size:22px">See the difference Premium makes</h2></div>
+  <div class="grid g-2">
+    <div class="card" style="padding:22px">
+      <span class="pill stone">Free view</span>
+      <h3 style="font-size:16px;margin-top:10px">3 of 30 photos visible</h3>
+      ${photoGrid(3,30,'p1','p3','p5')}
+    </div>
+    <div class="card" style="padding:22px;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)">
+      <span class="pill gold">${icon('crown')} Premium view</span>
+      <h3 style="font-size:16px;margin-top:10px">All 30 photos unlocked</h3>
+      <div class="photo-grid">${['p1','p3','p5','p2','p4','p6','p1','p3'].map(c=>`<div class="photo-tile ${c}"></div>`).join('')}</div>
+    </div>
+  </div>
+</section>
+
+<!-- MEMBERSHIP TIERS -->
+<section style="padding:0 48px 56px">
+  <div class="section-title"><h2 style="font-size:22px">Choose your membership</h2></div>
+  <div class="grid g-3">
+    ${tierCard('Free','৳0',null,['20 profile visits / month','3 photos per profile','1 free video per profile','5 messages to up to 5 people'],false)}
+    ${tierCard('Plus','৳1,250/mo','Most popular',['Unlimited profile visits','Up to 15 photos','Up to 5 videos','Unlimited messaging','See who liked you'],true)}
+    ${tierCard('VIP','৳3,500/mo',`${icon('video')} Video call`,['Everything in Plus','All 30 photos + 10 videos','Live video call with matches','Profile Spotlight in search','Dedicated relationship concierge'],false)}
+  </div>
+</section>
+
+<!-- COMPARISON TABLE -->
+<section style="padding:0 48px 56px">
+  <div class="section-title"><h2 style="font-size:22px">AMOURA vs. typical dating apps</h2></div>
+  <div class="card" style="padding:26px 28px">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;font-size:12px;color:var(--stone);padding-bottom:10px;border-bottom:1px solid var(--border-hair)">
+      <span></span><span style="text-align:center;color:var(--gold-bright);font-weight:600">AMOURA</span><span style="text-align:center">Others</span>
+    </div>
+    ${compareRow('ID + selfie verification required',true,false)}
+    ${compareRow('Human-reviewed profiles',true,false)}
+    ${compareRow('Free profile browsing',true,true)}
+    ${compareRow('Discreet billing',true,false)}
+    ${compareRow('Video profiles',true,false)}
+    ${compareRow('Active 24/7 moderation team',true,false)}
+  </div>
+</section>
+
+<!-- PRIVACY & DATA PROTECTION FAQ -->
+<section style="padding:0 48px 56px">
+  <div class="section-title">
+    <h2 style="font-size:22px">Your privacy, our promise</h2>
+    <span class="pill gold">${icon('lock')} Zero-knowledge on who is a member</span>
+  </div>
+  <p class="stone" style="font-size:13px;max-width:600px;margin-top:-6px;margin-bottom:22px">Being on a dating platform is personal. Here is exactly how we protect that — no vague promises, just the specifics.</p>
+
+  <div class="grid g-3" style="margin-bottom:20px">
+    ${trustBadge('lock','Messages are encrypted in transit — access is restricted to a small safety team for moderation only')}
+    ${trustBadge('shield','One-tap block & report, reviewed by a human within hours')}
+    ${trustBadge('check','You control exactly what is public vs. Premium-only')}
+  </div>
+
+  <div class="grid g-2">
+    <div class="card" style="padding:20px">
+      <div style="font-weight:600;font-size:14px">${icon('shield')} Who can actually see my profile?</div>
+      <p class="stone" style="font-size:12.5px;margin-top:8px;line-height:1.6">Only people actively browsing within your search preferences — your profile is never public, never indexed by Google or any search engine, and never shown to your Facebook or phone contacts.</p>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-weight:600;font-size:14px">${icon('lock')} Is my data ever sold or shared?</div>
+      <p class="stone" style="font-size:12.5px;margin-top:8px;line-height:1.6">Never. We do not sell or share personal data with advertisers or third parties. Your information is used only to operate and secure your account.</p>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-weight:600;font-size:14px">${icon('check')} What happens to my ID after verification?</div>
+      <p class="stone" style="font-size:12.5px;margin-top:8px;line-height:1.6">Your ID is used once for verification, stored encrypted, and is never shown on your public profile — matches only ever see the ✓ Verified badge, never the document itself.</p>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-weight:600;font-size:14px">${icon('search')} Can anyone find out I am on AMOURA?</div>
+      <p class="stone" style="font-size:12.5px;margin-top:8px;line-height:1.6">No. Membership is completely confidential. Incognito mode (Plus &amp; VIP) lets you browse without appearing in anyone's visitor list at all.</p>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-weight:600;font-size:14px">${icon('bell')} Can I permanently delete my data?</div>
+      <p class="stone" style="font-size:12.5px;margin-top:8px;line-height:1.6">Yes — one tap in Settings erases your profile, photos, videos and messages permanently. No retention tricks, no "are you sure" loops.</p>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="font-weight:600;font-size:14px">${icon('video')} What about screenshots of my photos?</div>
+      <p class="stone" style="font-size:12.5px;margin-top:8px;line-height:1.6">Profile photos are protected from easy downloading, and repeated screenshot attempts on a conversation notify the other person, same as major messaging apps.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDER NOTE -->
+<section style="padding:0 48px 56px">
+  <div style="max-width:640px">
+    <p style="font-family:var(--serif);font-style:italic;font-size:24px;line-height:1.5">"We built AMOURA because we were tired of apps full of fake profiles and empty conversations. Verification is not a feature here — it is the entire point."</p>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:18px">${av('S','p4',40)}<div><div style="font-size:13px;font-weight:600">Sara Alam</div><div class="stone" style="font-size:11px">Co-founder, AMOURA</div></div></div>
+  </div>
+</section>
+
+<!-- REFERRAL -->
+<section style="padding:0 48px 56px">
+  <div class="card" style="padding:30px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;background:linear-gradient(135deg,rgba(201,166,107,.08),transparent)">
+    <div style="width:46px;height:46px;border-radius:14px;background:rgba(201,166,107,.14);display:flex;align-items:center;justify-content:center;color:var(--gold-bright);flex-shrink:0">${icon('heart')}</div>
+    <div style="flex:1;min-width:220px">
+      <h3 style="font-size:18px">Invite a friend, get a free month</h3>
+      <p class="stone" style="font-size:12.5px;margin-top:4px">When they verify and go Premium, you both get 1 month free.</p>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="render('register');return false;">Get my invite link</button>
+  </div>
+</section>
+
+<!-- FAQ TEASER -->
+<section style="padding:0 48px 56px">
+  <div class="section-title"><h2 style="font-size:22px">Quick answers</h2></div>
+  <div class="grid g-2">
+    ${[['Is AMOURA really free to start?','Yes — create a profile and browse 20 profiles free, no card required.'],
+       ['How is my ID kept private?','Your ID is used only for verification and is never shown on your public profile.'],
+       ['Can I cancel Premium anytime?','Yes, cancel anytime from Settings — no phone calls, no retention tricks.'],
+       ['What happens if I get reported?','Our safety team reviews every report within hours and takes action fast.']]
+      .map(([q,a])=>`<div class="card" style="padding:20px"><div style="font-weight:600;font-size:14px">${q}</div><p class="stone" style="font-size:12px;margin-top:8px">${a}</p></div>`).join('')}
+  </div>
+</section>
+
+<!-- GUARANTEE + FINAL CTA -->
+<section style="padding:0 48px 56px">
+  <div class="card glass" style="padding:44px;text-align:center;border-radius:26px">
+    <span class="pill gold" style="margin-bottom:14px">${icon('check')} 7-day money-back guarantee</span>
+    <h2 style="font-size:26px">Not feeling it? Get every taka back, no questions asked.</h2>
+    <p class="stone" style="margin-top:8px;font-size:13px">Try Premium risk-free — if it is not for you within 7 days, we refund you in full.</p>
+    <a class="btn btn-gold" style="margin-top:20px" href="#" onclick="render('pricing');return false;">Try Premium risk-free</a>
+  </div>
+</section>
+
+<!-- APP / SOCIAL TRUST ROW -->
+<section style="padding:0 48px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <span class="pill stone" style="padding:9px 16px">📱 Download on the App Store</span>
+    <span class="pill stone" style="padding:9px 16px">▶ Get it on Google Play</span>
+  </div>
+  <div class="stone" style="font-size:12px">Sign in with Google, Apple, or Facebook — verified in seconds</div>
+</section>
+
+<section style="padding:10px 48px 70px">
+  <div class="eyebrow" style="text-align:center;display:block">Ready when you are</div>
+  <h2 style="font-size:22px;text-align:center;margin:8px 0 20px">Choose who you would like to meet</h2>
+  ${genderCTA()}
+</section>
+${siteFooter()}
+`};
+
+pages['browse']={group:'Public',title:'Browse Profiles', render:(loggedIn)=>`
+${loggedIn?navbarLoggedIn():navbar()}
+<div style="padding:24px 48px 12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+  <div style="display:flex;gap:4px;background:var(--bg-surface);border:1px solid var(--border-hair);border-radius:999px;padding:3px">
+    <span class="pill rose" style="padding:8px 18px">Showing: Men</span>
+    <span class="pill stone" style="padding:8px 18px">Women</span>
+  </div>
+  <div class="spacer" style="flex:1"></div>
+  ${usageMeter(14,20)}
+  ${msgMeter(3,5,3,5)}
+  <button class="btn btn-ghost btn-sm">${icon('filter')} More filters</button>
+</div>
+
+<!-- AGE RANGE FILTER -->
+<div style="padding:0 48px 20px">
+  <div class="card" style="padding:18px 22px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span style="color:var(--gold-bright)">${icon('search')}</span>
+      <span style="font-weight:600;font-size:13.5px">Search by age</span>
+      <span class="stone" style="font-size:11.5px">— find matches in exactly the age range you want</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="agePresets">
+      <span class="pill gold agePreset" onclick="pickAgePreset(this)" style="padding:8px 16px;cursor:pointer">18–24</span>
+      <span class="pill stone agePreset" onclick="pickAgePreset(this)" style="padding:8px 16px;cursor:pointer">25–30</span>
+      <span class="pill stone agePreset" onclick="pickAgePreset(this)" style="padding:8px 16px;cursor:pointer">31–40</span>
+      <span class="pill stone agePreset" onclick="pickAgePreset(this)" style="padding:8px 16px;cursor:pointer">41+</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px">
+        <label class="field-label">From age</label>
+        <select class="field"><option>18</option><option>21</option><option selected>24</option><option>28</option><option>32</option><option>40</option></select>
+      </div>
+      <div style="flex:1;min-width:120px">
+        <label class="field-label">To age</label>
+        <select class="field"><option>24</option><option selected>30</option><option>35</option><option>40</option><option>50</option><option>60+</option></select>
+      </div>
+      <button class="btn btn-gold btn-sm" style="margin-top:20px">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div style="padding:16px 48px 50px">
+  <div class="grid g-4">
+    ${profileCard('Rafi','26','Sylhet','p4',true)}
+    ${profileCard('Arman','28','Dhaka','p5',false)}
+    ${profileCard('Shovon','24','Khulna','p2',true)}
+    ${profileCard('Tanvir','29','Dhaka','p1',false)}
+    ${profileCard('Rakib','27','Chattogram','p6',false)}
+    ${profileCard('Emon','25','Dhaka','p4',true)}
+    ${profileCard('Nayeem','30','Rajshahi','p5',false)}
+    ${profileCard('Sabbir','26','Dhaka','p2',false)}
+  </div>
+  <div class="card glass" style="margin-top:24px;padding:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-size:13px">You have <b style="color:var(--gold-bright)">6</b> free profile visits left this month.</div>
+    <a class="btn btn-gold btn-sm" href="#" onclick="render('pricing');return false;">Get unlimited visits</a>
+  </div>
+</div>
+${siteFooter()}
+`};
+
+pages['profile']={group:'Public',title:'Profile Detail', render:(loggedIn)=>`
+${loggedIn?navbarLoggedIn():navbar()}
+<div style="padding:20px 48px 8px;display:flex;justify-content:flex-end">${usageMeter(14,20)}</div>
+<div style="padding:0 48px 60px;display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+  <div style="flex:2;min-width:340px">
+    <div class="cover" style="height:280px;border-radius:22px;position:relative;overflow:hidden">
+      <span class="pill success" style="position:absolute;top:16px;left:16px">● Online now</span>
+      <span class="pill gold" style="position:absolute;top:16px;right:16px">${icon('shield')} Verified</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:28px">Nadia, 23</h1>
+        <div class="stone" style="font-size:13px;margin-top:4px">${icon('map')} Dhaka, Bangladesh · Joined 2024</div>
+      </div>
+      <div style="text-align:right">
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost btn-sm">${icon('heart')} Like</button>
+          <button class="btn btn-rose btn-sm" onclick="openPaywall();return false;">${icon('msg')} Message</button>
+        </div>
+        <div style="margin-top:8px;justify-content:flex-end">${msgMeter(3,5,3,5)}</div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:32px">
+      <h3 style="font-size:17px">Photos</h3>
+      <span class="pill stone">3 of 30 visible</span>
+    </div>
+    ${photoGrid(3,30,'p1','p3','p5')}
+
+    <div class="section-title" style="margin-top:32px">
+      <h3 style="font-size:17px">Videos</h3>
+      <span class="pill stone">1 of 10 free</span>
+    </div>
+    ${videoRow(1,6)}
+
+    <div class="section-title" style="margin-top:32px"><h3 style="font-size:17px">About</h3></div>
+    <p class="stone" style="font-size:14px;line-height:1.7">Graphic designer by day, terrible karaoke singer by night. Looking for someone who does not take life (or themselves) too seriously. Coffee first, then we will see.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+      ${['Coffee dates','Travel','Design','Live music','Dogs'].map(t=>`<span class="pill stone">${t}</span>`).join('')}
+    </div>
+  </div>
+
+  <div class="glass" style="flex:1;min-width:260px;padding:24px;position:sticky;top:90px">
+    <h3 style="font-size:15px;margin-bottom:14px">Basics</h3>
+    ${[['Age','23'],['Height',"5'4\""],['Occupation','Graphic Designer'],['Looking for','Long-term']]
+      .map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span class="stone">${k}</span><span>${v}</span></div>`).join('')}
+    <div class="card" style="margin-top:20px;padding:16px;background:rgba(201,166,107,.06);border-color:rgba(201,166,107,.3)">
+      <span class="pill gold">${icon('crown')} Premium</span>
+      <p style="font-size:12px;margin-top:10px;line-height:1.6">Unlock all 30 photos, all 6 videos, and message Nadia directly.</p>
+      <button class="btn btn-gold btn-sm" style="width:100%;margin-top:12px" onclick="render('pricing');return false;">Upgrade now</button>
+    </div>
+  </div>
+</div>
+${siteFooter()}
+`};
+
+pages['pricing']={group:'Public',title:'Premium Pricing', render:()=>`
+${navbar()}
+<div style="padding:56px 48px 8px;text-align:center">
+  <div class="eyebrow">Membership</div>
+  <h1 style="font-size:36px;margin-top:10px">Free to start. Upgrade when you are ready to talk.</h1>
+  <p class="stone" style="margin-top:10px">Cancel anytime, no hidden fees. Billing appears discreetly on your statement.</p>
+  <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+    <span class="pill stone" style="padding:8px 16px">bKash</span>
+    <span class="pill stone" style="padding:8px 16px">Nagad</span>
+    <span class="pill stone" style="padding:8px 16px">Rocket</span>
+    <span class="pill stone" style="padding:8px 16px">Visa / Mastercard</span>
+  </div>
+</div>
+
+<div class="grid g-3" style="padding:30px 48px 20px;max-width:1100px;margin:0 auto">
+  <div class="card" style="padding:28px">
+    <div style="font-size:14px;color:var(--stone)">Free</div>
+    <div class="mono" style="font-size:30px;margin:10px 0">৳0</div>
+    <p class="stone" style="font-size:12px;margin-bottom:14px">Already what you have — no card needed</p>
+    ${[['20 profile visits / month',true],['3 photos per profile',true],['1 free video per profile',true],['Like profiles',true],['5 messages, up to 5 people',true],['See full photo galleries',false],['Live video call',false]]
+      .map(([f,ok])=>`<div style="font-size:12.5px;padding:6px 0;display:flex;gap:8px;color:${ok?'var(--ivory)':'var(--stone-dim)'}"><span style="color:${ok?'var(--success)':'var(--stone-dim)'}">${ok?'✓':'—'}</span>${f}</div>`).join('')}
+    <button class="btn btn-ghost" style="width:100%;margin-top:20px" onclick="render('register');return false;">Continue free</button>
+  </div>
+
+  <div class="card hoverable" style="padding:28px;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)">
+    <span class="pill gold" style="position:absolute;top:-12px;right:20px">${icon('crown')} Most popular</span>
+    <div style="font-size:14px;color:var(--stone)">Plus</div>
+    <div class="mono" style="font-size:30px;margin:10px 0">৳1,250<span class="stone" style="font-size:12px">/mo</span></div>
+    <p class="stone" style="font-size:12px;margin-bottom:14px">For members ready to actually start chatting</p>
+    ${['Unlimited profile visits','Up to 15 photos per profile','Up to 5 videos per profile','Unlimited messaging','See who liked you','Advanced filters — district, profession, education','Incognito browsing mode','Bangla priority support']
+      .map(f=>`<div style="font-size:12.5px;padding:6px 0;display:flex;gap:8px"><span style="color:var(--gold-bright)">✓</span>${f}</div>`).join('')}
+    <button class="btn btn-gold" style="width:100%;margin-top:20px" onclick="render('register');return false;">Get Plus</button>
+  </div>
+
+  <div class="card hoverable" style="padding:28px;position:relative;background:linear-gradient(160deg,rgba(201,166,107,.08),transparent)">
+    <span class="pill rose" style="position:absolute;top:-12px;right:20px">${icon('video')} Video call</span>
+    <div style="font-size:14px;color:var(--stone)">VIP</div>
+    <div class="mono" style="font-size:30px;margin:10px 0">৳3,500<span class="stone" style="font-size:12px">/mo</span></div>
+    <p class="stone" style="font-size:12px;margin-bottom:14px">For members who want to see and talk before they meet</p>
+    ${['Everything in Plus','All 30 photos + all 10 videos unlocked','Live video call with matches',
+       'Profile Spotlight — appear first in search','Dedicated relationship concierge',
+       'Verified income &amp; occupation badge','Read receipts &amp; priority matching']
+      .map(f=>`<div style="font-size:12.5px;padding:6px 0;display:flex;gap:8px"><span style="color:var(--gold-bright)">✓</span>${f}</div>`).join('')}
+    <button class="btn btn-gold" style="width:100%;margin-top:20px" onclick="render('register');return false;">Get VIP</button>
+  </div>
+</div>
+
+<div style="padding:10px 48px 20px;max-width:1100px;margin:0 auto">
+  <div class="card glass" style="padding:26px 30px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+    <div style="width:44px;height:44px;border-radius:12px;background:rgba(201,166,107,.14);display:flex;align-items:center;justify-content:center;color:var(--gold-bright);flex-shrink:0">${icon('video')}</div>
+    <div style="flex:1;min-width:240px">
+      <div style="font-weight:600;font-size:15px">See who you are really talking to</div>
+      <div class="stone" style="font-size:12px;margin-top:2px">VIP live video calls happen inside AMOURA — no numbers exchanged until you are ready, and every call can be reported instantly if something feels off.</div>
+    </div>
+  </div>
+</div>
+
+<div style="padding:20px 48px 60px;max-width:1100px;margin:0 auto">
+  <div class="grid g-3">
+    ${trustBadge('lock','Payments processed securely — bKash, Nagad, Rocket and cards all supported')}
+    ${trustBadge('check','Cancel anytime from Settings, no phone calls needed')}
+    ${trustBadge('shield','7-day money-back guarantee on your first Plus or VIP payment')}
+  </div>
+</div>
+${siteFooter()}
+`};
+
+/* ================= MEMBER DASHBOARDS ================= */
+
+pages['dash-free']={group:'Member',title:'Dashboard — Free', render:()=>`
+<div class="dash-shell">${dSidebar('free','Dashboard')}
+<div class="dmain">
+  ${dTopbar('Tanvir Ahmed','free')}
+  ${tierSwitch('free')}
+
+  <div class="card glass" style="padding:20px 22px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div><div style="font-weight:600;font-size:14px">You are on the Free plan</div><div class="stone" style="font-size:12px;margin-top:2px">Upgrade to Plus for unlimited chat, or VIP for live video calls.</div></div>
+    <a class="btn btn-gold btn-sm" href="#" onclick="render('pricing');return false;">Upgrade now</a>
+  </div>
+
+  <div class="grid g-4">
+    ${dStat('search','Profile visits left','6 / 20',false)}
+    ${dStat('msg','Messages left','2 / 5 · 3/5 people',false)}
+    ${dStat('heart','People who liked you','8',true)}
+    ${dStat('star','Matches','2',false)}
+  </div>
+
+  <div style="display:flex;gap:20px;margin-top:22px;flex-wrap:wrap">
+    <div class="card" style="flex:2;min-width:320px;padding:22px">
+      <div class="section-title"><h3 style="font-size:15px">Who liked you</h3><span class="pill gold">${icon('lock')} Plus feature</span></div>
+      <div class="grid g-4">
+        ${['p1','p3','p5','p2'].map(c=>`<div class="photo-tile ${c} locked" style="border-radius:16px"><div class="lockbadge">${icon('lock')}</div></div>`).join('')}
+      </div>
+      <a class="btn btn-gold btn-sm" style="margin-top:16px" href="#" onclick="render('pricing');return false;">Unlock with Plus →</a>
+    </div>
+    <div class="card" style="flex:1;min-width:260px;padding:22px">
+      <h3 style="font-size:15px;margin-bottom:14px">Recent messages</h3>
+      ${[['Nadia, 23','Hey! How was your weekend?','p3'],['Rafi, 26','Free coffee sometime? ☕','p4']]
+        .map(([n,m,c])=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">${av(n[0],c,34)}<div><div style="font-size:12.5px;font-weight:600">${n}</div><div class="stone" style="font-size:11.5px">${m}</div></div></div>`).join('')}
+      <div class="stone" style="font-size:11px;margin-top:12px">3 of 5 free messages used this month</div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:26px"><h3 style="font-size:15px">Discover</h3><a class="stone" href="#" onclick="render('browse');return false;" style="font-size:12px">Browse all →</a></div>
+  <div class="grid g-4">
+    ${profileCard('Meherin','26','Dhaka','p3',true)}
+    ${profileCard('Arman','28','Dhaka','p5',false)}
+    ${profileCard('Shovon','24','Khulna','p2',true)}
+    ${profileCard('Tanvir','29','Dhaka','p1',false)}
+  </div>
+</div></div>
+`};
+
+pages['dash-plus']={group:'Member',title:'Dashboard — Plus', render:()=>`
+<div class="dash-shell">${dSidebar('plus','Dashboard')}
+<div class="dmain">
+  ${dTopbar('Farzana Islam','plus')}
+  ${tierSwitch('plus')}
+
+  <div class="card glass" style="padding:20px 22px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div><span class="pill gold">${icon('sparkle')} Plus active</span><div style="font-weight:600;font-size:14px;margin-top:8px">Unlimited visits &amp; messaging unlocked</div></div>
+    <a class="btn btn-ghost btn-sm" href="#" onclick="render('pricing');return false;">Upgrade to VIP for video calls →</a>
+  </div>
+
+  <div class="grid g-4">
+    ${dStat('search','Profile visits','Unlimited',false)}
+    ${dStat('msg','Messages','Unlimited',false)}
+    ${dStat('heart','People who liked you','34',false)}
+    ${dStat('star','Matches','9',false)}
+  </div>
+
+  <div style="display:flex;gap:20px;margin-top:22px;flex-wrap:wrap">
+    <div class="card" style="flex:2;min-width:320px;padding:22px">
+      <div class="section-title"><h3 style="font-size:15px">Who liked you</h3><span class="pill success">${icon('check')} Unlocked</span></div>
+      <div class="grid g-4">
+        ${['p1','p3','p5','p2'].map(c=>`<div class="photo-tile ${c}" style="border-radius:16px;cursor:pointer" onclick="render('profile');return false;"></div>`).join('')}
+      </div>
+    </div>
+    <div class="card" style="flex:1;min-width:260px;padding:22px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <h3 style="font-size:15px">Incognito browsing</h3>
+        <div class="toggle on"></div>
+      </div>
+      <p class="stone" style="font-size:12px;line-height:1.6">Browse profiles without appearing in anyone's visitor list.</p>
+      <div class="divider" style="margin:16px 0"></div>
+      <div class="card" style="padding:16px;background:rgba(201,166,107,.06);border-color:rgba(201,166,107,.3)">
+        <span class="pill gold">${icon('video')} VIP feature</span>
+        <p style="font-size:12px;margin-top:8px;line-height:1.6">Live video calls are a VIP-only feature. See and talk to matches before you meet.</p>
+        <button class="btn btn-gold btn-sm" style="width:100%;margin-top:10px" onclick="render('pricing');return false;">Upgrade to VIP</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:26px"><h3 style="font-size:15px">Recent messages</h3><a class="stone" href="#" style="font-size:12px">View all →</a></div>
+  <div class="card" style="overflow:hidden"><table>
+    <tr><th>Match</th><th>Last message</th><th>Time</th><th></th></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('N','p3',28)}Nadia, 23</td><td class="stone">Hey! How was your weekend?</td><td class="mono">2h</td><td><a class="stone" style="font-size:12px">Reply</a></td></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('R','p4',28)}Rafi, 26</td><td class="stone">Free coffee sometime? ☕</td><td class="mono">1d</td><td><a class="stone" style="font-size:12px">Reply</a></td></tr>
+  </table></div>
+</div></div>
+`};
+
+pages['dash-vip']={group:'Member',title:'Dashboard — VIP', render:()=>`
+<div class="dash-shell">${dSidebar('vip','Dashboard')}
+<div class="dmain">
+  ${dTopbar('Imran Chowdhury','vip')}
+  ${tierSwitch('vip')}
+
+  <div class="card glass" style="padding:20px 22px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-color:var(--gold)">
+    <div><span class="pill gold">${icon('crown')} VIP active</span><div style="font-weight:600;font-size:14px;margin-top:8px">Every feature unlocked, including live video calls</div></div>
+    <span class="pill success">${icon('sparkle')} Profile Spotlight: Active</span>
+  </div>
+
+  <div class="grid g-4">
+    ${dStat('search','Profile visits','Unlimited',false)}
+    ${dStat('msg','Messages','Unlimited',false)}
+    ${dStat('heart','People who liked you','61',false)}
+    ${dStat('video','Video calls this month','5',false)}
+  </div>
+
+  <div style="display:flex;gap:20px;margin-top:22px;flex-wrap:wrap">
+    <div class="card" style="flex:2;min-width:320px;padding:22px">
+      <div class="section-title"><h3 style="font-size:15px">Start a video call</h3><span class="pill gold">${icon('video')} VIP</span></div>
+      ${[['Nadia, 23','Online now','p3',true],['Meherin, 26','Last seen 1h ago','p1',false]]
+        .map(([n,s,c,online])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+          <div style="display:flex;gap:10px;align-items:center">${av(n[0],c,38)}<div><div style="font-size:13px;font-weight:600">${n}</div><div class="stone" style="font-size:11px">${online?'<span class="pulse-dot"></span> ':''}${s}</div></div></div>
+          <button class="btn btn-gold btn-sm" ${online?'':'disabled style="opacity:.4"'}>${icon('video')} Call</button>
+        </div>`).join('')}
+      <p class="stone" style="font-size:11px;margin-top:12px">Calls happen inside AMOURA — no phone numbers exchanged, and every call can be reported instantly.</p>
+    </div>
+    <div class="card" style="flex:1;min-width:260px;padding:22px">
+      <h3 style="font-size:15px;margin-bottom:14px">Your concierge</h3>
+      <div style="display:flex;gap:12px;align-items:center">${av('S','p4',46)}<div><div style="font-size:13px;font-weight:600">Sabrina, Relationship Concierge</div><div class="stone" style="font-size:11px">Responds within 4 hours</div></div></div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:14px">${icon('msg')} Message concierge</button>
+      <div class="divider" style="margin:16px 0"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12.5px">Income &amp; occupation badge</span>
+        <div class="toggle on"></div>
+      </div>
+      <p class="stone" style="font-size:11px;margin-top:6px">Visible to matches only, never public.</p>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:26px"><h3 style="font-size:15px">Priority matches for you</h3></div>
+  <div class="grid g-4">
+    ${profileCard('Nadia','23','Dhaka','p3',true)}
+    ${profileCard('Meherin','26','Dhaka','p1',false)}
+    ${profileCard('Farzana','27','Dhaka','p6',true)}
+    ${profileCard('Ayesha','24','Dhaka','p2',false)}
+  </div>
+</div></div>
+`};
+
+
+/* ================= ADMIN PANEL ================= */
+
+pages['admin-dashboard']={group:'Admin',title:'Admin — Dashboard', render:()=>`
+<div class="dash-shell">${adminSidebar('Dashboard')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="grid g-3">
+    ${dStat('users','Total profiles','1,842',false)}
+    ${dStat('dollar','Revenue this month','৳4,86,500',false)}
+    ${dStat('inbox','Messages sent today','2,104',false)}
+  </div>
+
+  <div class="section-title" style="margin-top:22px"><h3 style="font-size:15px">Members by tier</h3></div>
+  <div class="grid g-3">
+    <div class="dstat">
+      <div style="width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;color:var(--stone)">${icon('user')}</div>
+      <div class="dvalue">1,530</div>
+      <div class="dlabel">Free members</div>
+    </div>
+    <div class="dstat" style="border-color:rgba(201,166,107,.35)">
+      <div style="width:32px;height:32px;border-radius:9px;background:rgba(201,166,107,.14);display:flex;align-items:center;justify-content:center;color:var(--gold-bright)">${icon('sparkle')}</div>
+      <div class="dvalue" style="color:var(--gold-bright)">268</div>
+      <div class="dlabel">Plus members</div>
+    </div>
+    <div class="dstat" style="border-color:var(--gold)">
+      <div style="width:32px;height:32px;border-radius:9px;background:rgba(201,166,107,.2);display:flex;align-items:center;justify-content:center;color:var(--gold-bright)">${icon('crown')}</div>
+      <div class="dvalue" style="color:var(--gold-bright)">44</div>
+      <div class="dlabel">VIP members</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:20px;margin-top:22px;flex-wrap:wrap">
+    <div class="card" style="flex:2;min-width:320px;padding:22px">
+      <div class="section-title"><h3 style="font-size:15px">Signups, last 30 days</h3></div>
+      <svg viewBox="0 0 400 120" style="width:100%;height:120px">
+        <polyline points="0,100 40,90 80,80 120,85 160,60 200,65 240,40 280,50 320,25 360,35 400,15" fill="none" stroke="var(--gold)" stroke-width="2.5"/>
+      </svg>
+    </div>
+    <div class="card" style="flex:1;min-width:260px;padding:22px">
+      <h3 style="font-size:15px;margin-bottom:14px">Needs attention</h3>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span>Pending verifications</span><span class="pill gold">14</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span>Reported profiles</span><span class="pill danger">3</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0"><span>Support tickets open</span><span class="pill info">6</span></div>
+    </div>
+  </div>
+  <div class="section-title" style="margin-top:24px"><h3 style="font-size:15px">Quick actions</h3></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-gold btn-sm" onclick="render('admin-model-profiles');return false;">${icon('plus')} Create a profile</button>
+    <button class="btn btn-ghost btn-sm" onclick="render('admin-inbox');return false;">${icon('inbox')} Open Inbox</button>
+    <button class="btn btn-ghost btn-sm" onclick="render('admin-cms');return false;">${icon('layout')} Edit site content</button>
+  </div>
+</div></div>
+`};
+
+pages['admin-model-profiles']={group:'Admin',title:'Admin — Model Profiles', render:()=>`
+<div class="dash-shell">${adminSidebar('Model Profiles')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="card glass" style="padding:14px 20px;margin-bottom:16px;display:flex;gap:12px;align-items:center">
+    <span style="color:var(--gold-bright)">${icon('crown')}</span>
+    <span style="font-size:12px">Admin-created profiles — Models, Influencers &amp; Other. These are not real signups, so there is no membership tier, phone, or IP data.</span>
+  </div>
+  <div class="section-title">
+    <div style="display:flex;gap:8px"><span class="pill gold">All (3)</span><span class="pill stone">Models</span><span class="pill stone">Influencers</span><span class="pill stone">Other</span></div>
+    <button class="btn btn-gold btn-sm" onclick="document.getElementById('newProfileForm').scrollIntoView({behavior:'smooth'})">${icon('plus')} Create profile</button>
+  </div>
+  <div class="card" style="overflow:hidden;margin-bottom:26px"><table>
+    <tr><th></th><th>Profile</th><th>Type</th><th>City</th><th>Status</th><th></th></tr>
+    <tr><td><input type="checkbox"></td><td style="display:flex;gap:8px;align-items:center;cursor:pointer" onclick="render('admin-profile-detail');return false;">${av('T','p1',30)}<div><div style="font-weight:600">Tanjila, 24</div><div class="stone" style="font-size:11px">ID #2201</div></div></td><td><span class="pill gold">Model</span></td><td class="stone">Dhaka</td><td><span class="pill success">Active</span></td><td style="display:flex;gap:8px"><a class="stone" style="font-size:12px;cursor:pointer" onclick="render('admin-profile-detail');return false;">${icon('edit')} View</a><a class="stone" style="font-size:12px;cursor:pointer">${icon('trash')}</a></td></tr>
+    <tr><td><input type="checkbox"></td><td style="display:flex;gap:8px;align-items:center;cursor:pointer" onclick="render('admin-profile-detail');return false;">${av('M','p2',30)}<div><div style="font-weight:600">Meherin, 26</div><div class="stone" style="font-size:11px">ID #2202</div></div></td><td><span class="pill rose">Influencer</span></td><td class="stone">Dhaka</td><td><span class="pill success">Active</span></td><td style="display:flex;gap:8px"><a class="stone" style="font-size:12px;cursor:pointer" onclick="render('admin-profile-detail');return false;">${icon('edit')} View</a><a class="stone" style="font-size:12px;cursor:pointer">${icon('trash')}</a></td></tr>
+    <tr><td><input type="checkbox"></td><td style="display:flex;gap:8px;align-items:center;cursor:pointer" onclick="render('admin-profile-detail');return false;">${av('F','p6',30)}<div><div style="font-weight:600">Farzana, 27</div><div class="stone" style="font-size:11px">ID #2203</div></div></td><td><span class="pill info">Other</span></td><td class="stone">Dhaka</td><td><span class="pill stone">Draft</span></td><td style="display:flex;gap:8px"><a class="stone" style="font-size:12px;cursor:pointer" onclick="render('admin-profile-detail');return false;">${icon('edit')} View</a><a class="stone" style="font-size:12px;cursor:pointer">${icon('trash')}</a></td></tr>
+  </table></div>
+
+  <div class="card" id="newProfileForm" style="padding:26px">
+    <div class="section-title"><h3 style="font-size:16px">${icon('plus')} Create a model profile</h3><span class="pill stone">Admin-created</span></div>
+    <div class="grid g-3">
+      <div class="field-wrap"><label class="field-label">Full name</label><input placeholder="e.g. Tanjila Rahman"></div>
+      <div class="field-wrap"><label class="field-label">Age</label><input placeholder="24"></div>
+      <div class="field-wrap"><label class="field-label">Profile type</label>
+        <select class="field"><option>Model</option><option>Influencer</option><option>Other</option></select>
+      </div>
+      <div class="field-wrap"><label class="field-label">City</label><input placeholder="Dhaka"></div>
+      <div class="field-wrap"><label class="field-label">Gender</label><select class="field"><option>Woman</option><option>Man</option></select></div>
+      <div class="field-wrap"><label class="field-label">Status</label><select class="field"><option>Active</option><option>Draft</option></select></div>
+    </div>
+    <div class="field-wrap"><label class="field-label">Bio</label><textarea rows="3" placeholder="Short bio for the public profile"></textarea></div>
+
+    <label class="field-label">Photos (up to 30)</label>
+    <div class="grid g-4" style="margin-bottom:16px">
+      ${['p1','p3','p5'].map(c=>`<div class="photo-tile ${c}" style="border-radius:14px"></div>`).join('')}
+      <div class="photo-tile" style="border:1.5px dashed var(--border-hair-2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--gold-bright);cursor:pointer">${icon('upload')}<span style="font-size:11px">Upload</span></div>
+    </div>
+    <label class="field-label">Videos (up to 10)</label>
+    <div class="video-row" style="margin-bottom:20px">
+      ${['p2'].map(c=>`<div class="video-tile ${c}"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div class="play-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M6 4l14 8-14 8z"/></svg></div></div></div>`).join('')}
+      <div class="video-tile" style="border:1.5px dashed var(--border-hair-2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--gold-bright);cursor:pointer">${icon('upload')}<span style="font-size:10px">Upload</span></div>
+    </div>
+    <p class="stone" style="font-size:11.5px;margin-bottom:16px">Client-supplied photos/videos received over WhatsApp can be uploaded here manually.</p>
+    <button class="btn btn-gold" onclick="showToast('Model profile created ✓')">${icon('check')} Create profile</button>
+  </div>
+</div></div>
+`};
+
+pages['admin-user-profiles']={group:'Admin',title:'Admin — Users Profile', render:()=>`
+<div class="dash-shell">${adminSidebar('Users Profile')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="card glass" style="padding:14px 20px;margin-bottom:16px;display:flex;gap:12px;align-items:center">
+    <span style="color:var(--gold-bright)">${icon('shield')}</span>
+    <span style="font-size:12px">Real signups only, grouped by membership tier. Phone numbers and IP/location are visible to Super Admins and Moderators only.</span>
+  </div>
+
+  <div class="section-title" style="margin-top:6px">
+    <h3 style="font-size:15px">${icon('user')} Free users</h3>
+    <span class="pill stone">1,530 total</span>
+  </div>
+  <div class="card" style="overflow:hidden;margin-bottom:28px"><table>
+    <tr><th></th><th>Profile</th><th>Type</th><th>Phone</th><th>Last IP / City</th><th>Status</th><th></th></tr>
+    ${profileRow('Rafi','26','Free user','stone','Active','success','p4','+880 1893-221190','43.245.118.9','Chattogram')}
+    ${profileRow('Arman','28','Free user','stone','Pending ID','info','p5','+880 1611-908877','27.147.203.61','Sylhet')}
+    ${profileRow('Sabbir','26','Free user','stone','Active','success','p6','+880 1522-345501','45.115.90.3','Khulna')}
+  </table></div>
+
+  <div class="section-title" style="margin-top:6px">
+    <h3 style="font-size:15px;color:var(--gold-bright)">${icon('sparkle')} Plus users</h3>
+    <span class="pill gold">268 total</span>
+  </div>
+  <div class="card" style="overflow:hidden;margin-bottom:28px;border-color:rgba(201,166,107,.3)"><table>
+    <tr><th></th><th>Profile</th><th>Type</th><th>Phone</th><th>Last IP / City</th><th>Status</th><th></th></tr>
+    ${profileRow('Nadia','23','Plus user','gold','Active','success','p3','+880 1712-345678','103.148.22.4','Dhaka')}
+    ${profileRow('Tanvir','29','Plus user','gold','Active','success','p5','+880 1611-772200','103.98.44.30','Rajshahi')}
+    ${profileRow('Nayeem','30','Plus user','gold','Active','success','p1','+880 1633-201188','103.98.44.12','Rajshahi')}
+  </table></div>
+
+  <div class="section-title" style="margin-top:6px">
+    <h3 style="font-size:15px;color:var(--gold-bright)">${icon('crown')} VIP users</h3>
+    <span class="pill gold">44 total</span>
+  </div>
+  <div class="card" style="overflow:hidden;margin-bottom:26px;border-color:var(--gold);background:linear-gradient(160deg,rgba(201,166,107,.06),transparent)"><table>
+    <tr><th></th><th>Profile</th><th>Type</th><th>Phone</th><th>Last IP / City</th><th>Status</th><th></th></tr>
+    ${profileRow('Imran','31','VIP user','gold','Active','success','p2','+880 1712-990011','103.148.22.90','Dhaka')}
+  </table></div>
+</div></div>
+`};
+
+pages['admin-profile-detail']={group:'Admin',title:'Admin — Profile Detail', render:()=>`
+<div class="dash-shell">${adminSidebar('Profiles')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <button class="btn btn-ghost btn-sm" style="margin-bottom:16px" onclick="render('admin-user-profiles');return false;">← Back to Users Profile</button>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+    <div style="flex:2;min-width:340px">
+      <div class="card" style="padding:24px">
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          ${av('N','p3',64)}
+          <div style="flex:1">
+            <div style="display:flex;gap:8px;align-items:center"><h2 style="font-size:22px">Nadia Hossain, 23</h2><span class="pill gold">${icon('shield')} Verified</span></div>
+            <div class="stone" style="font-size:12px;margin-top:4px">ID #4821 · Organic signup · Joined Feb 14, 2026</div>
+          </div>
+          <span class="pill gold">${icon('sparkle')} Plus member</span>
+        </div>
+
+        <div class="divider"></div>
+        <div class="grid g-3">
+          <div><div class="stone" style="font-size:11px">Phone number</div><div class="mono" style="font-size:13px;margin-top:3px">+880 1712-345678</div></div>
+          <div><div class="stone" style="font-size:11px">Email</div><div class="mono" style="font-size:13px;margin-top:3px">nadia.h@gmail.com</div></div>
+          <div><div class="stone" style="font-size:11px">Account status</div><div style="margin-top:3px"><span class="pill success">Active</span></div></div>
+        </div>
+
+        <div class="section-title" style="margin-top:22px"><h3 style="font-size:15px">Login &amp; location history</h3></div>
+        <div class="card" style="overflow:hidden"><table>
+          <tr><th>Event</th><th>Date</th><th>IP address</th><th>Location</th><th>Device</th></tr>
+          <tr><td>Signup</td><td class="mono">Feb 14, 2026</td><td class="mono">103.148.22.4</td><td>Dhaka, BD</td><td class="stone">Chrome / Android</td></tr>
+          <tr><td>Last login</td><td class="mono">Today, 3:41pm</td><td class="mono">103.148.22.4</td><td>Dhaka, BD</td><td class="stone">Chrome / Android</td></tr>
+          <tr><td>Login</td><td class="mono">Jul 5, 9:12am</td><td class="mono">103.148.22.4</td><td>Dhaka, BD</td><td class="stone">Safari / iOS</td></tr>
+          <tr><td>Login</td><td class="mono">Jun 29, 8:50pm</td><td class="mono" style="color:var(--danger)">45.90.11.203</td><td style="color:var(--danger)">Unrecognized — flagged</td><td class="stone">Chrome / Windows</td></tr>
+        </table></div>
+
+        <div class="section-title" style="margin-top:22px"><h3 style="font-size:15px">Photos (3 of 30 uploaded)</h3></div>
+        <div class="photo-grid">${['p1','p3','p5'].map(c=>`<div class="photo-tile ${c}" style="border-radius:14px"></div>`).join('')}</div>
+
+        <div class="section-title" style="margin-top:22px"><h3 style="font-size:15px">Videos (1 of 10 uploaded)</h3></div>
+        <div class="video-row">${['p3'].map(c=>`<div class="video-tile ${c}"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div class="play-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M6 4l14 8-14 8z"/></svg></div></div></div>`).join('')}</div>
+
+        <div class="section-title" style="margin-top:22px"><h3 style="font-size:15px">Verification documents</h3></div>
+        <div class="grid g-2">
+          <div class="photo-tile p2" style="border-radius:14px;height:100px"></div>
+          <div class="photo-tile p6" style="border-radius:14px;height:100px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:260px">
+      <div class="card" style="padding:20px;margin-bottom:16px">
+        <h3 style="font-size:14px;margin-bottom:14px">Membership</h3>
+        ${[['Plan','Plus'],['Renews','Aug 4, 2026'],['Payment method','bKash'],['Lifetime spend','৳6,750']].map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span class="stone">${k}</span><span>${v}</span></div>`).join('')}
+      </div>
+      <div class="card" style="padding:20px">
+        <h3 style="font-size:14px;margin-bottom:14px">Admin actions</h3>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="render('admin-inbox');return false;">${icon('inbox')} View conversations</button>
+          <button class="btn btn-ghost btn-sm" onclick="showToast('Warning sent')">${icon('bell')} Send warning</button>
+          <button class="btn btn-ghost btn-sm" onclick="showToast('Suspended 7 days')">${icon('lock')} Suspend account</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="showToast('Account banned')">${icon('ban')} Ban permanently</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+`};
+
+
+pages['admin-inbox']={group:'Admin',title:'Admin — Open Inbox', render:()=>`
+<div class="dash-shell">${adminSidebar('Open Inbox')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="card glass" style="padding:16px 20px;margin-bottom:18px;display:flex;gap:12px;align-items:center">
+    <span style="color:var(--gold-bright)">${icon('shield')}</span>
+    <span style="font-size:12.5px">Every profile's inbox in one place. Click a profile to see everyone messaging them.</span>
+  </div>
+
+  <div id="inboxLevel1">
+    <div class="section-title">
+      <h3 style="font-size:15px">All profiles</h3>
+      <div style="display:flex;gap:4px;background:var(--bg-surface);border:1px solid var(--border-hair);border-radius:999px;padding:3px">
+        <span class="pill stone" id="genderTabAll" style="padding:8px 16px;cursor:pointer" onclick="filterInboxGender('all',this)">All</span>
+        <span class="pill rose" id="genderTabFemale" style="padding:8px 16px;cursor:pointer" onclick="filterInboxGender('female',this)">Female</span>
+        <span class="pill stone" id="genderTabMale" style="padding:8px 16px;cursor:pointer" onclick="filterInboxGender('male',this)">Male</span>
+      </div>
+    </div>
+    <div class="grid g-4" id="inboxProfileGrid">
+      ${profileInboxCard('nadia','Nadia','p3',47,'female')}
+      ${profileInboxCard('tanjila','Tanjila','p1',132,'female')}
+      ${profileInboxCard('meherin','Meherin','p2',76,'female')}
+      ${profileInboxCard('rafi','Rafi','p4',12,'male')}
+      ${profileInboxCard('farzana','Farzana','p6',3,'female')}
+      ${profileInboxCard('arman','Arman','p5',0,'male')}
+    </div>
+  </div>
+
+  <div id="inboxLevel2" style="display:none">
+    <button class="btn btn-ghost btn-sm" onclick="closeProfileInbox()">← Back to all profiles</button>
+    <div class="inbox-shell" style="margin-top:16px">
+      <div class="convo-list" id="convoListArea"></div>
+      <div class="chat-pane" id="chatPaneArea"></div>
+      <div class="contact-panel" id="contactPanelArea"></div>
+    </div>
+  </div>
+</div></div>
+`};
+
+pages['admin-verification']={group:'Admin',title:'Admin — Verification Queue', render:()=>`
+<div class="dash-shell">${adminSidebar('Verification')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="section-title"><h3 style="font-size:16px">Pending verification (14)</h3></div>
+  <div class="grid g-3">
+    ${[['Sabbir','26','p2'],['Nayeem','30','p5'],['Emon','25','p4']].map(([n,a,c])=>`
+    <div class="card" style="padding:20px">
+      <div style="display:flex;gap:10px;align-items:center">${av(n[0],c,44)}<div><div style="font-weight:600;font-size:14px">${n}, ${a}</div><div class="stone" style="font-size:11px">Selfie + NID submitted</div></div></div>
+      <div class="grid g-2" style="margin-top:14px">
+        <div class="photo-tile p3" style="border-radius:12px;height:80px"></div>
+        <div class="photo-tile p5" style="border-radius:12px;height:80px"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-gold btn-sm" style="flex:1" onclick="showToast('Approved ✓')">${icon('check')} Approve</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--danger)" onclick="showToast('Rejected')">Reject</button>
+      </div>
+    </div>`).join('')}
+  </div>
+</div></div>
+`};
+
+pages['admin-payments']={group:'Admin',title:'Admin — Payments & Coupons', render:()=>`
+<div class="dash-shell">${adminSidebar('Payments & Coupons')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="grid g-4">
+    ${dStat('dollar','This month','৳4,86,500',false)}
+    ${dStat('crown','Plus subscribers','268',false)}
+    ${dStat('video','VIP subscribers','44',false)}
+    ${dStat('check','Successful payments','96.4%',false)}
+  </div>
+  <div class="section-title" style="margin-top:22px"><h3 style="font-size:15px">Recent payments</h3></div>
+  <div class="card" style="overflow:hidden;margin-bottom:26px"><table>
+    <tr><th>Member</th><th>Plan</th><th>Method</th><th>Amount</th><th>Status</th></tr>
+    <tr><td>Imran C.</td><td>VIP</td><td>bKash</td><td class="mono">৳3,500</td><td><span class="pill success">Paid</span></td></tr>
+    <tr><td>Farzana I.</td><td>Plus</td><td>Nagad</td><td class="mono">৳1,250</td><td><span class="pill success">Paid</span></td></tr>
+    <tr><td>Tanvir A.</td><td>Plus</td><td>Card</td><td class="mono">৳1,250</td><td><span class="pill info">Processing</span></td></tr>
+  </table></div>
+
+  <div class="section-title"><h3 style="font-size:15px">Coupons</h3><button class="btn btn-gold btn-sm">${icon('plus')} New coupon</button></div>
+  <div class="card" style="overflow:hidden"><table>
+    <tr><th>Code</th><th>Discount</th><th>Uses</th><th>Expires</th><th>Status</th></tr>
+    <tr><td class="mono">WELCOME20</td><td>20% off</td><td>412 / 1000</td><td class="stone">Jul 13</td><td><span class="pill success">Active</span></td></tr>
+    <tr><td class="mono">EID50</td><td>50% off</td><td>88 / 200</td><td class="stone">Expired</td><td><span class="pill stone">Ended</span></td></tr>
+  </table></div>
+</div></div>
+`};
+
+pages['admin-cms']={group:'Admin',title:'Admin — Edit Site (CMS)', render:()=>`
+<div class="dash-shell">${adminSidebar('Edit Site (CMS)')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="card glass" style="padding:14px 20px;margin-bottom:16px;display:flex;gap:12px;align-items:center">
+    <span style="color:var(--gold-bright)">${icon('globe')}</span>
+    <span style="font-size:12.5px">This is your live home page. Hover any section and click <b>Edit</b> to change it — <b>Save &amp; publish</b> updates the site instantly, no developer needed.</span>
+  </div>
+
+  <div class="editor-shell">
+    <div class="editor-canvas">
+      <div class="editor-toolbar"><span class="pill gold">Home page</span><span class="stone" style="font-size:11.5px">Live preview — click any section to edit</span></div>
+      <div id="editorCanvasInner">${renderEditorCanvas()}</div>
+    </div>
+    <div class="editor-drawer" id="editorDrawer">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="font-size:15px" id="editorDrawerLabel">Section</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeSectionEditor()">✕</button>
+      </div>
+      <label class="field-label">Content</label>
+      <textarea id="editorDrawerTextarea" rows="7"></textarea>
+      <button class="btn btn-gold btn-sm" style="margin-top:14px" onclick="saveSectionEditor()">${icon('check')} Save &amp; publish</button>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="discardSectionEditor()">${icon('trash')} Discard changes</button>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px"><h3 style="font-size:15px">Other pages</h3></div>
+  <div class="grid g-3">
+    ${[['FAQ','12 questions'],['Pricing','3 plans'],['Contact','Support details'],['Privacy FAQ','6 questions']].map(([p,d])=>`
+    <div class="card" style="padding:18px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-weight:600;font-size:13px">${p}</div><div class="stone" style="font-size:11px">${d}</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Opening visual editor…')">${icon('edit')} Edit</button>
+    </div>`).join('')}
+  </div>
+</div></div>
+`};
+
+pages['admin-settings']={group:'Admin',title:'Admin — Settings', render:()=>`
+<div class="dash-shell">${adminSidebar('Settings')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="card" style="padding:24px;margin-bottom:20px">
+    <h3 style="font-size:15px;margin-bottom:16px">Platform</h3>
+    <div class="grid g-3">
+      <div class="field-wrap"><label class="field-label">Free profile visits / month</label><input value="20"></div>
+      <div class="field-wrap"><label class="field-label">Free messages / month</label><input value="5"></div>
+      <div class="field-wrap"><label class="field-label">Free — max people messaged</label><input value="5"></div>
+      <div class="field-wrap"><label class="field-label">Plus price (৳/mo)</label><input value="1250"></div>
+      <div class="field-wrap"><label class="field-label">VIP price (৳/mo)</label><input value="3500"></div>
+      <div class="field-wrap"><label class="field-label">Platform fee on payouts</label><input value="15%"></div>
+    </div>
+    <button class="btn btn-gold btn-sm" style="margin-top:6px" onclick="showToast('Settings saved ✓')">${icon('check')} Save settings</button>
+  </div>
+  <div class="card" style="padding:24px">
+    <h3 style="font-size:15px;margin-bottom:16px">Feature toggles</h3>
+    ${[['Incognito browsing (Plus/VIP)',true],['Live video calls (VIP)',true],['Income/occupation verification badge',true],['Referral program',true],['New signups open',true]]
+      .map(([f,on])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:13px">${f}</span><div class="toggle ${on?'on':''}"></div></div>`).join('')}
+  </div>
+</div></div>
+`};
+
+pages['admin-analytics']={group:'Admin',title:'Admin — Analytics', render:()=>`
+<div class="dash-shell">${adminSidebar('Analytics')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="grid g-4">
+    ${dStat('users','Total signups','1,842',false)}
+    ${dStat('trend','Free → Paid conversion','16.9%',false)}
+    ${dStat('chart','30-day retention','61%',false)}
+    ${dStat('dollar','Avg. revenue per user','৳742',false)}
+  </div>
+  <div style="display:flex;gap:20px;margin-top:22px;flex-wrap:wrap">
+    <div class="card" style="flex:2;min-width:320px;padding:22px">
+      <div class="section-title"><h3 style="font-size:15px">Signup → Paid funnel</h3></div>
+      ${[['Visited site','12,400',100],['Created profile','1,842',15],['Sent a message','1,120',9],['Upgraded to Plus/VIP','312',2.5]]
+        .map(([s,v,pct])=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><span>${s}</span><span class="mono">${v}</span></div><div style="height:8px;border-radius:8px;background:rgba(255,255,255,.06)"><div style="width:${pct}%;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--rose),var(--gold))"></div></div></div>`).join('')}
+    </div>
+    <div class="card" style="flex:1;min-width:260px;padding:22px">
+      <h3 style="font-size:15px;margin-bottom:14px">Revenue by plan</h3>
+      ${[['VIP','৳1,54,000','32%'],['Plus','৳3,32,500','68%']].map(([p,v,pct])=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span>${p}</span><span class="mono">${v} · ${pct}</span></div>`).join('')}
+      <div class="divider" style="margin:16px 0"></div>
+      <h3 style="font-size:15px;margin-bottom:10px">Top cities</h3>
+      ${[['Dhaka','62%'],['Chattogram','18%'],['Sylhet','9%']].map(([c,p])=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0"><span>${c}</span><span class="stone">${p}</span></div>`).join('')}
+    </div>
+  </div>
+</div></div>
+`};
+
+pages['admin-reports']={group:'Admin',title:'Admin — Reports & Moderation', render:()=>`
+<div class="dash-shell">${adminSidebar('Reports & Moderation')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="section-title"><div style="display:flex;gap:8px"><span class="pill danger">Open (3)</span><span class="pill stone">Reviewed</span><span class="pill stone">Dismissed</span></div></div>
+  <div class="card" style="overflow:hidden"><table>
+    <tr><th>Reported</th><th>Reported by</th><th>Reason</th><th>Severity</th><th>Status</th><th></th></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('S','p2',28)}Sabbir, 26</td><td class="stone">Nadia, 23</td><td>Inappropriate messages</td><td><span class="pill danger">High</span></td><td><span class="pill danger">Open</span></td><td><a class="stone" style="font-size:12px" onclick="showToast('Case opened')">Review</a></td></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('N','p5',28)}Nayeem, 30</td><td class="stone">Meherin, 26</td><td>Fake photos suspected</td><td><span class="pill info">Medium</span></td><td><span class="pill danger">Open</span></td><td><a class="stone" style="font-size:12px" onclick="showToast('Case opened')">Review</a></td></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('E','p4',28)}Emon, 25</td><td class="stone">Farzana, 27</td><td>Harassment after decline</td><td><span class="pill danger">High</span></td><td><span class="pill danger">Open</span></td><td><a class="stone" style="font-size:12px" onclick="showToast('Case opened')">Review</a></td></tr>
+  </table></div>
+  <div class="card glass" style="margin-top:18px;padding:18px 22px">
+    <div style="font-weight:600;font-size:13.5px;margin-bottom:10px">Take action on selected case</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Warning sent')">${icon('bell')} Send warning</button>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Profile suspended for 7 days')">${icon('lock')} Suspend 7 days</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="showToast('Profile banned')">${icon('ban')} Ban permanently</button>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Case dismissed')">Dismiss</button>
+    </div>
+  </div>
+</div></div>
+`};
+
+pages['admin-banned']={group:'Admin',title:'Admin — Banned Users', render:()=>`
+<div class="dash-shell">${adminSidebar('Banned Users')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="section-title"><h3 style="font-size:16px">Banned &amp; suspended accounts (7)</h3></div>
+  <div class="card" style="overflow:hidden"><table>
+    <tr><th>Profile</th><th>Reason</th><th>Action</th><th>Date</th><th>Appeal</th><th></th></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('K','p6',28)}Karim, 31</td><td class="stone">Harassment</td><td><span class="pill danger">Permanent ban</span></td><td class="mono">Jul 2</td><td><span class="pill stone">None</span></td><td><a class="stone" style="font-size:12px">Details</a></td></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('R','p3',28)}Rina, 24</td><td class="stone">Fake profile / catfishing</td><td><span class="pill danger">Permanent ban</span></td><td class="mono">Jun 28</td><td><span class="pill info">Pending review</span></td><td><a class="stone" style="font-size:12px">Details</a></td></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('J','p5',28)}Joy, 27</td><td class="stone">Spam / promoting external service</td><td><span class="pill info">Suspended 30d</span></td><td class="mono">Jul 5</td><td><span class="pill stone">None</span></td><td><a class="stone" style="font-size:12px">Details</a></td></tr>
+  </table></div>
+</div></div>
+`};
+
+pages['admin-tickets']={group:'Admin',title:'Admin — Support Tickets', render:()=>`
+<div class="dash-shell">${adminSidebar('Support Tickets')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="section-title"><div style="display:flex;gap:8px"><span class="pill danger">Open (6)</span><span class="pill info">In progress (2)</span><span class="pill stone">Closed</span></div></div>
+  <div class="card" style="overflow:hidden"><table>
+    <tr><th>Ticket</th><th>Member</th><th>Subject</th><th>Priority</th><th>Assigned to</th><th>Status</th></tr>
+    <tr><td class="mono">#1042</td><td>Tanvir A.</td><td>Payment charged twice</td><td><span class="pill danger">Urgent</span></td><td>Rima</td><td><span class="pill danger">Open</span></td></tr>
+    <tr><td class="mono">#1041</td><td>Nadia H.</td><td>Cannot upload photo</td><td><span class="pill info">Normal</span></td><td>Unassigned</td><td><span class="pill danger">Open</span></td></tr>
+    <tr><td class="mono">#1039</td><td>Rafi K.</td><td>Refund request</td><td><span class="pill info">Normal</span></td><td>Sabbir</td><td><span class="pill info">In progress</span></td></tr>
+    <tr><td class="mono">#1035</td><td>Meherin S.</td><td>How to delete account</td><td><span class="pill stone">Low</span></td><td>Rima</td><td><span class="pill success">Closed</span></td></tr>
+  </table></div>
+</div></div>
+`};
+
+pages['admin-campaigns']={group:'Admin',title:'Admin — Notifications & Campaigns', render:()=>`
+<div class="dash-shell">${adminSidebar('Notifications & Campaigns')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="card" style="padding:24px;margin-bottom:22px">
+    <h3 style="font-size:15px;margin-bottom:14px">Send a broadcast</h3>
+    <div class="grid g-3">
+      <div class="field-wrap"><label class="field-label">Channel</label><select class="field"><option>Push notification</option><option>Email</option><option>SMS</option></select></div>
+      <div class="field-wrap"><label class="field-label">Audience</label><select class="field"><option>All members</option><option>Free members only</option><option>Plus members</option><option>VIP members</option><option>Inactive 30+ days</option></select></div>
+      <div class="field-wrap"><label class="field-label">Send</label><select class="field"><option>Now</option><option>Schedule</option></select></div>
+    </div>
+    <div class="field-wrap"><label class="field-label">Message</label><textarea rows="3" placeholder="e.g. 20% off Premium this week only — upgrade now"></textarea></div>
+    <button class="btn btn-gold btn-sm" onclick="showToast('Campaign sent ✓')">${icon('send')} Send campaign</button>
+  </div>
+  <div class="section-title"><h3 style="font-size:15px">Recent campaigns</h3></div>
+  <div class="card" style="overflow:hidden"><table>
+    <tr><th>Campaign</th><th>Channel</th><th>Audience</th><th>Sent</th><th>Open rate</th></tr>
+    <tr><td>Eid promo — 30% off</td><td>Push</td><td>All members</td><td class="mono">Jul 3</td><td class="mono">42%</td></tr>
+    <tr><td>Weekend reminder</td><td>Email</td><td>Free members</td><td class="mono">Jun 28</td><td class="mono">21%</td></tr>
+  </table></div>
+</div></div>
+`};
+
+pages['admin-team']={group:'Admin',title:'Admin — Team & Roles', render:()=>`
+<div class="dash-shell">${adminSidebar('Admin Team & Roles')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="section-title"><h3 style="font-size:16px">Admin team (4)</h3><button class="btn btn-gold btn-sm">${icon('plus')} Invite team member</button></div>
+  <div class="card" style="overflow:hidden"><table>
+    <tr><th>Name</th><th>Role</th><th>Access</th><th>Last active</th><th></th></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('A','p4',28)}You (Admin)</td><td><span class="pill gold">Super Admin</span></td><td class="stone">Full access</td><td class="mono">Now</td><td></td></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('R','p3',28)}Rima Sultana</td><td><span class="pill info">Moderator</span></td><td class="stone">Reports, Verification, Inbox</td><td class="mono">2h ago</td><td><a class="stone" style="font-size:12px">Edit</a></td></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('S','p2',28)}Sabbir Hasan</td><td><span class="pill info">Support agent</span></td><td class="stone">Tickets, Payments (read-only)</td><td class="mono">1d ago</td><td><a class="stone" style="font-size:12px">Edit</a></td></tr>
+    <tr><td style="display:flex;gap:8px;align-items:center">${av('L','p6',28)}Lamia Chowdhury</td><td><span class="pill stone">Content editor</span></td><td class="stone">CMS only</td><td class="mono">3d ago</td><td><a class="stone" style="font-size:12px">Edit</a></td></tr>
+  </table></div>
+</div></div>
+`};
+
+pages['admin-logs']={group:'Admin',title:'Admin — Security Logs', render:()=>`
+<div class="dash-shell">${adminSidebar('Security Logs')}
+<div class="dmain">
+  ${dTopbar('Admin','vip')}
+  <div class="section-title"><div style="display:flex;gap:8px"><span class="pill stone">All</span><span class="pill danger">Security alerts</span><span class="pill stone">Admin actions</span></div></div>
+  <div class="card" style="overflow:hidden"><table>
+    <tr><th>Time</th><th>Actor</th><th>Action</th><th>IP</th><th>Severity</th></tr>
+    <tr><td class="mono">Today 3:12pm</td><td>Rima Sultana</td><td>Approved verification — Sabbir, 26</td><td class="mono stone">103.22.x.x</td><td><span class="pill stone">Info</span></td></tr>
+    <tr><td class="mono">Today 1:04pm</td><td>System</td><td>5 failed login attempts — account locked</td><td class="mono stone">45.90.x.x</td><td><span class="pill danger">Alert</span></td></tr>
+    <tr><td class="mono">Yesterday</td><td>You (Admin)</td><td>Edited CMS block: hero-headline</td><td class="mono stone">103.22.x.x</td><td><span class="pill stone">Info</span></td></tr>
+    <tr><td class="mono">Yesterday</td><td>Sabbir Hasan</td><td>Refunded payment #4021</td><td class="mono stone">103.44.x.x</td><td><span class="pill info">Action</span></td></tr>
+  </table></div>
+</div></div>
+`};
+
+
+
+
+
+pages['inbox-free']={group:'Member',title:'Messages — Free', render:()=>`
+<div class="dash-shell">${dSidebar('free','Messages')}
+<div class="dmain">
+  ${dTopbar('Tanvir Ahmed','free')}
+  ${tierSwitch('free','inbox')}
+  <div style="margin-bottom:16px">${msgMeter(3,5,3,5)}</div>
+
+  <div class="inbox-shell">
+    <div class="convo-list">
+      <div class="convo-search"><input placeholder="Search conversations"></div>
+      ${convoItem('Nadia','23','How about this Saturday afternoon?','2h','p3',true,true,false,true)}
+      ${convoItem('Rafi','26','Free coffee sometime? ☕','1d','p4',false,false,false,false)}
+      ${convoItem('Meherin','26','Haha that is so true 😄','2d','p1',false,false,false,false)}
+      ${convoItem('Farzana','27','New match — say hi!','—','p6',false,false,true,false)}
+      ${convoItem('Ayesha','24','New match — say hi!','—','p2',false,false,true,false)}
+    </div>
+    <div class="chat-pane">
+      <div class="chat-header">${av('N','p3',38)}<div><div style="font-size:14px;font-weight:600">Nadia, 23</div><div class="stone" style="font-size:11px"><span class="pulse-dot"></span> Online now</div></div></div>
+      <div class="chat-messages">
+        ${chatBubble('Hey! How was your weekend?',false,'Fri 6:14pm')}
+        ${chatBubble('Pretty good, mostly recovering from work honestly 😅',true,'Fri 6:20pm')}
+        ${chatBubble('Same! We should grab coffee sometime',false,'Fri 6:22pm')}
+        ${chatBubble('I would like that, when are you free?',true,'Fri 6:25pm')}
+        ${chatBubble('How about this Saturday afternoon?',false,'Today 2:10pm')}
+      </div>
+      <div class="chat-input-row">
+        <input placeholder="Type a message… (2 of 5 free messages left)">
+        <button class="btn btn-rose btn-sm">${icon('send')} Send</button>
+      </div>
+    </div>
+  </div>
+  <div class="card glass" style="margin-top:16px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <span style="font-size:12.5px">You can message 2 more new people this month, and have 8 messages left.</span>
+    <a class="btn btn-gold btn-sm" href="#" onclick="render('pricing');return false;">Get unlimited messaging</a>
+  </div>
+</div></div>
+`};
+
+pages['inbox-plus']={group:'Member',title:'Messages — Plus', render:()=>`
+<div class="dash-shell">${dSidebar('plus','Messages')}
+<div class="dmain">
+  ${dTopbar('Farzana Islam','plus')}
+  ${tierSwitch('plus','inbox')}
+
+  <div class="inbox-shell">
+    <div class="convo-list">
+      <div class="convo-search"><input placeholder="Search conversations"></div>
+      ${convoItem('Nadia','23','How about this Saturday afternoon?','2h','p3',true,true,false,true)}
+      ${convoItem('Rafi','26','Free coffee sometime? ☕','1d','p4',true,false,false,false)}
+      ${convoItem('Meherin','26','Haha that is so true 😄','2d','p1',false,false,false,true)}
+      ${convoItem('Arman','28','Nice to meet you!','3d','p5',false,false,false,false)}
+      ${convoItem('Shovon','24','See you around 👋','5d','p2',false,false,false,false)}
+      ${convoItem('Nayeem','30','That sounds fun actually','1w','p5',false,false,false,false)}
+    </div>
+    <div class="chat-pane">
+      <div class="chat-header">${av('N','p3',38)}<div style="flex:1"><div style="font-size:14px;font-weight:600">Nadia, 23</div><div class="stone" style="font-size:11px"><span class="pulse-dot"></span> Online now</div></div>
+        <span class="pill stone">${icon('lock')} Video call is VIP</span>
+      </div>
+      <div class="chat-messages">
+        ${chatBubble('Hey! How was your weekend?',false,'Fri 6:14pm')}
+        ${chatBubble('Pretty good, mostly recovering from work honestly 😅',true,'Fri 6:20pm')}
+        ${chatBubble('Same! We should grab coffee sometime',false,'Fri 6:22pm')}
+        ${chatBubble('I would like that, when are you free?',true,'Fri 6:25pm')}
+        ${chatBubble('How about this Saturday afternoon?',false,'Today 2:10pm')}
+        ${chatBubble('Saturday works great, 3pm?',true,'Today 2:14pm')}
+      </div>
+      <div class="chat-input-row">
+        <input placeholder="Type a message… (unlimited)">
+        <button class="btn btn-rose btn-sm">${icon('send')} Send</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+`};
+
+pages['inbox-vip']={group:'Member',title:'Messages — VIP', render:()=>`
+<div class="dash-shell">${dSidebar('vip','Messages')}
+<div class="dmain">
+  ${dTopbar('Imran Chowdhury','vip')}
+  ${tierSwitch('vip','inbox')}
+
+  <div class="inbox-shell">
+    <div class="convo-list">
+      <div class="convo-search"><input placeholder="Search conversations"></div>
+      ${convoItem('Nadia','23','Sounds perfect, see you then!','12m','p3',true,true,false,true)}
+      ${convoItem('Meherin','26','That call was fun 😄','1h','p1',true,false,false,true)}
+      ${convoItem('Farzana','27','Looking forward to it','4h','p6',false,false,false,false)}
+      ${convoItem('Ayesha','24','Haha you are funny','1d','p2',false,false,false,false)}
+      ${convoItem('Rafi','26','Free coffee sometime? ☕','1d','p4',false,false,false,false)}
+    </div>
+    <div class="chat-pane">
+      <div class="chat-header">${av('N','p3',38)}<div style="flex:1"><div style="font-size:14px;font-weight:600">Nadia, 23</div><div class="stone" style="font-size:11px"><span class="pulse-dot"></span> Online now</div></div>
+        <button class="btn btn-gold btn-sm">${icon('video')} Video call</button>
+      </div>
+      <div class="chat-messages">
+        ${chatBubble('How about this Saturday afternoon?',false,'Fri 2:10pm')}
+        ${chatBubble('Saturday works great, 3pm? Should we do a quick video call first?',true,'Fri 2:14pm')}
+        ${chatBubble('I would love that actually 🙂',false,'Fri 2:16pm')}
+        ${chatBubble('Perfect, calling you now',true,'Fri 2:17pm')}
+        ${chatBubble('Sounds perfect, see you then!',false,'Today 9:02am')}
+      </div>
+      <div class="chat-input-row">
+        <input placeholder="Type a message… (unlimited)">
+        <button class="btn btn-rose btn-sm">${icon('send')} Send</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+`};
+
+
+function authShell(title,sub,body){
+  return `<div style="display:flex;min-height:100vh">
+    <div class="cover" style="flex:1;display:flex;align-items:flex-end;padding:48px" id="authArt">
+      <p style="font-family:var(--serif);font-size:26px;line-height:1.4;max-width:400px;font-style:italic">"Free to look around. Premium when you are ready to talk."</p>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px">
+      <div style="width:100%;max-width:340px">
+        <div class="logo" style="margin-bottom:28px">♥ AMOURA</div>
+        <h1 style="font-size:26px">${title}</h1>
+        <p class="stone" style="font-size:13px;margin-top:6px">${sub}</p>
+        <div style="margin-top:24px">${body}</div>
+      </div>
+    </div>
+  </div>`;
+}
+pages['login']={group:'Public',title:'Login', render:()=>authShell('Welcome back','Sign in to continue browsing.',`
+  <div class="field-wrap"><label class="field-label">Email</label><input placeholder="you@email.com"></div>
+  <div class="field-wrap"><label class="field-label">Password</label><input type="password" placeholder="********"></div>
+  <button class="btn btn-rose" style="width:100%" onclick="render('dash-free');return false;">Sign in</button>
+  <p class="stone" style="text-align:center;font-size:13px;margin-top:20px">New here? <a href="#" style="color:var(--gold-bright)" onclick="render('register');return false;">Create a free profile</a></p>
+`)};
+pages['register']={group:'Public',title:'Register', render:()=>authShell('Create your profile','Takes about 2 minutes. Free to join.',`
+  <div class="field-wrap"><label class="field-label">I am a</label>
+    <div style="display:flex;gap:8px"><span class="pill rose" style="flex:1;justify-content:center;padding:10px">Woman</span><span class="pill stone" style="flex:1;justify-content:center;padding:10px">Man</span></div>
+  </div>
+  <div class="field-wrap"><label class="field-label">Looking for</label>
+    <div style="display:flex;gap:8px"><span class="pill stone" style="flex:1;justify-content:center;padding:10px">Women</span><span class="pill gold" style="flex:1;justify-content:center;padding:10px">Men</span></div>
+  </div>
+  <div class="field-wrap"><label class="field-label">Full name</label><input placeholder="Your name"></div>
+  <div class="field-wrap"><label class="field-label">Phone number <span style="color:var(--rose-bright)">*</span></label><input placeholder="+880 1XXX-XXXXXX"></div>
+  <div class="field-wrap"><label class="field-label">Email</label><input placeholder="you@email.com"></div>
+  <div class="field-wrap"><label class="field-label">Password</label><input type="password" placeholder="Create a password"></div>
+  <div class="field-wrap">
+    <label class="field-label">Profile photo <span style="color:var(--rose-bright)">*</span></label>
+    <div style="width:80px;height:80px;border-radius:16px;border:1.5px dashed var(--border-hair-2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--gold-bright);cursor:pointer">${icon('upload')}<span style="font-size:9px">Upload</span></div>
+  </div>
+  <p class="stone" style="font-size:11px;margin:-8px 0 14px">Your phone number is never shown publicly — used only for account security.</p>
+  <button class="btn btn-rose" style="width:100%" onclick="render('dash-free');return false;">Create free profile</button>
+  <p class="stone" style="text-align:center;font-size:13px;margin-top:20px">Already a member? <a href="#" style="color:var(--gold-bright)" onclick="render('login');return false;">Sign in</a></p>
+`)};
+
+pages['member-home']={group:'Member',title:'Home (logged in)', render:()=>pages['home'].render(true)};
+pages['member-browse']={group:'Member',title:'Browse Profiles (logged in)', render:()=>pages['browse'].render(true)};
+pages['member-profile']={group:'Member',title:'Profile Detail (logged in)', render:()=>pages['profile'].render(true)};
+
+/* ================= ENGINE ================= */
+const order=['home','browse','profile','pricing','login','register','member-home','member-browse','member-profile','dash-free','dash-plus','dash-vip','inbox-free','inbox-plus','inbox-vip','admin-dashboard','admin-analytics','admin-model-profiles','admin-user-profiles','admin-profile-detail','admin-cms','admin-verification','admin-reports','admin-banned','admin-inbox','admin-tickets','admin-payments','admin-campaigns','admin-team','admin-logs','admin-settings'];
+const sel=document.getElementById('pageSelect');
+let lastGroup=null;
+order.forEach(id=>{
+  const p=pages[id];
+  if(p.group!==lastGroup){ lastGroup=p.group;
+    const og=document.createElement('optgroup'); og.label=p.group; sel.appendChild(og); }
+  const opt=document.createElement('option'); opt.value=id; opt.textContent=p.title;
+  sel.lastChild.appendChild(opt);
+});
+function render(id){
+  const p=pages[id]; if(!p) return;
+  document.getElementById('frameInner').innerHTML=`<div class="screen">${p.render()}</div>`;
+  sel.value=id;
+  document.getElementById('frameInner').scrollTop=0;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('deviceToggle').addEventListener('click',e=>{
+  const btn=e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#deviceToggle button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const frame=document.getElementById('frame');
+  frame.classList.remove('tablet','mobile');
+  if(btn.dataset.d!=='desktop') frame.classList.add(btn.dataset.d);
+});
+render('home');
+</script>
+</body>
+</html>
