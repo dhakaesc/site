@@ -54,7 +54,21 @@ export const likes = pgTable(
   (table) => [unique().on(table.fromUserId, table.toUserId)]
 );
 
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  fromUserId: integer("from_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  toUserId: integer("to_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Photo = typeof photos.$inferSelect;
 export type Like = typeof likes.$inferSelect;
+export type Message = typeof messages.$inferSelect;

@@ -1,4 +1,5 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { limitsFor } from "@/lib/plans";
 
 export async function getMediaBucket() {
   const { env } = await getCloudflareContext({ async: true });
@@ -28,9 +29,7 @@ export function extensionFor(mimeType: string) {
   }
 }
 
-/** Tier-based photo limits, mirrors the pricing page. */
+/** Tier-based photo limits, sourced from the shared plan config. */
 export function photoLimitFor(tier: string) {
-  if (tier === "vip") return 30;
-  if (tier === "plus") return 15;
-  return 3; // free
+  return limitsFor(tier).photos;
 }
