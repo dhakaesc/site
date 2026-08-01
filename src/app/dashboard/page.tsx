@@ -63,6 +63,21 @@ export default async function DashboardPage() {
             Upgrade to Plus
           </a>
         )}
+
+        <div className="flex gap-3 mt-6">
+          <a
+            href="/browse"
+            className="rounded-[14px] bg-gradient-to-b from-rose-bright to-rose px-6 py-3 text-sm font-semibold text-white"
+          >
+            Browse profiles
+          </a>
+          <a
+            href="/profile/edit"
+            className="rounded-[14px] border border-border-hair px-6 py-3 text-sm font-semibold"
+          >
+            Edit your photos
+          </a>
+        </div>
       </div>
     </main>
   );

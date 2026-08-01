@@ -1,0 +1,1 @@
+ALTER TABLE "likes" ADD COLUMN "liked" boolean DEFAULT true NOT NULL;
