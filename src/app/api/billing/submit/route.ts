@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { and, eq, desc } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { paymentRequests } from "@/lib/db/schema";
+import { paymentRequests, users } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { TIER_PRICES, PAYMENT_METHODS } from "@/lib/payments";
+import {
+  sendPaymentReceivedEmail,
+  sendAdminNewPaymentEmail,
+} from "@/lib/email";
 
 const schema = z.object({
   tier: z.enum(["plus", "vip"]),
@@ -87,6 +91,34 @@ export async function POST(req: NextRequest) {
         transactionId: transactionId.toUpperCase(),
       })
       .returning();
+
+    const [member] = await db
+      .select({ name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1);
+
+    if (member) {
+      // Confirm to the member immediately, and alert the admin so a
+      // payment never sits unnoticed overnight.
+      await Promise.all([
+        sendPaymentReceivedEmail({
+          to: member.email,
+          name: member.name,
+          tier,
+          amount: TIER_PRICES[tier],
+          transactionId: request.transactionId,
+        }),
+        sendAdminNewPaymentEmail({
+          userName: member.name,
+          userEmail: member.email,
+          tier,
+          amount: TIER_PRICES[tier],
+          transactionId: request.transactionId,
+          senderNumber,
+        }),
+      ]);
+    }
 
     return NextResponse.json({ request });
   } catch {

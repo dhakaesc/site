@@ -5,6 +5,10 @@ import { db } from "@/lib/db";
 import { paymentRequests, users } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { SUBSCRIPTION_DAYS } from "@/lib/payments";
+import {
+  sendPaymentApprovedEmail,
+  sendPaymentRejectedEmail,
+} from "@/lib/email";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -86,13 +90,18 @@ export async function PATCH(req: NextRequest) {
     })
     .where(eq(paymentRequests.id, requestId));
 
-  if (action === "approve") {
-    const [member] = await db
-      .select({ tierExpiresAt: users.tierExpiresAt, tier: users.tier })
-      .from(users)
-      .where(eq(users.id, request.userId))
-      .limit(1);
+  const [member] = await db
+    .select({
+      name: users.name,
+      email: users.email,
+      tier: users.tier,
+      tierExpiresAt: users.tierExpiresAt,
+    })
+    .from(users)
+    .where(eq(users.id, request.userId))
+    .limit(1);
 
+  if (action === "approve") {
     // If they still have time left on the same plan, extend it rather
     // than cutting the remaining days short.
     const now = new Date();
@@ -110,6 +119,22 @@ export async function PATCH(req: NextRequest) {
       .update(users)
       .set({ tier: request.tier, tierExpiresAt: expiresAt })
       .where(eq(users.id, request.userId));
+
+    if (member) {
+      await sendPaymentApprovedEmail({
+        to: member.email,
+        name: member.name,
+        tier: request.tier,
+        expiresAt,
+      });
+    }
+  } else if (member) {
+    await sendPaymentRejectedEmail({
+      to: member.email,
+      name: member.name,
+      transactionId: request.transactionId,
+      note: note ?? "",
+    });
   }
 
   return NextResponse.json({ ok: true });

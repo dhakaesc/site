@@ -60,10 +60,24 @@ export default async function UpgradePage({
         <PaymentForm tier={tier} amount={amount} />
       </div>
 
-      <p className="text-stone-dim text-xs text-center mt-6">
-        Payments are reviewed manually, usually within a few hours. Your plan
-        activates as soon as it's approved.
-      </p>
+      <div className="rounded-[16px] border border-border-hair bg-surface/60 p-5 mt-5 text-[13px] text-stone">
+        <p className="text-ivory font-semibold text-sm mb-2">Good to know</p>
+        <ul className="space-y-1.5">
+          <li>
+            • Every payment is checked by a person against our bKash/Nagad
+            statement — usually within a few hours, and by the next morning at
+            the latest.
+          </li>
+          <li>
+            • Your {SUBSCRIPTION_DAYS} days start when your plan is activated,
+            not when you pay, so waiting costs you nothing.
+          </li>
+          <li>
+            • We'll email you the moment it's live. If anything looks wrong,
+            reply to that email and we'll sort it out.
+          </li>
+        </ul>
+      </div>
     </main>
   );
 }

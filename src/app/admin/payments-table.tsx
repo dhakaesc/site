@@ -28,16 +28,32 @@ export default function AdminPaymentsTable() {
       .then((d) => setPayments(d.payments ?? []));
   }
 
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+    // Refresh so newly submitted payments appear without a manual reload.
+    const interval = setInterval(load, 20000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function review(requestId: number, action: "approve" | "reject") {
+    let note = "";
+    if (action === "reject") {
+      const reason = window.prompt(
+        "Why is this being rejected? This is emailed to the member, so keep it helpful.",
+        "We couldn't find this transaction ID in our statement. Please double-check it and submit again."
+      );
+      // Cancelling the prompt cancels the rejection.
+      if (reason === null) return;
+      note = reason;
+    }
+
     setBusyId(requestId);
     setError(null);
 
     const res = await fetch("/api/admin/payments", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId, action }),
+      body: JSON.stringify({ requestId, action, note }),
     });
 
     setBusyId(null);

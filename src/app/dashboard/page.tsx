@@ -3,7 +3,7 @@ import Link from "next/link";
 import { and, eq, or, isNull, count } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { users, messages, likes } from "@/lib/db/schema";
+import { users, messages, likes, paymentRequests } from "@/lib/db/schema";
 import { limitsFor, effectiveTier } from "@/lib/plans";
 import LogoutButton from "./logout-button";
 
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
     ? null
     : Math.max(limits.messages - user.messagesUsed, 0);
 
-  const [[unread], [likesReceived]] = await Promise.all([
+  const [[unread], [likesReceived], [pendingPayment]] = await Promise.all([
     db
       .select({ value: count() })
       .from(messages)
@@ -37,6 +37,16 @@ export default async function DashboardPage() {
       .select({ value: count() })
       .from(likes)
       .where(and(eq(likes.toUserId, user.id), eq(likes.liked, true))),
+    db
+      .select({ tier: paymentRequests.tier })
+      .from(paymentRequests)
+      .where(
+        and(
+          eq(paymentRequests.userId, user.id),
+          eq(paymentRequests.status, "pending")
+        )
+      )
+      .limit(1),
   ]);
 
   return (
@@ -113,7 +123,20 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {activeTier === "free" && (
+        {pendingPayment && (
+          <div className="rounded-[14px] border border-gold/40 bg-gold/10 px-5 py-4 mt-6 text-[13px]">
+            <p className="text-gold-bright font-semibold text-sm mb-1">
+              Your {pendingPayment.tier.toUpperCase()} payment is being verified
+            </p>
+            <p className="text-stone">
+              We're checking your transaction now and you'll get an email as
+              soon as your plan is live — usually within a few hours. Nothing
+              else is needed from you.
+            </p>
+          </div>
+        )}
+
+        {activeTier === "free" && !pendingPayment && (
           <Link
             href="/pricing"
             className="inline-block mt-6 rounded-[14px] bg-gradient-to-b from-gold-bright to-gold px-6 py-3 text-sm font-semibold text-[#2a1c05]"
