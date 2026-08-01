@@ -9,6 +9,7 @@ import {
   extensionFor,
   photoLimitFor,
 } from "@/lib/media";
+import { effectiveTier } from "@/lib/plans";
 
 export async function GET() {
   const session = await getSession();
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [user] = await db
-    .select({ tier: users.tier })
+    .select({ tier: users.tier, tierExpiresAt: users.tierExpiresAt })
     .from(users)
     .where(eq(users.id, session.userId))
     .limit(1);
@@ -57,7 +58,9 @@ export async function POST(req: NextRequest) {
     .from(photos)
     .where(eq(photos.userId, session.userId));
 
-  const limit = photoLimitFor(user?.tier ?? "free");
+  const limit = photoLimitFor(
+    effectiveTier(user?.tier ?? "free", user?.tierExpiresAt)
+  );
   if (existing.length >= limit) {
     return NextResponse.json(
       {

@@ -32,6 +32,25 @@ export function limitsFor(tier: string) {
   return PLAN_LIMITS[(tier as Tier) in PLAN_LIMITS ? (tier as Tier) : "free"];
 }
 
+/**
+ * The tier a member is actually entitled to right now.
+ *
+ * Paid plans are time-limited, so an expired subscription falls back to
+ * free rather than staying paid forever. Every entitlement check should
+ * go through this instead of reading `user.tier` directly.
+ */
+export function effectiveTier(
+  tier: string,
+  tierExpiresAt: Date | string | null | undefined
+): Tier {
+  if (tier === "free" || !(tier in PLAN_LIMITS)) return "free";
+  if (!tierExpiresAt) return "free";
+
+  const expiry =
+    tierExpiresAt instanceof Date ? tierExpiresAt : new Date(tierExpiresAt);
+  return expiry.getTime() > Date.now() ? (tier as Tier) : "free";
+}
+
 export function isPaid(tier: string) {
   return tier === "plus" || tier === "vip";
 }

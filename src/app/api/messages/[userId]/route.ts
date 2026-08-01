@@ -4,7 +4,7 @@ import { and, eq, or, asc, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { messages, users, likes } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
-import { limitsFor } from "@/lib/plans";
+import { limitsFor, effectiveTier } from "@/lib/plans";
 
 /** Two users may chat only if they have both liked each other. */
 async function areMatched(a: number, b: number) {
@@ -130,12 +130,18 @@ export async function POST(
   }
 
   const [me] = await db
-    .select({ tier: users.tier, messagesUsed: users.messagesUsed })
+    .select({
+      tier: users.tier,
+      tierExpiresAt: users.tierExpiresAt,
+      messagesUsed: users.messagesUsed,
+    })
     .from(users)
     .where(eq(users.id, session.userId))
     .limit(1);
 
-  const limits = limitsFor(me?.tier ?? "free");
+  const limits = limitsFor(
+    effectiveTier(me?.tier ?? "free", me?.tierExpiresAt)
+  );
 
   // Free members have both a total message cap and a cap on how many
   // distinct people they can message. Paid tiers skip both.

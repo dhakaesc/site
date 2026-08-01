@@ -19,6 +19,8 @@ export const users = pgTable("users", {
   bio: text("bio").default(""),
   location: varchar("location", { length: 120 }).default(""),
   tier: varchar("tier", { length: 20 }).notNull().default("free"), // free | plus | vip
+  // When a paid plan runs out. Null for free members / no active plan.
+  tierExpiresAt: timestamp("tier_expires_at"),
   messagesUsed: integer("messages_used").notNull().default(0),
   isAdmin: boolean("is_admin").notNull().default(false),
   isBanned: boolean("is_banned").notNull().default(false),
@@ -67,8 +69,26 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const paymentRequests = pgTable("payment_requests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tier: varchar("tier", { length: 20 }).notNull(), // plus | vip
+  amount: integer("amount").notNull(), // BDT, whole taka
+  method: varchar("method", { length: 20 }).notNull(), // bkash | nagad
+  senderNumber: varchar("sender_number", { length: 30 }).notNull(),
+  transactionId: varchar("transaction_id", { length: 60 }).notNull().unique(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending | approved | rejected
+  adminNote: text("admin_note").default(""),
+  reviewedByUserId: integer("reviewed_by_user_id").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Photo = typeof photos.$inferSelect;
 export type Like = typeof likes.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+export type PaymentRequest = typeof paymentRequests.$inferSelect;

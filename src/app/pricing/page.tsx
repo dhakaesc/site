@@ -1,5 +1,9 @@
 import Link from "next/link";
+import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { effectiveTier } from "@/lib/plans";
 import UpgradeButton from "./upgrade-button";
 
 const TIERS = [
@@ -46,6 +50,18 @@ const TIERS = [
 export default async function PricingPage() {
   const session = await getSession();
 
+  // Read the tier from the database rather than the session token: the
+  // token is issued at login and would be stale after an upgrade.
+  let currentTier = "free";
+  if (session) {
+    const [user] = await db
+      .select({ tier: users.tier, tierExpiresAt: users.tierExpiresAt })
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1);
+    if (user) currentTier = effectiveTier(user.tier, user.tierExpiresAt);
+  }
+
   return (
     <main className="min-h-screen px-6 py-12 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-10">
@@ -69,7 +85,7 @@ export default async function PricingPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {TIERS.map((tier) => {
-          const isCurrent = (session?.tier ?? "free") === tier.id;
+          const isCurrent = currentTier === tier.id;
           const featured = tier.id === "plus";
 
           return (

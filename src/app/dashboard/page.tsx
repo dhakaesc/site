@@ -4,7 +4,7 @@ import { and, eq, or, isNull, count } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { users, messages, likes } from "@/lib/db/schema";
-import { limitsFor } from "@/lib/plans";
+import { limitsFor, effectiveTier } from "@/lib/plans";
 import LogoutButton from "./logout-button";
 
 export default async function DashboardPage() {
@@ -19,7 +19,8 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  const limits = limitsFor(user.tier);
+  const activeTier = effectiveTier(user.tier, user.tierExpiresAt);
+  const limits = limitsFor(activeTier);
   const unlimited = !Number.isFinite(limits.messages);
   const messagesLeft = unlimited
     ? null
@@ -62,13 +63,25 @@ export default async function DashboardPage() {
         <p className="text-stone text-sm mb-6">
           You are on the{" "}
           <span className="text-gold-bright font-semibold capitalize">
-            {user.tier}
+            {activeTier}
           </span>{" "}
-          plan.
+          plan
+          {activeTier !== "free" && user.tierExpiresAt && (
+            <>
+              {" "}
+              until{" "}
+              {new Date(user.tierExpiresAt).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </>
+          )}
+          .
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Stat label="Plan" value={user.tier.toUpperCase()} />
+          <Stat label="Plan" value={activeTier.toUpperCase()} />
           <Stat
             label="Messages left"
             value={
@@ -100,7 +113,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {user.tier === "free" && (
+        {activeTier === "free" && (
           <Link
             href="/pricing"
             className="inline-block mt-6 rounded-[14px] bg-gradient-to-b from-gold-bright to-gold px-6 py-3 text-sm font-semibold text-[#2a1c05]"
