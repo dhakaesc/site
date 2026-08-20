@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CATEGORIES } from "@/lib/categories";
 
 type Profile = {
   id: number;
@@ -9,33 +10,27 @@ type Profile = {
   gender: string;
   location: string | null;
   bio: string | null;
-  adminCategory: string | null;
+  category: string | null;
   adminNote: string | null;
   isPublished: boolean;
   createdAt: string;
   photos: string[];
 };
 
-const CATEGORY_LABEL: Record<string, string> = {
-  model: "Model",
-  influencer: "Influencer",
-  other: "Other",
-};
-const CATEGORY_PILL: Record<string, string> = {
-  model: "bg-gold-bright/15 border-gold-bright/35 text-gold-bright",
-  influencer: "bg-rose/15 border-rose/35 text-[#F3B4BE]",
-  other: "bg-info/15 border-info/35 text-info",
-};
+const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.slug, c.title])
+);
 
 export default function ModelProfilesManager() {
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
-  const [filter, setFilter] = useState<"all" | "model" | "influencer" | "other">("all");
+  const [filter, setFilter] = useState<string>("all");
   const [busyId, setBusyId] = useState<number | null>(null);
 
+  const [editing, setEditing] = useState<Profile | null>(null);
   const [form, setForm] = useState({
     name: "",
     age: "",
-    category: "model",
+    category: CATEGORIES[0].slug as string,
     location: "",
     gender: "female",
     published: false,
@@ -79,6 +74,29 @@ export default function ModelProfilesManager() {
     load();
   }
 
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editing) return;
+    setBusyId(editing.id);
+    await fetch("/api/admin/model-profiles", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: editing.id,
+        name: editing.name,
+        age: editing.age,
+        category: editing.category ?? undefined,
+        gender: editing.gender,
+        location: editing.location ?? "",
+        bio: editing.bio ?? "",
+        adminNote: editing.adminNote ?? "",
+      }),
+    });
+    setBusyId(null);
+    setEditing(null);
+    load();
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -112,7 +130,7 @@ export default function ModelProfilesManager() {
     setForm({
       name: "",
       age: "",
-      category: "model",
+      category: CATEGORIES[0].slug as string,
       location: "",
       gender: "female",
       published: false,
@@ -139,13 +157,7 @@ export default function ModelProfilesManager() {
     load();
   }
 
-  const visible = profiles?.filter((p) => (filter === "all" ? true : p.adminCategory === filter));
-  const counts = {
-    all: profiles?.length ?? 0,
-    model: profiles?.filter((p) => p.adminCategory === "model").length ?? 0,
-    influencer: profiles?.filter((p) => p.adminCategory === "influencer").length ?? 0,
-    other: profiles?.filter((p) => p.adminCategory === "other").length ?? 0,
-  };
+  const visible = profiles?.filter((p) => (filter === "all" ? true : p.category === filter));
 
   const activeProfile = profiles?.find((p) => p.id === newProfileId);
 
@@ -153,7 +165,7 @@ export default function ModelProfilesManager() {
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div className="flex gap-2">
-          {(["all", "model", "influencer", "other"] as const).map((f) => (
+          {["all", ...CATEGORIES.map((c) => c.slug)].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -163,7 +175,9 @@ export default function ModelProfilesManager() {
                   : "border border-border-hair text-stone"
               }`}
             >
-              {f === "all" ? `All (${counts.all})` : `${CATEGORY_LABEL[f]}s`}
+              {f === "all"
+                ? `All (${profiles?.length ?? 0})`
+                : CATEGORY_LABEL[f]}
             </button>
           ))}
         </div>
@@ -211,9 +225,9 @@ export default function ModelProfilesManager() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {p.adminCategory && (
-                      <span className={`rounded-full border text-[11px] font-semibold px-2.5 py-1 ${CATEGORY_PILL[p.adminCategory]}`}>
-                        {CATEGORY_LABEL[p.adminCategory]}
+                    {p.category && (
+                      <span className="rounded-full border border-gold-bright/35 bg-gold-bright/15 text-gold-bright text-[11px] font-semibold px-2.5 py-1">
+                        {CATEGORY_LABEL[p.category] ?? p.category}
                       </span>
                     )}
                   </td>
@@ -227,6 +241,12 @@ export default function ModelProfilesManager() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-3">
+                      <button
+                        onClick={() => setEditing(p)}
+                        className="text-stone text-xs hover:text-ivory"
+                      >
+                        Edit
+                      </button>
                       <button
                         disabled={busyId === p.id}
                         onClick={() => togglePublish(p.id, p.isPublished)}
@@ -265,9 +285,9 @@ export default function ModelProfilesManager() {
             <div>
               <label className="block text-xs text-stone mb-1.5">Profile type</label>
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="field-input">
-                <option value="model">Model</option>
-                <option value="influencer">Influencer</option>
-                <option value="other">Other</option>
+                {CATEGORIES.map((c) => (
+                  <option key={c.slug} value={c.slug}>{c.title}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -355,6 +375,141 @@ export default function ModelProfilesManager() {
           </div>
         )}
       </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 px-4 py-8 overflow-y-auto">
+          <form
+            onSubmit={saveEdit}
+            className="w-full max-w-lg rounded-[18px] border border-border-hair bg-surface p-6 space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-serif text-lg">Edit profile</h3>
+              <span className="text-stone-dim text-[11px]">ID #{editing.id}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <LabeledInput
+                label="Full name"
+                value={editing.name}
+                onChange={(v) => setEditing({ ...editing, name: v })}
+                required
+              />
+              <LabeledInput
+                label="Age"
+                type="number"
+                value={String(editing.age)}
+                onChange={(v) => setEditing({ ...editing, age: Number(v) })}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-stone mb-1.5">Category</label>
+                <select
+                  value={editing.category ?? ""}
+                  onChange={(e) => setEditing({ ...editing, category: e.target.value })}
+                  className="field-input"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-stone mb-1.5">Gender</label>
+                <select
+                  value={editing.gender}
+                  onChange={(e) => setEditing({ ...editing, gender: e.target.value })}
+                  className="field-input"
+                >
+                  <option value="female">Woman</option>
+                  <option value="male">Man</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <LabeledInput
+              label="City"
+              value={editing.location ?? ""}
+              onChange={(v) => setEditing({ ...editing, location: v })}
+            />
+
+            <div>
+              <label className="block text-xs text-stone mb-1.5">Bio</label>
+              <textarea
+                rows={3}
+                value={editing.bio ?? ""}
+                onChange={(e) => setEditing({ ...editing, bio: e.target.value })}
+                className="w-full rounded-[14px] border border-border-hair-2 bg-surface-2 px-4 py-3 text-sm text-ivory placeholder:text-stone-dim focus:outline-none focus:border-ivory/40"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-stone mb-1.5">
+                Internal note (never shown publicly)
+              </label>
+              <textarea
+                rows={2}
+                value={editing.adminNote ?? ""}
+                onChange={(e) => setEditing({ ...editing, adminNote: e.target.value })}
+                className="w-full rounded-[14px] border border-border-hair-2 bg-surface-2 px-4 py-3 text-sm text-ivory placeholder:text-stone-dim focus:outline-none focus:border-ivory/40"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-stone mb-2">Photos</label>
+              <div className="grid grid-cols-5 gap-2">
+                {editing.photos.map((url) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={url} src={url} alt="" className="aspect-square rounded-[10px] object-cover" />
+                ))}
+                <label className="aspect-square rounded-[10px] border border-dashed border-border-hair-2 flex items-center justify-center text-stone-dim text-[10px] cursor-pointer hover:text-stone">
+                  ↑ Add
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !editing) return;
+                      const body = new FormData();
+                      body.append("file", file);
+                      await fetch(`/api/admin/model-profiles/${editing.id}/photos`, {
+                        method: "POST",
+                        body,
+                      });
+                      const res = await fetch("/api/admin/model-profiles");
+                      const d = await res.json();
+                      setProfiles(d.profiles ?? []);
+                      const fresh = (d.profiles ?? []).find((x: Profile) => x.id === editing.id);
+                      if (fresh) setEditing(fresh);
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="flex-1 rounded-[12px] border border-border-hair-2 py-2.5 text-sm text-stone"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={busyId === editing.id}
+                className="flex-1 rounded-[12px] bg-gradient-to-b from-gold-bright to-gold py-2.5 text-sm font-semibold text-[#2a1c05] disabled:opacity-60"
+              >
+                {busyId === editing.id ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

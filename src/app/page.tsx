@@ -1,5 +1,10 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { users, photos } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
+import { CATEGORIES } from "@/lib/categories";
 import {
   Icon,
   Avatar,
@@ -65,8 +70,69 @@ function GenderCTA() {
   );
 }
 
+const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
+
+/** City from Cloudflare's geo headers, when available. */
+async function visitorCity() {
+  try {
+    const h = await headers();
+    return h.get("cf-ipcity") ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function HomePage() {
   const session = await getSession();
+  const city = await visitorCity();
+
+  const publicFilters = [eq(users.isBanned, false), eq(users.isPublished, true)];
+
+  // "People near you": prefer profiles in the visitor's city when we can
+  // tell, otherwise just show recent ones.
+  let nearbyRows = city
+    ? await db
+        .select({ id: users.id, name: users.name, age: users.age, location: users.location })
+        .from(users)
+        .where(and(...publicFilters, ilike(users.location, `%${city}%`)))
+        .limit(4)
+    : [];
+
+  if (nearbyRows.length === 0) {
+    nearbyRows = await db
+      .select({ id: users.id, name: users.name, age: users.age, location: users.location })
+      .from(users)
+      .where(and(...publicFilters))
+      .orderBy(desc(users.createdAt))
+      .limit(4);
+  }
+
+  // "Most popular this week": most-liked profiles, spotlighted first.
+  const popularRows = await db
+    .select({ id: users.id, name: users.name, age: users.age, location: users.location })
+    .from(users)
+    .where(and(...publicFilters))
+    .orderBy(
+      desc(sql`CASE WHEN ${users.spotlightUntil} > now() THEN 1 ELSE 0 END`),
+      desc(sql`(SELECT count(*) FROM likes WHERE likes.to_user_id = ${users.id} AND likes.liked = true)`)
+    )
+    .limit(4);
+
+  const shownIds = [...new Set([...nearbyRows, ...popularRows].map((r) => r.id))];
+  const coverPhotos = shownIds.length
+    ? await db.select().from(photos).where(inArray(photos.userId, shownIds))
+    : [];
+  const photoByUser = new Map<number, string>();
+  for (const ph of coverPhotos) {
+    if (!photoByUser.has(ph.userId)) photoByUser.set(ph.userId, `/api/media/${ph.key}`);
+  }
+
+  const withPhoto = (r: { id: number; name: string; age: number; location: string | null }) => ({
+    ...r,
+    photo: photoByUser.get(r.id) ?? null,
+  });
+  const nearby = nearbyRows.map(withPhoto);
+  const popular = popularRows.map(withPhoto);
 
   return (
     <main className="min-h-screen">
@@ -171,12 +237,25 @@ export default async function HomePage() {
           <h2 className="text-[22px]">People near you</h2>
           <Link href="/browse" className="text-stone text-[13px] hover:text-ivory">Browse all →</Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <ProfileCard name="Ayesha" age={24} loc="Dhaka" tone="p1" online />
-          <ProfileCard name="Farhan" age={27} loc="Chattogram" tone="p5" />
-          <ProfileCard name="Nadia" age={23} loc="Dhaka" tone="p3" online />
-          <ProfileCard name="Rafi" age={26} loc="Sylhet" tone="p4" />
-        </div>
+        {nearby.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {nearby.map((p, i) => (
+              <ProfileCard
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                age={p.age}
+                loc={p.location || "Bangladesh"}
+                tone={TONES[i % TONES.length]}
+                photo={p.photo ?? undefined}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-stone text-sm">
+            New profiles are being added — check back shortly.
+          </p>
+        )}
       </section>
 
       {/* COMPATIBILITY QUIZ */}
@@ -223,12 +302,16 @@ export default async function HomePage() {
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <AudienceCard icon="film" tone="p1" title="Bangladeshi drama models" desc="Verified profiles of familiar faces from television and web dramas, here for real conversations, not fan mail." />
-          <AudienceCard icon="bolt" tone="p6" title="Instagram & TikTok influencers" desc="Content creators and social personalities with verified profiles, looking for something genuine off-camera." />
-          <AudienceCard icon="heart" tone="p4" title="Divorced & single parents welcome" desc="A judgment-free space for divorced members and single mothers ready to date again — no assumptions, no awkward questions." />
-          <AudienceCard icon="shield" tone="p2" title="Verified professionals" desc="Occupation and, optionally, income verification for members who want to signal they are serious and established." />
-          <AudienceCard icon="check" tone="p5" title="College/University students" desc="Valid student ID verification opens a safe, age-appropriate space to meet people on and off campus." />
-          <AudienceCard icon="star" tone="p3" title="News presenters (women)" desc="Verified profiles of familiar broadcast faces, here for genuine conversations away from the camera." />
+          {CATEGORIES.map((c) => (
+            <AudienceCard
+              key={c.slug}
+              href={`/browse?category=${c.slug}`}
+              icon={c.icon}
+              tone={c.tone}
+              title={c.title}
+              desc={c.desc}
+            />
+          ))}
         </div>
       </section>
 
@@ -269,15 +352,26 @@ export default async function HomePage() {
       {/* EDITOR'S PICKS */}
       <section className="px-6 sm:px-12 py-14">
         <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-          <h2 className="text-[22px]">Editor&apos;s picks this week</h2>
+          <h2 className="text-[22px]">Most popular this week</h2>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="crown" /> Handpicked</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <ProfileCard name="Meherin" age={26} loc="Dhaka" tone="p3" online />
-          <ProfileCard name="Arman" age={28} loc="Dhaka" tone="p5" />
-          <ProfileCard name="Shovon" age={24} loc="Khulna" tone="p2" online />
-          <ProfileCard name="Tanvir" age={29} loc="Dhaka" tone="p1" />
-        </div>
+        {popular.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {popular.map((p, i) => (
+              <ProfileCard
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                age={p.age}
+                loc={p.location || "Bangladesh"}
+                tone={TONES[(i + 2) % TONES.length]}
+                photo={p.photo ?? undefined}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-stone text-sm">Nothing to show here yet.</p>
+        )}
       </section>
 
       {/* HOW IT WORKS */}

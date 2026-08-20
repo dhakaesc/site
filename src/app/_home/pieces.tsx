@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // Presentational building blocks for the marketing homepage, mirroring
 // reference/design-prototype.html's helper functions (icon, av, profileCard,
 // reviewCard, trustBadge, etc.) but as React components.
@@ -91,30 +93,46 @@ export function VerificationStep({
 }
 
 export function AudienceCard({
-  icon, title, desc, tone,
-}: { icon: string; title: string; desc: string; tone: string }) {
-  return (
-    <div
-      className="rounded-[22px] border border-border-hair p-[26px] relative overflow-hidden hover:-translate-y-[3px] hover:border-border-hair-2 transition"
-      style={{ background: GRADIENTS[tone] }}
-    >
-      <div className="relative">
-        <div className="w-10 h-10 rounded-[12px] bg-black/25 flex items-center justify-center text-gold-bright">
-          <Icon name={icon} />
-        </div>
-        <h3 className="text-[17px] mt-4">{title}</h3>
-        <p className="text-[12.5px] mt-2 leading-relaxed text-ivory/85">{desc}</p>
+  icon, title, desc, tone, href,
+}: { icon: string; title: string; desc: string; tone: string; href?: string }) {
+  const inner = (
+    <>
+      <div className="w-10 h-10 rounded-[12px] bg-black/25 flex items-center justify-center text-gold-bright">
+        <Icon name={icon} />
       </div>
+      <h3 className="text-[17px] mt-4">{title}</h3>
+      <p className="text-[12.5px] mt-2 leading-relaxed text-ivory/85">{desc}</p>
+    </>
+  );
+
+  const className =
+    "rounded-[22px] border border-border-hair p-[26px] relative overflow-hidden hover:-translate-y-[3px] hover:border-border-hair-2 transition block";
+
+  if (href) {
+    return (
+      <Link href={href} className={className} style={{ background: GRADIENTS[tone] }}>
+        <div className="relative">{inner}</div>
+      </Link>
+    );
+  }
+
+  return (
+    <div className={className} style={{ background: GRADIENTS[tone] }}>
+      <div className="relative">{inner}</div>
     </div>
   );
 }
 
 export function ProfileCard({
-  name, age, loc, tone, online,
-}: { name: string; age: number; loc: string; tone: string; online?: boolean }) {
-  return (
-    <div className="rounded-[22px] border border-border-hair bg-surface overflow-hidden hover:-translate-y-[3px] hover:border-border-hair-2 transition">
+  name, age, loc, tone, online, id, photo,
+}: { name: string; age: number; loc: string; tone: string; online?: boolean; id?: number; photo?: string }) {
+  const inner = (
+    <>
       <div className="h-[200px] relative" style={{ background: GRADIENTS[tone] }}>
+        {photo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt={name} className="absolute inset-0 w-full h-full object-cover" />
+        )}
         {online && (
           <span className="absolute top-3 left-3 rounded-full bg-success/10 border border-success/25 text-success text-[11px] font-semibold px-3 py-1">
             ● Online
@@ -130,8 +148,16 @@ export function ProfileCard({
           <Icon name="map" /> {loc}
         </div>
       </div>
-    </div>
+    </>
   );
+
+  const className =
+    "rounded-[22px] border border-border-hair bg-surface overflow-hidden hover:-translate-y-[3px] hover:border-border-hair-2 transition block";
+
+  if (id) {
+    return <Link href={`/u/${id}`} className={className}>{inner}</Link>;
+  }
+  return <div className={className}>{inner}</div>;
 }
 
 export function SuccessStoryCard({

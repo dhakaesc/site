@@ -64,6 +64,13 @@
       "when": 1787244244057,
       "tag": "0008_fancy_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787246350823,
+      "tag": "0009_tense_sentinel",
+      "breakpoints": true
     }
   ]
 }

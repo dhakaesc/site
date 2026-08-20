@@ -26,7 +26,7 @@ export async function GET() {
       gender: users.gender,
       location: users.location,
       bio: users.bio,
-      adminCategory: users.adminCategory,
+      category: users.category,
       adminNote: users.adminNote,
       isPublished: users.isPublished,
       createdAt: users.createdAt,
@@ -58,7 +58,7 @@ const createSchema = z.object({
   name: z.string().trim().min(2).max(100),
   age: z.number().int().min(18).max(100),
   gender: z.enum(["male", "female", "other"]),
-  category: z.enum(["model", "influencer", "other"]),
+  category: z.string().trim().max(40),
   location: z.string().trim().max(120).optional(),
   bio: z.string().trim().max(500).optional(),
   published: z.boolean().default(false),
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       location: location ?? "",
       bio: bio ?? "",
       profileSource: "admin",
-      adminCategory: category,
+      category,
       adminNote: adminNote ?? "",
       isPublished: published,
       // Admin-created profiles are a known, trusted party — no phone-call
@@ -113,7 +113,8 @@ export async function POST(req: NextRequest) {
 const patchSchema = z.object({
   userId: z.number().int(),
   isPublished: z.boolean().optional(),
-  category: z.enum(["model", "influencer", "other"]).optional(),
+  category: z.string().trim().max(40).optional(),
+  gender: z.enum(["male", "female", "other"]).optional(),
   name: z.string().trim().min(2).max(100).optional(),
   age: z.number().int().min(18).max(100).optional(),
   location: z.string().trim().max(120).optional(),
@@ -133,7 +134,7 @@ export async function PATCH(req: NextRequest) {
 
   const { userId, category, ...rest } = parsed.data;
   const updates: Record<string, unknown> = { ...rest };
-  if (category !== undefined) updates.adminCategory = category;
+  if (category !== undefined) updates.category = category;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });

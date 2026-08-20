@@ -3,49 +3,60 @@ import { and, eq, notInArray, inArray, or, gte, lte, ilike, desc, sql } from "dr
 import { db } from "@/lib/db";
 import { users, photos, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
+import { CATEGORY_SLUGS } from "@/lib/categories";
 
 export async function GET(req: NextRequest) {
+  // Browsing is public - a visitor arriving from an ad can look around
+  // before signing up. Only acting (like/pass/message) needs a session.
   const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-  }
 
   const { searchParams } = new URL(req.url);
   const gender = searchParams.get("gender"); // male | female | other
   const minAge = Number(searchParams.get("minAge"));
   const maxAge = Number(searchParams.get("maxAge"));
   const location = searchParams.get("location")?.trim();
+  const category = searchParams.get("category")?.trim();
 
-  const alreadyDecided = await db
-    .select({ toUserId: likes.toUserId })
-    .from(likes)
-    .where(eq(likes.fromUserId, session.userId));
+  let excludeIds: number[] = [];
 
-  // Hide anyone in a block relationship with me, in either direction.
-  const blockRows = await db
-    .select({
-      blockerUserId: blocks.blockerUserId,
-      blockedUserId: blocks.blockedUserId,
-    })
-    .from(blocks)
-    .where(
-      or(
-        eq(blocks.blockerUserId, session.userId),
-        eq(blocks.blockedUserId, session.userId)
-      )
+  if (session) {
+    const alreadyDecided = await db
+      .select({ toUserId: likes.toUserId })
+      .from(likes)
+      .where(eq(likes.fromUserId, session.userId));
+
+    // Hide anyone in a block relationship with me, in either direction.
+    const blockRows = await db
+      .select({
+        blockerUserId: blocks.blockerUserId,
+        blockedUserId: blocks.blockedUserId,
+      })
+      .from(blocks)
+      .where(
+        or(
+          eq(blocks.blockerUserId, session.userId),
+          eq(blocks.blockedUserId, session.userId)
+        )
+      );
+
+    const blockedIds = blockRows.map((r) =>
+      r.blockerUserId === session.userId ? r.blockedUserId : r.blockerUserId
     );
 
-  const blockedIds = blockRows.map((r) =>
-    r.blockerUserId === session.userId ? r.blockedUserId : r.blockerUserId
-  );
+    excludeIds = [
+      session.userId,
+      ...alreadyDecided.map((r) => r.toUserId),
+      ...blockedIds,
+    ];
+  }
 
-  const excludeIds = [
-    session.userId,
-    ...alreadyDecided.map((r) => r.toUserId),
-    ...blockedIds,
-  ];
-
-  const filters = [eq(users.isBanned, false), eq(users.isPublished, true), notInArray(users.id, excludeIds)];
+  const filters = [eq(users.isBanned, false), eq(users.isPublished, true)];
+  if (excludeIds.length > 0) {
+    filters.push(notInArray(users.id, excludeIds));
+  }
+  if (category && CATEGORY_SLUGS.includes(category)) {
+    filters.push(eq(users.category, category));
+  }
   if (gender === "male" || gender === "female" || gender === "other") {
     filters.push(eq(users.gender, gender));
   }

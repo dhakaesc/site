@@ -38,7 +38,10 @@ export const users = pgTable("users", {
   // of a real person who already has a paying relationship with us (per
   // business decision - not for impersonating public figures).
   profileSource: varchar("profile_source", { length: 20 }).notNull().default("self"),
-  adminCategory: varchar("admin_category", { length: 20 }), // model | influencer | other, admin-created only
+  adminCategory: varchar("admin_category", { length: 30 }), // legacy: model | influencer | other
+  // Which homepage category this profile belongs to. Drives the
+  // "Who you will meet here" browse filters. Null = uncategorised.
+  category: varchar("category", { length: 40 }),
   adminNote: text("admin_note").default(""), // internal note, e.g. how/when they paid
   // Admin-created profiles start unpublished (draft) until an admin
   // flips them live. Self-signups are published immediately.

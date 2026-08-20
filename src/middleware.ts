@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken, SESSION_COOKIE } from "@/lib/auth/jwt";
 
-const PROTECTED_PREFIXES = [
-  "/dashboard",
-  "/admin",
-  "/browse",
-  "/profile",
-  "/likes-me",
-];
+// /browse and /u/[id] are deliberately public: someone arriving from an ad
+// can look around before being asked to create an account. Anything that
+// *acts* (messaging, liking) still requires a session.
+const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/profile", "/likes-me"];
 const ADMIN_PREFIXES = ["/admin"];
 
 export async function middleware(req: NextRequest) {
@@ -37,7 +34,6 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/admin/:path*",
-    "/browse/:path*",
     "/profile/:path*",
     "/likes-me/:path*",
   ],

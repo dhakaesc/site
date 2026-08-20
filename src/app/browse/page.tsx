@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { categoryTitle } from "@/lib/categories";
 
 type Profile = {
   id: number;
@@ -14,12 +16,15 @@ type Profile = {
   photos: string[];
 };
 
-export default function BrowsePage() {
+function BrowseInner() {
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [index, setIndex] = useState(0);
   const [matchNotice, setMatchNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category");
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [gender, setGender] = useState("");
   const [minAge, setMinAge] = useState("");
@@ -32,6 +37,7 @@ export default function BrowsePage() {
     if (min) params.set("minAge", min);
     if (max) params.set("maxAge", max);
     if (loc) params.set("location", loc);
+    if (category) params.set("category", category);
 
     fetch(`/api/browse?${params.toString()}`)
       .then((r) => r.json())
@@ -44,8 +50,12 @@ export default function BrowsePage() {
 
   useEffect(() => {
     loadProfiles();
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setSignedIn(Boolean(d.user)))
+      .catch(() => setSignedIn(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [category]);
 
   function applyFilters(e: React.FormEvent) {
     e.preventDefault();
@@ -65,6 +75,11 @@ export default function BrowsePage() {
   async function decide(liked: boolean) {
     const current = profiles?.[index];
     if (!current) return;
+
+    if (signedIn === false) {
+      window.location.href = "/register";
+      return;
+    }
 
     setMatchNotice(null);
     const res = await fetch("/api/likes", {
@@ -86,7 +101,7 @@ export default function BrowsePage() {
   return (
     <main className="min-h-screen flex flex-col items-center px-6 py-10">
       <div className="w-full max-w-md flex items-center justify-between mb-6">
-        <div className="font-serif italic text-xl">♥ AMOURA</div>
+        <Link href="/" className="font-serif italic text-xl">♥ AMOURA</Link>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setFiltersOpen((v) => !v)}
@@ -94,14 +109,31 @@ export default function BrowsePage() {
           >
             Filters{gender || minAge || maxAge || location ? " •" : ""}
           </button>
-          <Link
-            href="/dashboard"
-            className="text-sm text-stone hover:text-ivory"
-          >
-            Dashboard
-          </Link>
+          {signedIn === false ? (
+            <Link
+              href="/register"
+              className="rounded-[12px] bg-gradient-to-b from-rose-bright to-rose px-4 py-2 text-sm font-semibold text-white"
+            >
+              Join free
+            </Link>
+          ) : (
+            <Link href="/dashboard" className="text-sm text-stone hover:text-ivory">
+              Dashboard
+            </Link>
+          )}
         </div>
       </div>
+
+      {category && (
+        <div className="w-full max-w-md flex items-center justify-between mb-4 rounded-[14px] border border-gold-bright/35 bg-gold-bright/10 px-4 py-2.5">
+          <span className="text-gold-bright text-[13px] font-semibold">
+            {categoryTitle(category) ?? "Filtered"}
+          </span>
+          <Link href="/browse" className="text-stone text-xs hover:text-ivory">
+            Clear ✕
+          </Link>
+        </div>
+      )}
 
       {filtersOpen && (
         <form
@@ -266,5 +298,13 @@ function ProfileCard({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BrowsePage() {
+  return (
+    <Suspense fallback={null}>
+      <BrowseInner />
+    </Suspense>
   );
 }
