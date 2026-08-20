@@ -38,7 +38,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
       onMouseLeave={() => setPaused(false)}
       style={{ padding: "24px 48px 8px" }}
     >
-      <div style={{
+      <div className="hero-slider" style={{
         position: "relative", borderRadius: 24, overflow: "hidden",
         border: "1px solid var(--border-hair)", background: "var(--bg-surface)",
       }}>
@@ -62,7 +62,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
               decoding="async"
               style={{
                 position: "absolute", inset: 0, width: "100%", height: "100%",
-                objectFit: "cover", objectPosition: "center 25%",
+                objectFit: "cover", objectPosition: "center center",
               }}
             />
             <div style={{

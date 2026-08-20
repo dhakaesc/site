@@ -15,7 +15,7 @@ const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
 
 const SLIDES: Slide[] = [
   {
-    image: "/categories/drama-models.webp",
+    image: "/slides/slide-1.webp",
     eyebrow: "Real people. Real matches.",
     title: "Find someone worth texting back.",
     desc: "Genuine, verified profiles and conversations that actually go somewhere — not endless swiping into the void.",
