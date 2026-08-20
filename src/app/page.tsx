@@ -117,6 +117,16 @@ export default async function HomePage() {
         <div className="max-w-3xl mx-auto">
           <GenderCTA />
         </div>
+        <div className="max-w-xl mx-auto mt-5 text-center">
+          <div className="text-stone text-xs mb-2.5">Or jump straight to an age range</div>
+          <div className="flex gap-2 justify-center flex-wrap">
+            {["18–24", "25–30", "31–40", "41+"].map((a) => (
+              <Link key={a} href="/browse" className="inline-flex rounded-full border border-border-hair bg-white/[0.02] text-stone text-sm px-[18px] py-2 hover:text-ivory hover:border-border-hair-2">
+                {a}
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* HERO */}
