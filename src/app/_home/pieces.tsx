@@ -128,7 +128,7 @@ export function ProfileCard({
 }: { name: string; age: number; loc: string; tone: string; online?: boolean; id?: number; photo?: string }) {
   const inner = (
     <>
-      <div className="h-[200px] relative" style={{ background: GRADIENTS[tone] }}>
+      <div className="aspect-square relative" style={{ background: GRADIENTS[tone] }}>
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photo} alt={name} className="absolute inset-0 w-full h-full object-cover" />

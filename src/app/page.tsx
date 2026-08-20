@@ -135,7 +135,7 @@ export default async function HomePage() {
   const popular = popularRows.map(withPhoto);
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen max-w-[1280px] mx-auto">
       {/* TOP BANNER */}
       <div className="bg-rose text-white text-center text-xs font-semibold py-2 px-4">
         ✦ Limited time — 20% off your first month of Premium · ends Sunday
