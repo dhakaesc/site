@@ -93,6 +93,21 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/** Homepage hero slides, editable from the admin panel. */
+export const slides = pgTable("slides", {
+  id: serial("id").primaryKey(),
+  // Object key inside the R2 bucket, e.g. "slides/<uuid>.jpg"
+  imageKey: varchar("image_key", { length: 500 }).notNull(),
+  eyebrow: varchar("eyebrow", { length: 120 }).default(""),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").default(""),
+  ctaLabel: varchar("cta_label", { length: 60 }).default("Create free profile"),
+  ctaHref: varchar("cta_href", { length: 200 }).default("/register"),
+  position: integer("position").notNull().default(0),
+  isPublished: boolean("is_published").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const paymentRequests = pgTable("payment_requests", {
   id: serial("id").primaryKey(),
   userId: integer("user_id")
@@ -162,3 +177,4 @@ export type PaymentRequest = typeof paymentRequests.$inferSelect;
 export type VerificationToken = typeof verificationTokens.$inferSelect;
 export type Block = typeof blocks.$inferSelect;
 export type Report = typeof reports.$inferSelect;
+export type Slide = typeof slides.$inferSelect;

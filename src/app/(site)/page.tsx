@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users, photos } from "@/lib/db/schema";
+import { users, photos, slides as slidesTable } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { CATEGORIES } from "@/lib/categories";
 import HeroSlider, { type Slide } from "../_home/hero-slider";
@@ -13,7 +13,8 @@ import {
 
 const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
 
-const SLIDES: Slide[] = [
+// Shown only until an admin adds slides in Admin → Homepage Slider.
+const FALLBACK_SLIDES: Slide[] = [
   {
     image: "/slides/slide-1.webp",
     eyebrow: "Real people. Real matches.",
@@ -91,6 +92,23 @@ export default async function HomePage() {
   const session = await getSession();
   const city = await visitorCity();
 
+  const slideRows = await db
+    .select()
+    .from(slidesTable)
+    .where(eq(slidesTable.isPublished, true))
+    .orderBy(asc(slidesTable.position), asc(slidesTable.id));
+
+  const heroSlides: Slide[] = slideRows.length
+    ? slideRows.map((r) => ({
+        image: `/api/media/${r.imageKey}`,
+        eyebrow: r.eyebrow ?? "",
+        title: r.title,
+        desc: r.description ?? "",
+        href: r.ctaHref || "/register",
+        cta: r.ctaLabel || "Create free profile",
+      }))
+    : FALLBACK_SLIDES;
+
   const publicFilters = [eq(users.isBanned, false), eq(users.isPublished, true)];
   const cols = { id: users.id, name: users.name, age: users.age, location: users.location };
 
@@ -134,7 +152,7 @@ export default async function HomePage() {
         </div>
       )}
 
-      <HeroSlider slides={SLIDES} />
+      <HeroSlider slides={heroSlides} />
 
       {/* START HERE */}
       <section style={{ padding: "26px 48px 10px" }}>

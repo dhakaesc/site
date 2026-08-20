@@ -14,6 +14,7 @@ const GROUPS: {
   {
     label: "Content",
     items: [
+      { label: "Homepage Slider", href: "/admin/slides" },
       { label: "Model Profiles", href: "/admin/model-profiles" },
       { label: "Users Profile", href: "/admin" },
     ],
