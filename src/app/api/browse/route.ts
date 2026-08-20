@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, notInArray, inArray, or, gte, lte, ilike } from "drizzle-orm";
+import { and, eq, notInArray, inArray, or, gte, lte, ilike, desc, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users, photos, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
@@ -66,9 +66,14 @@ export async function GET(req: NextRequest) {
       age: users.age,
       bio: users.bio,
       location: users.location,
+      spotlightUntil: users.spotlightUntil,
     })
     .from(users)
     .where(and(...filters))
+    // Active VIP spotlight users first, then everyone else.
+    .orderBy(
+      desc(sql`CASE WHEN ${users.spotlightUntil} > now() THEN 1 ELSE 0 END`)
+    )
     .limit(20);
 
   if (candidates.length === 0) {
@@ -89,7 +94,12 @@ export async function GET(req: NextRequest) {
   }
 
   const profiles = candidates.map((c) => ({
-    ...c,
+    id: c.id,
+    name: c.name,
+    age: c.age,
+    bio: c.bio,
+    location: c.location,
+    spotlighted: Boolean(c.spotlightUntil && c.spotlightUntil.getTime() > Date.now()),
     photos: photosByUser.get(c.id) ?? [],
   }));
 

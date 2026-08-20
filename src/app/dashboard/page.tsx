@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { users, messages, likes, paymentRequests } from "@/lib/db/schema";
 import { limitsFor, effectiveTier } from "@/lib/plans";
 import LogoutButton from "./logout-button";
+import SpotlightButton from "./spotlight-button";
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -121,6 +122,12 @@ export default async function DashboardPage() {
           >
             Who liked you
           </Link>
+          <SpotlightButton
+            isVip={activeTier === "vip"}
+            initiallyActive={Boolean(
+              user.spotlightUntil && user.spotlightUntil.getTime() > Date.now()
+            )}
+          />
           <Link
             href="/profile/edit"
             className="rounded-[14px] border border-border-hair px-6 py-3 text-sm font-semibold"

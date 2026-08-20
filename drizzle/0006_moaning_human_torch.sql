@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "spotlight_until" timestamp;

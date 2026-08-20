@@ -25,6 +25,8 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").notNull().default(false),
   isBanned: boolean("is_banned").notNull().default(false),
   emailVerifiedAt: timestamp("email_verified_at"),
+  // When a VIP's "spotlight" boost expires. Null = not currently spotlighted.
+  spotlightUntil: timestamp("spotlight_until"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
