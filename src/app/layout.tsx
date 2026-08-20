@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AMOURA — Find real connections",
+  title: "AMOURA — Find someone worth texting back",
   description: "AMOURA is a modern matchmaking platform built for real connections.",
 };
 
