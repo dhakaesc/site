@@ -101,6 +101,42 @@ export async function sendPaymentRejectedEmail(opts: {
   );
 }
 
+export async function sendPasswordResetEmail(opts: {
+  to: string;
+  name: string;
+  token: string;
+}) {
+  const url = `${process.env.SITE_URL ?? "https://site.amouradhaka.workers.dev"}/reset-password?token=${opts.token}`;
+  await send(
+    opts.to,
+    "Reset your AMOURA password",
+    layout(
+      `Reset your password, ${opts.name.split(" ")[0]}`,
+      `<p>Someone requested a password reset for this account. If that was you, click below — this link works for 1 hour.</p>
+       <p style="margin-top:20px"><a href="${url}" style="display:inline-block;background:#C9A66B;color:#2a1c05;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:600;font-size:13px">Reset password</a></p>
+       <p style="margin-top:20px;font-size:12px">If you didn't request this, you can ignore this email — your password won't change.</p>`
+    )
+  );
+}
+
+export async function sendVerificationEmail(opts: {
+  to: string;
+  name: string;
+  token: string;
+}) {
+  const url = `${process.env.SITE_URL ?? "https://site.amouradhaka.workers.dev"}/verify-email?token=${opts.token}`;
+  await send(
+    opts.to,
+    "Verify your email — AMOURA",
+    layout(
+      `Welcome, ${opts.name.split(" ")[0]}`,
+      `<p>One last step — verify your email so we know it's really you.</p>
+       <p style="margin-top:20px"><a href="${url}" style="display:inline-block;background:#C9A66B;color:#2a1c05;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:600;font-size:13px">Verify email</a></p>
+       <p style="margin-top:20px;font-size:12px">This link works for 24 hours.</p>`
+    )
+  );
+}
+
 /** Tells the admin a payment is waiting, so nothing sits unnoticed. */
 export async function sendAdminNewPaymentEmail(opts: {
   userName: string;

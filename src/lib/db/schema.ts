@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   messagesUsed: integer("messages_used").notNull().default(0),
   isAdmin: boolean("is_admin").notNull().default(false),
   isBanned: boolean("is_banned").notNull().default(false),
+  emailVerifiedAt: timestamp("email_verified_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -86,9 +87,55 @@ export const paymentRequests = pgTable("payment_requests", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Used for both "reset password" and "verify email" links. purpose keeps
+// them apart; token is a random opaque string, never guessable.
+export const verificationTokens = pgTable("verification_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  purpose: varchar("purpose", { length: 20 }).notNull(), // reset | verify
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const blocks = pgTable(
+  "blocks",
+  {
+    id: serial("id").primaryKey(),
+    blockerUserId: integer("blocker_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    blockedUserId: integer("blocked_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.blockerUserId, table.blockedUserId)]
+);
+
+export const reports = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  reporterUserId: integer("reporter_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  reportedUserId: integer("reported_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  reason: varchar("reason", { length: 40 }).notNull(),
+  details: text("details").default(""),
+  status: varchar("status", { length: 20 }).notNull().default("open"), // open | reviewed | dismissed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Photo = typeof photos.$inferSelect;
 export type Like = typeof likes.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type PaymentRequest = typeof paymentRequests.$inferSelect;
+export type VerificationToken = typeof verificationTokens.$inferSelect;
+export type Block = typeof blocks.$inferSelect;
+export type Report = typeof reports.$inferSelect;
