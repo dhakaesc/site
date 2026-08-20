@@ -5,6 +5,7 @@ import { users, messages, photos, paymentRequests } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import AdminUsersTable from "./users-table";
 import AdminPaymentsTable from "./payments-table";
+import AdminSidebar from "./admin-sidebar";
 
 export default async function AdminPage() {
   const session = await getSession();
@@ -40,37 +41,7 @@ export default async function AdminPage() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar scrolls independently of the main panel. */}
-      <aside className="w-[250px] shrink-0 border-r border-border-hair bg-surface p-5 overflow-y-auto">
-        <div className="font-serif italic text-lg mb-6">♥ AMOURA</div>
-        <nav className="space-y-1 text-sm">
-          <div className="rounded-[10px] bg-surface-2 px-3 py-2">Overview</div>
-          <a
-            href="/dashboard"
-            className="block rounded-[10px] px-3 py-2 text-stone hover:text-ivory"
-          >
-            My dashboard
-          </a>
-          <a
-            href="/browse"
-            className="block rounded-[10px] px-3 py-2 text-stone hover:text-ivory"
-          >
-            Browse
-          </a>
-          <a
-            href="/messages"
-            className="block rounded-[10px] px-3 py-2 text-stone hover:text-ivory"
-          >
-            Messages
-          </a>
-          <a
-            href="/pricing"
-            className="block rounded-[10px] px-3 py-2 text-stone hover:text-ivory"
-          >
-            Plans
-          </a>
-        </nav>
-      </aside>
+      <AdminSidebar active="Dashboard" />
 
       {/* Main panel scrolls independently of the sidebar. */}
       <main className="flex-1 min-w-0 overflow-y-auto p-8">
