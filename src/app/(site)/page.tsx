@@ -140,18 +140,6 @@ export default async function HomePage() {
 
   return (
     <>
-      {session && (
-        <div className="card glass" style={{
-          margin: "20px 48px 0", padding: "16px 22px", display: "flex",
-          justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10,
-        }}>
-          <div style={{ fontSize: 14 }}>
-            Welcome back — here is who is new since your last visit.
-          </div>
-          <Link className="btn btn-ghost btn-sm" href="/dashboard">Go to my dashboard →</Link>
-        </div>
-      )}
-
       <HeroSlider slides={heroSlides} />
 
       {/* START HERE */}

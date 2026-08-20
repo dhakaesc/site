@@ -36,6 +36,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
     <section
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      className="hero-slider-section"
       style={{ padding: "24px 48px 8px" }}
     >
       <div className="hero-slider" style={{
@@ -51,7 +52,8 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
               inset: i === index ? undefined : 0,
               opacity: i === index ? 1 : 0,
               transition: "opacity .6s ease",
-              pointerEvents: i === index ? "auto" : "none",
+              pointerEvents: "none",
+              zIndex: 0,
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -79,7 +81,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
               <p className="stone" style={{ maxWidth: 460, marginTop: 14, fontSize: 15 }}>
                 {s.desc}
               </p>
-              <Link className="btn btn-rose" style={{ marginTop: 24 }} href={s.href}>
+              <Link className="btn btn-rose" style={{ marginTop: 24, pointerEvents: "auto" }} href={s.href}>
                 {s.cta}
               </Link>
             </div>
@@ -92,7 +94,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
               onClick={() => go(index - 1)}
               aria-label="Previous slide"
               className="slide-arrow"
-              style={{ left: 16 }}
+              style={{ left: 16, zIndex: 3 }}
             >
               ‹
             </button>
@@ -100,14 +102,15 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
               onClick={() => go(index + 1)}
               aria-label="Next slide"
               className="slide-arrow"
-              style={{ right: 16 }}
+              style={{ right: 16, zIndex: 3 }}
             >
               ›
             </button>
 
             <div style={{
-              position: "absolute", bottom: 18, left: 0, right: 0,
+              position: "absolute", bottom: 18, left: 0, right: 0, zIndex: 3,
               display: "flex", justifyContent: "center", gap: 8,
+              pointerEvents: "none",
             }}>
               {slides.map((s, i) => (
                 <button
@@ -117,6 +120,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
                   style={{
                     width: i === index ? 22 : 8, height: 8, borderRadius: 999,
                     border: "none", cursor: "pointer", transition: ".25s",
+                    pointerEvents: "auto",
                     background: i === index ? "var(--gold-bright)" : "rgba(255,255,255,.35)",
                   }}
                 />
