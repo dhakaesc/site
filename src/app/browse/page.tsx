@@ -18,12 +18,47 @@ export default function BrowsePage() {
   const [matchNotice, setMatchNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/api/browse")
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [gender, setGender] = useState("");
+  const [minAge, setMinAge] = useState("");
+  const [maxAge, setMaxAge] = useState("");
+  const [location, setLocation] = useState("");
+
+  function loadProfiles(g = gender, min = minAge, max = maxAge, loc = location) {
+    const params = new URLSearchParams();
+    if (g) params.set("gender", g);
+    if (min) params.set("minAge", min);
+    if (max) params.set("maxAge", max);
+    if (loc) params.set("location", loc);
+
+    fetch(`/api/browse?${params.toString()}`)
       .then((r) => r.json())
-      .then((data) => setProfiles(data.profiles ?? []))
+      .then((data) => {
+        setProfiles(data.profiles ?? []);
+        setIndex(0);
+      })
       .catch(() => setError("Couldn't load profiles. Try again."));
+  }
+
+  useEffect(() => {
+    loadProfiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function applyFilters(e: React.FormEvent) {
+    e.preventDefault();
+    setFiltersOpen(false);
+    loadProfiles();
+  }
+
+  function clearFilters() {
+    setGender("");
+    setMinAge("");
+    setMaxAge("");
+    setLocation("");
+    setFiltersOpen(false);
+    loadProfiles("", "", "", "");
+  }
 
   async function decide(liked: boolean) {
     const current = profiles?.[index];
@@ -50,13 +85,95 @@ export default function BrowsePage() {
     <main className="min-h-screen flex flex-col items-center px-6 py-10">
       <div className="w-full max-w-md flex items-center justify-between mb-6">
         <div className="font-serif italic text-xl">♥ AMOURA</div>
-        <Link
-          href="/dashboard"
-          className="text-sm text-stone hover:text-ivory"
-        >
-          Dashboard
-        </Link>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setFiltersOpen((v) => !v)}
+            className="text-sm text-stone hover:text-ivory"
+          >
+            Filters{gender || minAge || maxAge || location ? " •" : ""}
+          </button>
+          <Link
+            href="/dashboard"
+            className="text-sm text-stone hover:text-ivory"
+          >
+            Dashboard
+          </Link>
+        </div>
       </div>
+
+      {filtersOpen && (
+        <form
+          onSubmit={applyFilters}
+          className="w-full max-w-md rounded-[18px] border border-border-hair bg-surface p-5 mb-4 space-y-3"
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-stone mb-1.5">Show me</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="field-input"
+              >
+                <option value="">Anyone</option>
+                <option value="male">Men</option>
+                <option value="female">Women</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-stone mb-1.5">Location</label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. Dhaka"
+                className="field-input"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-stone mb-1.5">Min age</label>
+              <input
+                type="number"
+                min={18}
+                max={100}
+                value={minAge}
+                onChange={(e) => setMinAge(e.target.value)}
+                className="field-input"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-stone mb-1.5">Max age</label>
+              <input
+                type="number"
+                min={18}
+                max={100}
+                value={maxAge}
+                onChange={(e) => setMaxAge(e.target.value)}
+                className="field-input"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="flex-1 rounded-[12px] border border-border-hair-2 py-2.5 text-sm text-stone"
+            >
+              Clear
+            </button>
+            <button
+              type="submit"
+              className="flex-1 rounded-[12px] bg-gradient-to-b from-rose-bright to-rose py-2.5 text-sm font-semibold text-white"
+            >
+              Apply
+            </button>
+          </div>
+        </form>
+      )}
 
       {matchNotice && (
         <div className="w-full max-w-md rounded-[14px] bg-gradient-to-b from-gold-bright to-gold text-[#2a1c05] text-sm font-semibold text-center py-3 mb-4">

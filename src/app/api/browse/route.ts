@@ -1,14 +1,20 @@
-import { NextResponse } from "next/server";
-import { and, eq, notInArray, inArray, or } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import { and, eq, notInArray, inArray, or, gte, lte, ilike } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users, photos, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
+
+  const { searchParams } = new URL(req.url);
+  const gender = searchParams.get("gender"); // male | female | other
+  const minAge = Number(searchParams.get("minAge"));
+  const maxAge = Number(searchParams.get("maxAge"));
+  const location = searchParams.get("location")?.trim();
 
   const alreadyDecided = await db
     .select({ toUserId: likes.toUserId })
@@ -39,6 +45,20 @@ export async function GET() {
     ...blockedIds,
   ];
 
+  const filters = [eq(users.isBanned, false), notInArray(users.id, excludeIds)];
+  if (gender === "male" || gender === "female" || gender === "other") {
+    filters.push(eq(users.gender, gender));
+  }
+  if (Number.isInteger(minAge) && minAge >= 18) {
+    filters.push(gte(users.age, minAge));
+  }
+  if (Number.isInteger(maxAge) && maxAge >= 18) {
+    filters.push(lte(users.age, maxAge));
+  }
+  if (location) {
+    filters.push(ilike(users.location, `%${location}%`));
+  }
+
   const candidates = await db
     .select({
       id: users.id,
@@ -48,9 +68,7 @@ export async function GET() {
       location: users.location,
     })
     .from(users)
-    .where(
-      and(eq(users.isBanned, false), notInArray(users.id, excludeIds))
-    )
+    .where(and(...filters))
     .limit(20);
 
   if (candidates.length === 0) {
