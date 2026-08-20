@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken, SESSION_COOKIE } from "@/lib/auth/jwt";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/browse", "/profile"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/admin",
+  "/browse",
+  "/profile",
+  "/likes-me",
+];
 const ADMIN_PREFIXES = ["/admin"];
 
 export async function middleware(req: NextRequest) {
@@ -28,5 +34,11 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/browse/:path*",
+    "/profile/:path*",
+    "/likes-me/:path*",
+  ],
 };

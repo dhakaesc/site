@@ -116,6 +116,12 @@ export default async function DashboardPage() {
             Messages
           </Link>
           <Link
+            href="/likes-me"
+            className="rounded-[14px] border border-border-hair px-6 py-3 text-sm font-semibold"
+          >
+            Who liked you
+          </Link>
+          <Link
             href="/profile/edit"
             className="rounded-[14px] border border-border-hair px-6 py-3 text-sm font-semibold"
           >
