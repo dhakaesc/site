@@ -5,6 +5,13 @@ import Link from "next/link";
 import { Icon, PhotoGrid } from "../../../_home/pieces";
 import PhotoLightbox from "../../../_home/photo-lightbox";
 
+type Related = {
+  id: number; name: string; age: number;
+  location: string | null; photo: string | null;
+};
+
+type Msg = { id: number; body: string; fromMe: boolean; createdAt: string };
+
 type Profile = {
   id: number;
   name: string;
@@ -28,11 +35,25 @@ export default function PublicProfilePage({
   const [error, setError] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [related, setRelated] = useState<Related[]>([]);
+
+  const [liked, setLiked] = useState(false);
+  const [likeNote, setLikeNote] = useState<string | null>(null);
+
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/profiles/${id}`)
       .then((r) => r.json())
-      .then((d) => (d.error ? setError(d.error) : setProfile(d.profile)))
+      .then((d) => {
+        if (d.error) { setError(d.error); return; }
+        setProfile(d.profile);
+        setRelated(d.related ?? []);
+      })
       .catch(() => setError("Couldn't load this profile."));
 
     fetch("/api/auth/me")
@@ -40,6 +61,67 @@ export default function PublicProfilePage({
       .then((d) => setSignedIn(Boolean(d.user)))
       .catch(() => setSignedIn(false));
   }, [id]);
+
+  async function toggleLike() {
+    if (signedIn === false) { window.location.href = "/register"; return; }
+    const next = !liked;
+    setLiked(next);              // optimistic - feels instant
+    setLikeNote(null);
+
+    const res = await fetch("/api/likes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ toUserId: Number(id), liked: next }),
+    });
+
+    if (!res.ok) {
+      setLiked(!next);           // roll back if the server refused
+      const d = await res.json().catch(() => ({}));
+      setLikeNote(d.error ?? "Couldn't save that.");
+      return;
+    }
+    const d = await res.json().catch(() => ({}));
+    if (next) {
+      setLikeNote(d.matched ? "It's a match — you can message now." : "Liked.");
+    }
+  }
+
+  function openChat() {
+    if (signedIn === false) { window.location.href = "/register"; return; }
+    setChatOpen(true);
+    setChatError(null);
+    fetch(`/api/messages/${id}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.error) { setChatError(d.error); return; }
+        setMessages(d.messages ?? []);
+      })
+      .catch(() => setChatError("Couldn't open this conversation."));
+  }
+
+  async function sendMessage(e: React.FormEvent) {
+    e.preventDefault();
+    const body = draft.trim();
+    if (!body || sending) return;
+    setSending(true);
+    setChatError(null);
+
+    const res = await fetch(`/api/messages/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+    });
+    setSending(false);
+
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setChatError(d.error ?? "Couldn't send that message.");
+      return;
+    }
+    const d = await res.json();
+    setMessages((prev) => [...prev, d.message]);
+    setDraft("");
+  }
 
   if (error) {
     return (
@@ -130,13 +212,33 @@ export default function PublicProfilePage({
               <Icon name="map" /> {profile.location || "Bangladesh"}
             </div>
           </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <Link className="btn btn-ghost btn-sm" href={signedIn ? "/browse" : "/register"}>
-              <Icon name="heart" /> Like
-            </Link>
-            <Link className="btn btn-rose btn-sm" href={signedIn ? "/messages" : "/register"}>
-              <Icon name="msg" /> Message
-            </Link>
+          <div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={toggleLike}
+                aria-pressed={liked}
+                className="btn btn-ghost btn-sm"
+                style={liked ? {
+                  color: "var(--rose-bright)",
+                  borderColor: "rgba(199,54,75,.45)",
+                  background: "rgba(199,54,75,.12)",
+                } : undefined}
+              >
+                <span style={{ color: liked ? "var(--rose-bright)" : "inherit" }}>
+                  <Icon name="heart" filled={liked} />
+                </span>
+                {liked ? "Liked" : "Like"}
+              </button>
+              <button type="button" onClick={openChat} className="btn btn-rose btn-sm">
+                <Icon name="msg" /> Message
+              </button>
+            </div>
+            {likeNote && (
+              <div className="stone" style={{ fontSize: 11, marginTop: 6, textAlign: "right" }}>
+                {likeNote}
+              </div>
+            )}
           </div>
         </div>
 
@@ -196,10 +298,99 @@ export default function PublicProfilePage({
             <span className="pill stone">{profile.categoryTitle}</span>
           </div>
         )}
+
+        {related.length > 0 && (
+          <>
+            <div className="section-title" style={{ marginTop: 34 }}>
+              <h3 style={{ fontSize: 17 }}>More related for dates</h3>
+            </div>
+            <div className="grid g-5">
+              {related.map((r) => (
+                <Link key={r.id} href={`/u/${r.id}`} className="card hoverable"
+                  style={{ overflow: "hidden", display: "block" }}>
+                  <div className="cover" style={{
+                    aspectRatio: "1 / 1", position: "relative",
+                    background: "linear-gradient(135deg,#D9A7B0,#8C4B5A)",
+                  }}>
+                    {r.photo && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={r.photo} alt={r.name} loading="lazy" style={{
+                        position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+                      }} />
+                    )}
+                  </div>
+                  <div style={{ padding: "12px 14px" }}>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name}, {r.age}</div>
+                    <div className="stone" style={{ fontSize: 11.5, marginTop: 2 }}>
+                      {r.location || "Bangladesh"}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 22 }}>
+              <Link className="btn btn-ghost" href="/browse">Browse more profiles</Link>
+            </div>
+          </>
+        )}
       </div>
 
       {/* SIDEBAR */}
       <div className="flex-1 min-w-[260px] rounded-[22px] border border-border-hair bg-surface/60 backdrop-blur-xl p-6 sticky top-[90px]">
+        {/* Message panel - opens in place rather than navigating away */}
+        {chatOpen && (
+          <div className="card" style={{ padding: 16, marginBottom: 18 }}>
+            <div className="section-title" style={{ marginBottom: 10 }}>
+              <h3 style={{ fontSize: 14 }}>Message {firstName}</h3>
+              <button type="button" onClick={() => setChatOpen(false)}
+                className="stone" style={{ background: "none", border: "none", fontSize: 16, lineHeight: 1 }}
+                aria-label="Close conversation">×</button>
+            </div>
+
+            <div style={{
+              maxHeight: 260, overflowY: "auto", display: "flex",
+              flexDirection: "column", gap: 8, marginBottom: 10,
+            }}>
+              {messages.length === 0 && !chatError && (
+                <p className="stone" style={{ fontSize: 12 }}>
+                  No messages yet — say hello.
+                </p>
+              )}
+              {messages.map((m) => (
+                <div key={m.id} style={{ display: "flex", justifyContent: m.fromMe ? "flex-end" : "flex-start" }}>
+                  <div className="bubble" style={{
+                    background: m.fromMe
+                      ? "linear-gradient(180deg,var(--rose-bright),var(--rose))"
+                      : "var(--bg-surface-2)",
+                    color: m.fromMe ? "#fff" : "var(--ivory)",
+                  }}>
+                    {m.body}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {chatError && (
+              <p style={{ color: "var(--danger)", fontSize: 12, marginBottom: 8 }}>{chatError}</p>
+            )}
+
+            <form onSubmit={sendMessage} style={{ display: "flex", gap: 8 }}>
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Type a message…"
+                className="field-input"
+                maxLength={2000}
+                style={{ flex: 1 }}
+              />
+              <button type="submit" disabled={sending || !draft.trim()}
+                className="btn btn-rose btn-sm">
+                <Icon name="send" />
+              </button>
+            </form>
+          </div>
+        )}
+
         <h3 className="text-[15px] mb-3.5">Basics</h3>
         {[
           ["Age", String(profile.age)],

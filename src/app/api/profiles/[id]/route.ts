@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, eq, asc } from "drizzle-orm";
+import { and, eq, asc, ne, or, isNull, desc, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users, photos } from "@/lib/db/schema";
 import { categoryTitle } from "@/lib/categories";
@@ -50,7 +50,43 @@ export async function GET(
     .where(eq(photos.userId, userId))
     .orderBy(asc(photos.position));
 
+  // A few other profiles to look at next: same category first, then anyone else.
+  const relatedRows = await db
+    .select({
+      id: users.id, name: users.name, age: users.age,
+      location: users.location, category: users.category,
+    })
+    .from(users)
+    .where(
+      and(
+        ne(users.id, userId),
+        eq(users.isBanned, false),
+        eq(users.isPublished, true)
+      )
+    )
+    .orderBy(
+      desc(sql`CASE WHEN ${users.category} = ${profile.category ?? ""} THEN 1 ELSE 0 END`),
+      desc(users.createdAt)
+    )
+    .limit(5);
+
+  const relatedPhotos = relatedRows.length
+    ? await db
+        .select({ userId: photos.userId, key: photos.key, position: photos.position })
+        .from(photos)
+        .where(inArray(photos.userId, relatedRows.map((r) => r.id)))
+        .orderBy(asc(photos.position))
+    : [];
+  const coverFor = new Map<number, string>();
+  for (const ph of relatedPhotos) {
+    if (!coverFor.has(ph.userId)) coverFor.set(ph.userId, `/api/media/${ph.key}`);
+  }
+
   return NextResponse.json({
+    related: relatedRows.map((r) => ({
+      id: r.id, name: r.name, age: r.age,
+      location: r.location, photo: coverFor.get(r.id) ?? null,
+    })),
     profile: {
       id: profile.id,
       name: profile.name,

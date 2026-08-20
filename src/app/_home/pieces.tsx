@@ -33,10 +33,11 @@ const ICON_PATHS: Record<string, string> = {
   chart: "M4 20V10M11 20V4M18 20v-7",
 };
 
-export function Icon({ name }: { name: string }) {
+export function Icon({ name, filled }: { name: string; filled?: boolean }) {
   const d = ICON_PATHS[name] ?? "";
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d={d} />
     </svg>
