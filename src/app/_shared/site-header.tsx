@@ -14,7 +14,8 @@ export default async function SiteHeader() {
         ✦ Limited time — 20% off your first month of Premium · ends Sunday
       </div>
 
-      <header className="flex items-center gap-7 px-6 sm:px-12 py-4 sticky top-0 z-20 bg-void/80 backdrop-blur-xl border-b border-border-hair">
+      <header className="sticky top-0 z-20 bg-void/80 backdrop-blur-xl border-b border-border-hair">
+        <div className="max-w-[1280px] mx-auto flex items-center gap-7 px-6 sm:px-12 py-4">
         <Link href="/" className="font-serif italic text-xl flex items-center gap-2">
           <span className="text-rose-bright not-italic">♥</span> AMOURA
         </Link>
@@ -57,6 +58,7 @@ export default async function SiteHeader() {
             </Link>
           </>
         )}
+        </div>
       </header>
     </>
   );
