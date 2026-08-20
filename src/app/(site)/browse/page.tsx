@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { categoryTitle } from "@/lib/categories";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Icon, ProfileCard } from "../../_home/pieces";
+import { CATEGORIES, categoryTitle } from "@/lib/categories";
 
 type Profile = {
   id: number;
@@ -11,279 +12,222 @@ type Profile = {
   age: number;
   bio: string | null;
   location: string | null;
-  spotlighted?: boolean;
   verified?: boolean;
+  spotlighted?: boolean;
   photos: string[];
 };
 
+const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
+const AGE_PRESETS: [string, string, string][] = [
+  ["18–24", "18", "24"],
+  ["25–30", "25", "30"],
+  ["31–40", "31", "40"],
+  ["41+", "41", ""],
+];
+const AGE_OPTIONS = [18, 21, 24, 28, 32, 36, 40, 45, 50, 60];
+
 function BrowseInner() {
+  const router = useRouter();
+  const params = useSearchParams();
+
+  // The URL is the single source of truth, so links from the homepage
+  // ("Find women" / "Find men") and the category cards arrive pre-filtered
+  // and stay shareable.
+  const gender = params.get("gender") ?? "";
+  const category = params.get("category") ?? "";
+  const minAge = params.get("minAge") ?? "";
+  const maxAge = params.get("maxAge") ?? "";
+  const location = params.get("location") ?? "";
+
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
-  const [index, setIndex] = useState(0);
-  const [matchNotice, setMatchNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const searchParams = useSearchParams();
-  const category = searchParams.get("category");
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [gender, setGender] = useState("");
-  const [minAge, setMinAge] = useState("");
-  const [maxAge, setMaxAge] = useState("");
-  const [location, setLocation] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [fromAge, setFromAge] = useState(minAge || "18");
+  const [toAge, setToAge] = useState(maxAge || "60");
+  const [city, setCity] = useState(location);
 
-  function loadProfiles(g = gender, min = minAge, max = maxAge, loc = location) {
-    const params = new URLSearchParams();
-    if (g) params.set("gender", g);
-    if (min) params.set("minAge", min);
-    if (max) params.set("maxAge", max);
-    if (loc) params.set("location", loc);
-    if (category) params.set("category", category);
-
-    fetch(`/api/browse?${params.toString()}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setProfiles(data.profiles ?? []);
-        setIndex(0);
-      })
-      .catch(() => setError("Couldn't load profiles. Try again."));
-  }
+  const setParams = useCallback(
+    (changes: Record<string, string>) => {
+      const next = new URLSearchParams(params.toString());
+      Object.entries(changes).forEach(([k, v]) => {
+        if (v) next.set(k, v);
+        else next.delete(k);
+      });
+      router.push(`/browse?${next.toString()}`);
+    },
+    [params, router]
+  );
 
   useEffect(() => {
-    loadProfiles();
+    const q = new URLSearchParams();
+    if (gender) q.set("gender", gender);
+    if (category) q.set("category", category);
+    if (minAge) q.set("minAge", minAge);
+    if (maxAge) q.set("maxAge", maxAge);
+    if (location) q.set("location", location);
+
+    setProfiles(null);
+    fetch(`/api/browse?${q.toString()}`)
+      .then((r) => r.json())
+      .then((d) => setProfiles(d.profiles ?? []))
+      .catch(() => setProfiles([]));
+  }, [gender, category, minAge, maxAge, location]);
+
+  useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setSignedIn(Boolean(d.user)))
       .catch(() => setSignedIn(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
+  }, []);
 
-  function applyFilters(e: React.FormEvent) {
-    e.preventDefault();
-    setFiltersOpen(false);
-    loadProfiles();
-  }
-
-  function clearFilters() {
-    setGender("");
-    setMinAge("");
-    setMaxAge("");
-    setLocation("");
-    setFiltersOpen(false);
-    loadProfiles("", "", "", "");
-  }
-
-  async function decide(liked: boolean) {
-    const current = profiles?.[index];
-    if (!current) return;
-
-    if (signedIn === false) {
-      window.location.href = "/register";
-      return;
-    }
-
-    setMatchNotice(null);
-    const res = await fetch("/api/likes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ toUserId: current.id, liked }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.matched) {
-        setMatchNotice(`It's a match with ${current.name}! 🎉`);
-      }
-    }
-
-    setIndex((i) => i + 1);
-  }
+  const activePreset = AGE_PRESETS.find(([, lo, hi]) => lo === minAge && hi === maxAge);
 
   return (
-    <div className="flex flex-col items-center px-6 py-10">
-      <div className="w-full max-w-md flex items-center justify-between mb-6">
-        <h1 className="font-serif text-xl">Discover</h1>
-        <button
-          onClick={() => setFiltersOpen((v) => !v)}
-          className="text-sm text-stone hover:text-ivory"
-        >
-          Filters{gender || minAge || maxAge || location ? " •" : ""}
+    <>
+      {/* Gender toggle + filters */}
+      <div style={{ padding: "24px 48px 12px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <div style={{
+          display: "flex", gap: 4, background: "var(--bg-surface)",
+          border: "1px solid var(--border-hair)", borderRadius: 999, padding: 3,
+        }}>
+          {[
+            { label: "Everyone", value: "" },
+            { label: "Men", value: "male" },
+            { label: "Women", value: "female" },
+          ].map((g) => (
+            <button
+              key={g.value || "all"}
+              onClick={() => setParams({ gender: g.value })}
+              className={`pill ${gender === g.value ? "rose" : "stone"}`}
+              style={{ padding: "8px 18px", cursor: "pointer", border: "none" }}
+            >
+              {gender === g.value && g.value ? `Showing: ${g.label}` : g.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        {category && (
+          <span className="pill gold" style={{ padding: "8px 14px" }}>
+            {categoryTitle(category) ?? category}
+            <button onClick={() => setParams({ category: "" })}
+              style={{ background: "none", border: "none", color: "inherit", marginLeft: 6 }}
+              aria-label="Clear category">✕</button>
+          </span>
+        )}
+
+        <button className="btn btn-ghost btn-sm" onClick={() => setShowFilters((v) => !v)}>
+          <Icon name="filter" /> More filters
         </button>
       </div>
 
-      {category && (
-        <div className="w-full max-w-md flex items-center justify-between mb-4 rounded-[14px] border border-gold-bright/35 bg-gold-bright/10 px-4 py-2.5">
-          <span className="text-gold-bright text-[13px] font-semibold">
-            {categoryTitle(category) ?? "Filtered"}
-          </span>
-          <Link href="/browse" className="text-stone text-xs hover:text-ivory">
-            Clear ✕
-          </Link>
+      {/* Age / city filter */}
+      {showFilters && (
+        <div style={{ padding: "0 48px 20px" }}>
+          <div className="card" style={{ padding: "18px 22px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+              <span style={{ color: "var(--gold-bright)" }}><Icon name="search" /></span>
+              <span style={{ fontWeight: 600, fontSize: 13.5 }}>Search by age</span>
+              <span className="stone" style={{ fontSize: 11.5 }}>
+                — find matches in exactly the age range you want
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+              {AGE_PRESETS.map(([label, lo, hi]) => (
+                <button key={label}
+                  onClick={() => { setFromAge(lo); setToAge(hi || "60"); setParams({ minAge: lo, maxAge: hi }); }}
+                  className={`pill ${activePreset?.[0] === label ? "gold" : "stone"}`}
+                  style={{ padding: "8px 16px", cursor: "pointer", border: "none" }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 120 }}>
+                <label className="field-label">From age</label>
+                <select className="field-input" value={fromAge} onChange={(e) => setFromAge(e.target.value)}>
+                  {AGE_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: 120 }}>
+                <label className="field-label">To age</label>
+                <select className="field-input" value={toAge} onChange={(e) => setToAge(e.target.value)}>
+                  {AGE_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <label className="field-label">City</label>
+                <input className="field-input" value={city} placeholder="Dhaka"
+                  onChange={(e) => setCity(e.target.value)} />
+              </div>
+              <button className="btn btn-gold btn-sm"
+                onClick={() => setParams({ minAge: fromAge, maxAge: toAge, location: city })}>
+                Apply
+              </button>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+              {CATEGORIES.map((c) => (
+                <button key={c.slug}
+                  onClick={() => setParams({ category: category === c.slug ? "" : c.slug })}
+                  className={`pill ${category === c.slug ? "gold" : "stone"}`}
+                  style={{ padding: "7px 14px", cursor: "pointer", border: "none" }}>
+                  {c.title}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
-      {filtersOpen && (
-        <form
-          onSubmit={applyFilters}
-          className="w-full max-w-md rounded-[18px] border border-border-hair bg-surface p-5 mb-4 space-y-3"
-        >
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-stone mb-1.5">Show me</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="field-input"
-              >
-                <option value="">Anyone</option>
-                <option value="male">Men</option>
-                <option value="female">Women</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-stone mb-1.5">Location</label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Dhaka"
-                className="field-input"
-              />
-            </div>
-          </div>
+      {/* Results */}
+      <div style={{ padding: "0 48px 40px" }}>
+        {!profiles && <p className="stone" style={{ fontSize: 13 }}>Loading profiles…</p>}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-stone mb-1.5">Min age</label>
-              <input
-                type="number"
-                min={18}
-                max={100}
-                value={minAge}
-                onChange={(e) => setMinAge(e.target.value)}
-                className="field-input"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-stone mb-1.5">Max age</label>
-              <input
-                type="number"
-                min={18}
-                max={100}
-                value={maxAge}
-                onChange={(e) => setMaxAge(e.target.value)}
-                className="field-input"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="flex-1 rounded-[12px] border border-border-hair-2 py-2.5 text-sm text-stone"
-            >
-              Clear
-            </button>
-            <button
-              type="submit"
-              className="flex-1 rounded-[12px] bg-gradient-to-b from-rose-bright to-rose py-2.5 text-sm font-semibold text-white"
-            >
-              Apply
+        {profiles && profiles.length === 0 && (
+          <div className="card" style={{ padding: 40, textAlign: "center" }}>
+            <p className="stone" style={{ fontSize: 14 }}>
+              No profiles match these filters yet.
+            </p>
+            <button className="btn btn-ghost btn-sm" style={{ marginTop: 14 }}
+              onClick={() => router.push("/browse")}>
+              Clear all filters
             </button>
           </div>
-        </form>
-      )}
+        )}
 
-      {matchNotice && (
-        <div className="w-full max-w-md rounded-[14px] bg-gradient-to-b from-gold-bright to-gold text-[#2a1c05] text-sm font-semibold text-center py-3 mb-4">
-          {matchNotice}
-        </div>
-      )}
+        {profiles && profiles.length > 0 && (
+          <div className="grid g-5">
+            {profiles.map((p, i) => (
+              <ProfileCard
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                age={p.age}
+                loc={p.location || "Bangladesh"}
+                tone={TONES[i % TONES.length]}
+                photo={p.photos[0]}
+              />
+            ))}
+          </div>
+        )}
 
-      {error && <p className="text-danger text-sm">{error}</p>}
-
-      {!profiles && !error && (
-        <p className="text-stone text-sm">Loading profiles…</p>
-      )}
-
-      {profiles && profiles.length === 0 && (
-        <div className="text-center text-stone text-sm mt-10">
-          No profiles to show right now — check back later.
-        </div>
-      )}
-
-      {profiles && index < profiles.length && (
-        <ProfileCard profile={profiles[index]} onDecide={decide} />
-      )}
-
-      {profiles && profiles.length > 0 && index >= profiles.length && (
-        <div className="text-center text-stone text-sm mt-10">
-          That's everyone for now — check back later for new profiles.
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ProfileCard({
-  profile,
-  onDecide,
-}: {
-  profile: Profile;
-  onDecide: (liked: boolean) => void;
-}) {
-  return (
-    <div className="w-full max-w-md rounded-[22px] border border-border-hair bg-surface overflow-hidden">
-      <div className="aspect-[4/5] bg-surface-2 flex items-center justify-center">
-        {profile.photos[0] ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={profile.photos[0]}
-            alt={profile.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <span className="text-stone-dim text-sm">No photo yet</span>
+        {signedIn === false && profiles && profiles.length > 0 && (
+          <div className="card glass" style={{
+            marginTop: 24, padding: 20, display: "flex", justifyContent: "space-between",
+            alignItems: "center", flexWrap: "wrap", gap: 12,
+          }}>
+            <div style={{ fontSize: 13 }}>
+              Browsing is free. Create a profile to like and message people.
+            </div>
+            <Link className="btn btn-rose btn-sm" href="/register">Create free profile</Link>
+          </div>
         )}
       </div>
-      <div className="p-5">
-        <h2 className="font-serif text-xl flex items-center gap-2">
-          {profile.name}, {profile.age}
-          {profile.verified && (
-            <span className="text-[10px] uppercase tracking-wide bg-success/10 border border-success/25 text-success font-semibold rounded-full px-2 py-0.5">
-              ✓ Verified
-            </span>
-          )}
-          {profile.spotlighted && (
-            <span className="text-[10px] uppercase tracking-wide bg-gradient-to-b from-gold-bright to-gold text-[#2a1c05] font-semibold rounded-full px-2 py-0.5">
-              Spotlight
-            </span>
-          )}
-        </h2>
-        {profile.location && (
-          <p className="text-stone text-xs mt-1">{profile.location}</p>
-        )}
-        {profile.bio && (
-          <p className="text-ivory text-sm mt-3">{profile.bio}</p>
-        )}
-
-        <div className="flex gap-3 mt-5">
-          <button
-            onClick={() => onDecide(false)}
-            className="flex-1 rounded-[14px] border border-border-hair py-3 text-sm font-semibold"
-          >
-            Pass
-          </button>
-          <button
-            onClick={() => onDecide(true)}
-            className="flex-1 rounded-[14px] bg-gradient-to-b from-rose-bright to-rose py-3 text-sm font-semibold text-white"
-          >
-            Like
-          </button>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
 
