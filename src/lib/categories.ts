@@ -5,6 +5,7 @@
 export const CATEGORIES = [
   {
     slug: "drama-models",
+    cover: "/categories/drama-models.webp",
     icon: "film",
     tone: "p1",
     title: "Bangladeshi drama models",
@@ -12,6 +13,7 @@ export const CATEGORIES = [
   },
   {
     slug: "influencers",
+    cover: "/categories/influencers.webp",
     icon: "bolt",
     tone: "p6",
     title: "Instagram & TikTok influencers",
@@ -19,6 +21,7 @@ export const CATEGORIES = [
   },
   {
     slug: "single-parents",
+    cover: "/categories/single-parents.webp",
     icon: "heart",
     tone: "p4",
     title: "Divorced & single parents welcome",
@@ -26,6 +29,7 @@ export const CATEGORIES = [
   },
   {
     slug: "professionals",
+    cover: "/categories/professionals.webp",
     icon: "shield",
     tone: "p2",
     title: "Verified professionals",
@@ -33,6 +37,7 @@ export const CATEGORIES = [
   },
   {
     slug: "students",
+    cover: "/categories/students.webp",
     icon: "check",
     tone: "p5",
     title: "College/University students",
@@ -40,6 +45,7 @@ export const CATEGORIES = [
   },
   {
     slug: "news-presenters",
+    cover: "/categories/news-presenters.webp",
     icon: "star",
     tone: "p3",
     title: "News presenters (women)",

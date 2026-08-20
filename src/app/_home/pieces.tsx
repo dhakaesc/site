@@ -110,26 +110,44 @@ export function VerificationStep({ n, icon, title, desc }: { n: number; icon: st
   );
 }
 
-/** Prototype: audienceCard(ic, title, desc, cls) */
-export function AudienceCard({ icon, title, desc, tone, href }: {
-  icon: string; title: string; desc: string; tone: string; href?: string;
+/** Prototype: audienceCard(ic, title, desc, cls), with a cover photo behind it. */
+export function AudienceCard({ icon, title, desc, tone, href, cover }: {
+  icon: string; title: string; desc: string; tone: string; href?: string; cover?: string;
 }) {
   const inner = (
-    <div style={{ position: "relative" }}>
-      <div style={{
-        width: 40, height: 40, borderRadius: 12, background: "rgba(0,0,0,.25)",
-        display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold-bright)",
-      }}>
-        <Icon name={icon} />
+    <>
+      {cover && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={cover} alt="" loading="lazy" decoding="async" style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover", objectPosition: "center 22%",
+          }} />
+          {/* Keeps the copy legible whatever the photo behind it looks like. */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(180deg, rgba(20,6,9,.35) 0%, rgba(20,6,9,.72) 55%, rgba(20,6,9,.92) 100%)",
+          }} />
+        </>
+      )}
+      <div style={{ position: "relative" }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 12, background: "rgba(0,0,0,.35)",
+          display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold-bright)",
+        }}>
+          <Icon name={icon} />
+        </div>
+        <h3 style={{ fontSize: 17, marginTop: 16 }}>{title}</h3>
+        <p style={{ fontSize: 12.5, marginTop: 8, lineHeight: 1.6, color: "rgba(243,230,225,.88)" }}>{desc}</p>
       </div>
-      <h3 style={{ fontSize: 17, marginTop: 16 }}>{title}</h3>
-      <p style={{ fontSize: 12.5, marginTop: 8, lineHeight: 1.6, color: "rgba(243,230,225,.85)" }}>{desc}</p>
-    </div>
+    </>
   );
-  const style = { padding: 26, position: "relative" as const, overflow: "hidden" as const, background: GRADIENTS[tone] };
-  if (href) {
-    return <Link href={href} className="card hoverable" style={style}>{inner}</Link>;
-  }
+  const style = {
+    padding: 26, position: "relative" as const, overflow: "hidden" as const,
+    minHeight: 230, display: "flex", flexDirection: "column" as const, justifyContent: "flex-end" as const,
+    background: cover ? "var(--bg-surface)" : GRADIENTS[tone],
+  };
+  if (href) return <Link href={href} className="card hoverable" style={style}>{inner}</Link>;
   return <div className="card hoverable" style={style}>{inner}</div>;
 }
 

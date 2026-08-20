@@ -198,7 +198,7 @@ export default async function HomePage() {
         <div className="grid g-3">
           {CATEGORIES.map((c) => (
             <AudienceCard key={c.slug} href={`/browse?category=${c.slug}`}
-              icon={c.icon} tone={c.tone} title={c.title} desc={c.desc} />
+              icon={c.icon} tone={c.tone} title={c.title} desc={c.desc} cover={c.cover} />
           ))}
         </div>
       </section>
