@@ -12,6 +12,7 @@ import {
   CompareRow,
   CityChip,
   PressLogo,
+  PhotoGrid,
 } from "./_home/pieces";
 
 // Real product facts — these must stay accurate even though the marketing
@@ -165,7 +166,7 @@ export default async function HomePage() {
       </section>
 
       {/* PEOPLE NEAR YOU */}
-      <section className="px-6 sm:px-12 pt-14">
+      <section className="px-6 sm:px-12 py-14">
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-[22px]">People near you</h2>
           <Link href="/browse" className="text-stone text-[13px] hover:text-ivory">Browse all →</Link>
@@ -315,6 +316,30 @@ export default async function HomePage() {
           <ReviewCard name="Nusrat" age={25} tone="p3" rating={5} quote="I matched with someone genuine in my first week. The verification badge actually means something here." />
           <ReviewCard name="Tanvir" age={29} tone="p5" rating={5} quote="Free browsing let me get a feel for the app before I paid for anything. No pressure, just an easy upgrade when I was ready." />
           <ReviewCard name="Meherin" age={26} tone="p1" rating={4} quote="Video profiles helped me get a real sense of personality before we even chatted." />
+        </div>
+      </section>
+
+      {/* PREMIUM DEEP DIVE */}
+      <section className="px-6 sm:px-12 pb-14">
+        <h2 className="text-[22px] mb-4">See the difference Premium makes</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="rounded-[22px] border border-border-hair bg-surface p-[22px]">
+            <span className="inline-flex rounded-full border border-border-hair text-stone text-[11px] font-semibold px-3 py-1">
+              Free view
+            </span>
+            <h3 className="text-base mt-2.5 mb-3">3 of 30 photos visible</h3>
+            <PhotoGrid unlocked={3} total={30} />
+          </div>
+          <div
+            className="rounded-[22px] border bg-surface p-[22px]"
+            style={{ borderColor: "var(--gold)", boxShadow: "0 0 0 1px var(--gold)" }}
+          >
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1">
+              <Icon name="crown" /> Premium view
+            </span>
+            <h3 className="text-base mt-2.5 mb-3">All 30 photos unlocked</h3>
+            <PhotoGrid unlocked={8} total={30} />
+          </div>
         </div>
       </section>
 

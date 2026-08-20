@@ -192,6 +192,36 @@ export function CityChip({ city, count }: { city: string; count: string }) {
   );
 }
 
+export function PhotoGrid({ unlocked, total }: { unlocked: number; total: number }) {
+  const tones = ["p1", "p3", "p5", "p2", "p4", "p6", "p1", "p3"];
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+      {tones.map((tone, i) => {
+        const isUnlocked = i < unlocked;
+        const isFirstLocked = i === unlocked;
+        return (
+          <div
+            key={i}
+            className="aspect-square rounded-[14px] relative overflow-hidden"
+            style={{ background: GRADIENTS[tone] }}
+          >
+            {!isUnlocked && (
+              <div className="absolute inset-0 bg-[rgba(10,3,4,0.72)] backdrop-blur-[6px]" />
+            )}
+            {isFirstLocked && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gold-bright text-[11px] text-center z-[2] px-1">
+                <Icon name="lock" />
+                <b className="font-sans text-xs">+{total - unlocked} more</b>
+                <span>Unlock with Premium</span>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function PressLogo({ name }: { name: string }) {
   return (
     <span className="font-serif italic text-[17px] text-stone/80">{name}</span>
