@@ -13,6 +13,7 @@ const registerSchema = z.object({
   age: z.number().int().min(18).max(100),
   gender: z.enum(["male", "female", "other"]),
   email: z.string().email(),
+  phone: z.string().trim().min(6).max(30),
   password: z.string().min(8).max(72),
 });
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { name, age, gender, email, password } = parsed.data;
+  const { name, age, gender, email, phone, password } = parsed.data;
 
   const existing = await db
     .select({ id: users.id })
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
       age,
       gender,
       email: email.toLowerCase(),
+      phone,
       passwordHash,
     })
     .returning();

@@ -10,6 +10,7 @@ type Profile = {
   bio: string | null;
   location: string | null;
   spotlighted?: boolean;
+  verified?: boolean;
   photos: string[];
 };
 
@@ -231,6 +232,11 @@ function ProfileCard({
       <div className="p-5">
         <h2 className="font-serif text-xl flex items-center gap-2">
           {profile.name}, {profile.age}
+          {profile.verified && (
+            <span className="text-[10px] uppercase tracking-wide bg-success/10 border border-success/25 text-success font-semibold rounded-full px-2 py-0.5">
+              ✓ Verified
+            </span>
+          )}
           {profile.spotlighted && (
             <span className="text-[10px] uppercase tracking-wide bg-gradient-to-b from-gold-bright to-gold text-[#2a1c05] font-semibold rounded-full px-2 py-0.5">
               Spotlight

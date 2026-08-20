@@ -7,6 +7,7 @@ import {
   text,
   boolean,
   unique,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -15,6 +16,7 @@ export const users = pgTable("users", {
   age: integer("age").notNull(),
   gender: varchar("gender", { length: 20 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
+  phone: varchar("phone", { length: 30 }).notNull().default(""),
   passwordHash: text("password_hash").notNull(),
   bio: text("bio").default(""),
   location: varchar("location", { length: 120 }).default(""),
@@ -25,6 +27,13 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").notNull().default(false),
   isBanned: boolean("is_banned").notNull().default(false),
   emailVerifiedAt: timestamp("email_verified_at"),
+  // Manual phone-call identity check, done by an admin. We deliberately do
+  // NOT store NID numbers or ID document images/scans anywhere in this
+  // system - verification happens by phone call, and only the outcome
+  // (status/who/when) is recorded here.
+  identityStatus: varchar("identity_status", { length: 20 }).notNull().default("pending"), // pending | verified | rejected
+  identityVerifiedAt: timestamp("identity_verified_at"),
+  identityVerifiedByUserId: integer("identity_verified_by_user_id").references((): AnyPgColumn => users.id),
   // When a VIP's "spotlight" boost expires. Null = not currently spotlighted.
   spotlightUntil: timestamp("spotlight_until"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

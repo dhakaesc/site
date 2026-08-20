@@ -10,6 +10,7 @@ export default function RegisterPage() {
     age: "",
     gender: "female",
     email: "",
+    phone: "",
     password: "",
   });
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export default function RegisterPage() {
         age: Number(form.age),
         gender: form.gender,
         email: form.email,
+        phone: form.phone,
         password: form.password,
       }),
     });
@@ -101,6 +103,20 @@ export default function RegisterPage() {
               placeholder="you@example.com"
             />
           </Field>
+
+          <Field label="Phone number">
+            <input
+              required
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className="field-input"
+              placeholder="01XXXXXXXXX"
+            />
+          </Field>
+          <p className="text-stone-dim text-[11px] -mt-3">
+            We'll call to verify your account. Your number is never shown on your profile.
+          </p>
 
           <Field label="Password">
             <input

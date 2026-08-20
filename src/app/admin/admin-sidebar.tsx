@@ -13,10 +13,7 @@ const GROUPS: {
   },
   {
     label: "Content",
-    items: [
-      { label: "Model Profiles", href: "/admin/model-profiles" },
-      { label: "Users Profile", href: "/admin" },
-    ],
+    items: [{ label: "Users Profile", href: "/admin" }],
   },
   {
     label: "Trust & Safety",

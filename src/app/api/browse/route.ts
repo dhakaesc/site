@@ -67,6 +67,7 @@ export async function GET(req: NextRequest) {
       bio: users.bio,
       location: users.location,
       spotlightUntil: users.spotlightUntil,
+      identityStatus: users.identityStatus,
     })
     .from(users)
     .where(and(...filters))
@@ -100,6 +101,7 @@ export async function GET(req: NextRequest) {
     bio: c.bio,
     location: c.location,
     spotlighted: Boolean(c.spotlightUntil && c.spotlightUntil.getTime() > Date.now()),
+    verified: c.identityStatus === "verified",
     photos: photosByUser.get(c.id) ?? [],
   }));
 
