@@ -87,15 +87,20 @@ export function VerificationStep({
 }
 
 export function AudienceCard({
-  icon, title, desc,
-}: { icon: string; title: string; desc: string }) {
+  icon, title, desc, tone,
+}: { icon: string; title: string; desc: string; tone: string }) {
   return (
-    <div className="rounded-[22px] border border-border-hair bg-surface p-[26px] hover:-translate-y-[3px] hover:border-border-hair-2 transition">
-      <div className="w-10 h-10 rounded-[12px] bg-black/25 flex items-center justify-center text-gold-bright">
-        <Icon name={icon} />
+    <div
+      className="rounded-[22px] border border-border-hair p-[26px] relative overflow-hidden hover:-translate-y-[3px] hover:border-border-hair-2 transition"
+      style={{ background: GRADIENTS[tone] }}
+    >
+      <div className="relative">
+        <div className="w-10 h-10 rounded-[12px] bg-black/25 flex items-center justify-center text-gold-bright">
+          <Icon name={icon} />
+        </div>
+        <h3 className="text-[17px] mt-4">{title}</h3>
+        <p className="text-[12.5px] mt-2 leading-relaxed text-ivory/85">{desc}</p>
       </div>
-      <h3 className="text-[17px] mt-4">{title}</h3>
-      <p className="text-[12.5px] mt-2 leading-relaxed text-ivory/85">{desc}</p>
     </div>
   );
 }
