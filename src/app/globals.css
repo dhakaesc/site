@@ -18,7 +18,7 @@
   --serif:var(--font-playfair),'Playfair Display',Georgia,serif; --sans:var(--font-inter),'Inter',-apple-system,sans-serif; --mono:var(--font-jetbrains),'JetBrains Mono',monospace;
 }
 *{box-sizing:border-box;}
-html,body{background:linear-gradient(160deg,#2B0D12 0%,#170608 60%,#0d0304 100%); color:var(--ivory); font-family:var(--sans); height:100%;}
+html,body{background:linear-gradient(160deg,#2B0D12 0%,#170608 60%,#0d0304 100%); background-attachment:fixed; color:var(--ivory); font-family:var(--sans); min-height:100%;}
 ::selection{background:var(--rose); color:#fff;}
 ::-webkit-scrollbar{width:8px; height:8px;}
 ::-webkit-scrollbar-thumb{background:var(--border-hair-2); border-radius:8px;}
@@ -229,4 +229,30 @@ footer.site {
   max-width: 1440px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive behaviour. The prototype was previewed in a fixed desktop frame,
+   so it carries no small-screen rules. These only take effect below the
+   prototype's own breakpoints - desktop rendering is untouched.
+   --------------------------------------------------------------------------- */
+html, body { overflow-x: hidden; }
+
+/* Hero decoration must never widen the page. */
+section { position: relative; }
+
+@media (max-width: 900px) {
+  .navbar { flex-wrap: wrap; gap: 12px; padding: 14px 20px; }
+  .navbar .links { gap: 16px; margin-left: 0; order: 3; width: 100%; }
+  .navbar .spacer { display: none; }
+  footer.site { padding: 32px 20px; }
+  .grid.g-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .grid.g-4, .grid.g-3, .grid.g-2 { grid-template-columns: 1fr; }
+  .gender-cta { grid-template-columns: 1fr; }
+  section { padding-left: 20px !important; padding-right: 20px !important; }
+  .glass[style*="margin"] { margin-left: 20px !important; margin-right: 20px !important; }
+  .card[style*="padding: 44px"] { padding: 28px !important; }
 }

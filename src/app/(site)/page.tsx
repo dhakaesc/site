@@ -6,77 +6,43 @@ import { users, photos } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { CATEGORIES } from "@/lib/categories";
 import {
-  Icon,
-  Avatar,
-  TrustBadge,
-  VerificationStep,
-  AudienceCard,
-  ProfileCard,
-  SuccessStoryCard,
-  ReviewCard,
-  CompareRow,
-  CityChip,
-  PressLogo,
-  PhotoGrid,
+  Icon, Avatar, TrustBadge, VerificationStep, AudienceCard, ProfileCard,
+  SuccessStoryCard, ReviewCard, CompareRow, CityChip, PressLogo, PhotoGrid,
 } from "../_home/pieces";
 
-// Real product facts — these must stay accurate even though the marketing
-// sections below intentionally include illustrative/placeholder social proof
-// (see the note at the bottom of this file).
-const STEPS = [
-  { n: "01", title: "Create your profile", body: "Add photos, a short bio, and what you are looking for." },
-  { n: "02", title: "Browse & connect", body: "Visit profiles free, and like who catches your eye." },
-  { n: "03", title: "Message & upgrade", body: "Free members get 5 messages to up to 5 people — go Plus for unlimited chat." },
-];
+const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
 
-const TIERS = [
-  {
-    name: "Free", price: "৳0", badge: null,
-    features: ["3 photos per profile", "5 messages to up to 5 people", "Full profile browsing"],
-    highlight: false,
-  },
-  {
-    name: "Plus", price: "৳1,250/mo", badge: "Most popular",
-    features: ["Up to 15 photos", "Unlimited messaging", "See who liked you"],
-    highlight: true,
-  },
-  {
-    name: "VIP", price: "৳3,500/mo", badge: "Spotlight",
-    features: ["Everything in Plus", "Up to 30 photos", "Profile Spotlight in browse"],
-    highlight: false,
-  },
-] as const;
-
+/** Prototype: genderCTA() */
 function GenderCTA() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-      <Link href="/browse" className="rounded-[24px] border border-border-hair bg-surface p-[30px] hover:-translate-y-[2px] hover:border-border-hair-2 transition block">
-        <span className="inline-block rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5 mb-3.5">For men</span>
-        <h3 className="font-serif text-2xl">Looking for women?</h3>
-        <p className="text-stone text-[13px] mt-2">Browse female profiles near you, free to start.</p>
-        <span className="inline-flex items-center gap-2 rounded-[14px] bg-gradient-to-b from-gold-bright to-gold text-[#2a1c05] text-sm font-semibold px-4 py-2 mt-4.5 mt-[18px]">
+    <div className="gender-cta">
+      <Link href="/browse?gender=female" className="gender-card men card hoverable">
+        <span className="pill gold" style={{ marginBottom: 14 }}>For men</span>
+        <h3 style={{ fontSize: 24 }}>Looking for women?</h3>
+        <p className="stone" style={{ fontSize: 13, marginTop: 8 }}>
+          Browse verified female profiles near you, free to start.
+        </p>
+        <div className="btn btn-gold btn-sm" style={{ marginTop: 18 }}>
           Find women <Icon name="heart" />
-        </span>
+        </div>
       </Link>
-      <Link href="/browse" className="rounded-[24px] border border-border-hair bg-surface p-[30px] hover:-translate-y-[2px] hover:border-border-hair-2 transition block">
-        <span className="inline-block rounded-full bg-rose/15 border border-rose/35 text-[#F3B4BE] text-[11px] font-semibold px-3 py-1.5 mb-3.5">For women</span>
-        <h3 className="font-serif text-2xl">Looking for men?</h3>
-        <p className="text-stone text-[13px] mt-2">Browse male profiles near you, free to start.</p>
-        <span className="inline-flex items-center gap-2 rounded-[14px] bg-gradient-to-b from-rose-bright to-rose text-white text-sm font-semibold px-4 py-2 mt-[18px]">
+      <Link href="/browse?gender=male" className="gender-card women card hoverable">
+        <span className="pill rose" style={{ marginBottom: 14 }}>For women</span>
+        <h3 style={{ fontSize: 24 }}>Looking for men?</h3>
+        <p className="stone" style={{ fontSize: 13, marginTop: 8 }}>
+          Browse verified male profiles near you, free to start.
+        </p>
+        <div className="btn btn-rose btn-sm" style={{ marginTop: 18 }}>
           Find men <Icon name="heart" />
-        </span>
+        </div>
       </Link>
     </div>
   );
 }
 
-const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
-
-/** City from Cloudflare's geo headers, when available. */
 async function visitorCity() {
   try {
-    const h = await headers();
-    return h.get("cf-ipcity") ?? null;
+    return (await headers()).get("cf-ipcity") ?? null;
   } catch {
     return null;
   }
@@ -87,163 +53,125 @@ export default async function HomePage() {
   const city = await visitorCity();
 
   const publicFilters = [eq(users.isBanned, false), eq(users.isPublished, true)];
+  const cols = { id: users.id, name: users.name, age: users.age, location: users.location };
 
-  // "People near you": prefer profiles in the visitor's city when we can
-  // tell, otherwise just show recent ones.
   let nearbyRows = city
-    ? await db
-        .select({ id: users.id, name: users.name, age: users.age, location: users.location })
-        .from(users)
-        .where(and(...publicFilters, ilike(users.location, `%${city}%`)))
-        .limit(4)
+    ? await db.select(cols).from(users)
+        .where(and(...publicFilters, ilike(users.location, `%${city}%`))).limit(4)
     : [];
-
   if (nearbyRows.length === 0) {
-    nearbyRows = await db
-      .select({ id: users.id, name: users.name, age: users.age, location: users.location })
-      .from(users)
-      .where(and(...publicFilters))
-      .orderBy(desc(users.createdAt))
-      .limit(4);
+    nearbyRows = await db.select(cols).from(users).where(and(...publicFilters))
+      .orderBy(desc(users.createdAt)).limit(4);
   }
 
-  // "Most popular this week": most-liked profiles, spotlighted first.
-  const popularRows = await db
-    .select({ id: users.id, name: users.name, age: users.age, location: users.location })
-    .from(users)
-    .where(and(...publicFilters))
+  const popularRows = await db.select(cols).from(users).where(and(...publicFilters))
     .orderBy(
       desc(sql`CASE WHEN ${users.spotlightUntil} > now() THEN 1 ELSE 0 END`),
       desc(sql`(SELECT count(*) FROM likes WHERE likes.to_user_id = ${users.id} AND likes.liked = true)`)
-    )
-    .limit(4);
+    ).limit(4);
 
   const shownIds = [...new Set([...nearbyRows, ...popularRows].map((r) => r.id))];
-  const coverPhotos = shownIds.length
-    ? await db.select().from(photos).where(inArray(photos.userId, shownIds))
-    : [];
+  const covers = shownIds.length
+    ? await db.select().from(photos).where(inArray(photos.userId, shownIds)) : [];
   const photoByUser = new Map<number, string>();
-  for (const ph of coverPhotos) {
+  for (const ph of covers) {
     if (!photoByUser.has(ph.userId)) photoByUser.set(ph.userId, `/api/media/${ph.key}`);
   }
-
-  const withPhoto = (r: { id: number; name: string; age: number; location: string | null }) => ({
-    ...r,
-    photo: photoByUser.get(r.id) ?? null,
-  });
+  const withPhoto = (r: typeof nearbyRows[number]) => ({ ...r, photo: photoByUser.get(r.id) ?? null });
   const nearby = nearbyRows.map(withPhoto);
   const popular = popularRows.map(withPhoto);
 
   return (
     <>
       {session && (
-        <div className="mx-6 sm:mx-12 mt-5 rounded-[18px] border border-border-hair bg-surface/60 backdrop-blur-xl px-5 py-4 flex justify-between items-center flex-wrap gap-2.5">
-          <div className="text-sm">Welcome back — here is who is new since your last visit.</div>
-          <Link href="/dashboard" className="text-sm border border-border-hair rounded-[12px] px-4 py-2 hover:border-border-hair-2">
-            Go to my dashboard →
-          </Link>
+        <div className="card glass" style={{
+          margin: "20px 48px 0", padding: "16px 22px", display: "flex",
+          justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10,
+        }}>
+          <div style={{ fontSize: 14 }}>
+            Welcome back — here is who is new since your last visit.
+          </div>
+          <Link className="btn btn-ghost btn-sm" href="/dashboard">Go to my dashboard →</Link>
         </div>
       )}
 
-      {/* START HERE / GENDER PICKER */}
-      <section className="px-6 sm:px-12 py-9 pt-[26px]">
-        <div className="font-mono text-[11px] tracking-[2.5px] uppercase text-gold-bright text-center">Start here</div>
-        <h2 className="text-xl text-center mt-1.5 mb-5">Tell us who you are looking for</h2>
-        <div className="max-w-3xl mx-auto">
-          <GenderCTA />
-        </div>
-        <div className="max-w-xl mx-auto mt-5 text-center">
-          <div className="text-stone text-xs mb-2.5">Or jump straight to an age range</div>
-          <div className="flex gap-2 justify-center flex-wrap">
-            {["18–24", "25–30", "31–40", "41+"].map((a) => (
-              <Link key={a} href="/browse" className="inline-flex rounded-full border border-border-hair bg-white/[0.02] text-stone text-sm px-[18px] py-2 hover:text-ivory hover:border-border-hair-2">
-                {a}
-              </Link>
+      {/* START HERE */}
+      <section style={{ padding: "26px 48px 10px" }}>
+        <div className="eyebrow" style={{ textAlign: "center", display: "block" }}>Start here</div>
+        <h2 style={{ fontSize: 20, textAlign: "center", marginTop: 6, marginBottom: 18 }}>
+          Tell us who you are looking for
+        </h2>
+        <GenderCTA />
+        <div style={{ maxWidth: 560, margin: "20px auto 0", textAlign: "center" }}>
+          <div className="stone" style={{ fontSize: 12, marginBottom: 10 }}>
+            Or jump straight to an age range
+          </div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+            {[["18–24", "18", "24"], ["25–30", "25", "30"], ["31–40", "31", "40"], ["41+", "41", ""]].map(([l, min, max]) => (
+              <Link key={l} href={`/browse?minAge=${min}${max ? `&maxAge=${max}` : ""}`}
+                className="pill stone" style={{ padding: "8px 18px", cursor: "pointer" }}>{l}</Link>
             ))}
           </div>
         </div>
       </section>
 
       {/* HERO */}
-      <section className="px-6 sm:px-12 py-16 relative overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-[420px] h-[420px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(166,38,57,.16), transparent 70%)" }} />
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5">
+      <section style={{ padding: "70px 48px 30px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -100, right: -100, width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle,rgba(166,38,57,.16),transparent 70%)" }} />
+        <div style={{ position: "absolute", top: 120, left: -80, width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle,rgba(201,166,107,.10),transparent 70%)" }} />
+        <span className="pill gold" style={{ marginBottom: 16 }}>
           <Icon name="shield" /> 100% ID-verified community
         </span>
-        <div className="font-mono text-[11px] tracking-[2.5px] uppercase text-gold-bright mt-2.5">Real people. Real matches.</div>
-        <h1 className="font-serif text-4xl sm:text-6xl max-w-3xl mt-3 leading-tight">
-          Find someone worth <span className="text-blush-bright italic">texting back.</span>
+        <div className="eyebrow" style={{ marginTop: 10 }}>Real people. Real matches.</div>
+        <h1 style={{ fontSize: "clamp(34px,5.5vw,58px)", maxWidth: 760, marginTop: 12 }}>
+          Find someone worth <em>texting back.</em>
         </h1>
-        <p className="text-stone max-w-lg mt-4 text-[15px]">
-          AMOURA is built around genuine, verified profiles and conversations that actually go somewhere — not endless swiping into the void.
+        <p className="stone" style={{ maxWidth: 520, marginTop: 16, fontSize: 15 }}>
+          AMOURA is built around genuine, verified profiles and conversations that actually go
+          somewhere — not endless swiping into the void.
         </p>
-        <div className="flex gap-3.5 gap-[14px] mt-7 flex-wrap">
-          <Link href={session ? "/browse" : "/register"} className="rounded-[14px] bg-gradient-to-b from-rose-bright to-rose px-6 py-3 text-sm font-semibold text-white">
+        <div style={{ display: "flex", gap: 14, marginTop: 28, flexWrap: "wrap" }}>
+          <Link className="btn btn-rose" href={session ? "/browse" : "/register"}>
             {session ? "Browse profiles" : "Create free profile"}
           </Link>
-          <Link href="/pricing" className="rounded-[14px] border border-border-hair px-6 py-3 text-sm font-semibold">
-            See Premium
-          </Link>
+          <Link className="btn btn-ghost" href="/pricing">See Premium</Link>
         </div>
-        <div className="flex gap-7 gap-[28px] mt-8 flex-wrap items-center">
+        <div style={{ display: "flex", gap: 28, marginTop: 32, flexWrap: "wrap", alignItems: "center" }}>
           {[["210k+", "active members"], ["18k", "matches this week"], ["4.8★", "app rating"]].map(([v, l]) => (
             <div key={l}>
-              <span className="font-mono text-gold-bright text-[17px]">{v}</span>{" "}
-              <span className="text-stone text-xs">{l}</span>
+              <span className="mono" style={{ color: "var(--gold-bright)", fontSize: 17 }}>{v}</span>{" "}
+              <span className="stone" style={{ fontSize: 12 }}>{l}</span>
             </div>
           ))}
-          <div className="flex gap-2 items-center text-xs text-stone">
-            <span className="w-2 h-2 rounded-full bg-success inline-block animate-pulse" /> 1,204 people online right now
+          <div className="stone" style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 12 }}>
+            <span className="pulse-dot" /> 1,204 people online right now
           </div>
         </div>
-      </section>
-
-      {/* PEOPLE NEAR YOU */}
-      <section className="px-6 sm:px-12 py-14">
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-[22px]">People near you</h2>
-          <Link href="/browse" className="text-stone text-[13px] hover:text-ivory">Browse all →</Link>
-        </div>
-        {nearby.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {nearby.map((p, i) => (
-              <ProfileCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                age={p.age}
-                loc={p.location || "Bangladesh"}
-                tone={TONES[i % TONES.length]}
-                photo={p.photo ?? undefined}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-stone text-sm">
-            New profiles are being added — check back shortly.
-          </p>
-        )}
       </section>
 
       {/* COMPATIBILITY QUIZ */}
-      <section className="mx-6 sm:mx-12 mb-10 rounded-[20px] border border-border-hair bg-surface/60 backdrop-blur-xl p-6 sm:px-[30px] flex gap-4 items-center flex-wrap">
-        <div className="w-[46px] h-[46px] rounded-[14px] bg-gold-bright/15 flex items-center justify-center text-gold-bright shrink-0">
+      <section className="glass" style={{
+        margin: "0 48px 40px", padding: "26px 30px", borderRadius: 20,
+        display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap",
+      }}>
+        <div style={{ width: 46, height: 46, borderRadius: 14, background: "rgba(201,166,107,.14)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold-bright)", flexShrink: 0 }}>
           <Icon name="bolt" />
         </div>
-        <div className="flex-1 min-w-[220px]">
-          <div className="font-semibold text-[15px]">Take the 2-minute compatibility quiz</div>
-          <div className="text-stone text-xs mt-0.5">Get a smart match score with every profile you visit — free.</div>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <div style={{ fontWeight: 600, fontSize: 15 }}>Take the 2-minute compatibility quiz</div>
+          <div className="stone" style={{ fontSize: 12, marginTop: 2 }}>
+            Get a smart match score with every profile you visit — free.
+          </div>
         </div>
-        <Link href="/register" className="rounded-[14px] bg-gradient-to-b from-gold-bright to-gold px-5 py-2.5 text-sm font-semibold text-[#2a1c05]">
-          Start the quiz →
-        </Link>
+        <Link className="btn btn-gold btn-sm" href="/register">Start the quiz →</Link>
       </section>
 
-      {/* PRESS STRIP */}
-      <section className="px-6 sm:px-12 py-6 border-t border-b border-border-hair">
-        <div className="text-stone text-[11px] text-center tracking-[1.5px] uppercase mb-4">Trusted &amp; featured in</div>
-        <div className="flex justify-center gap-10 flex-wrap opacity-75">
+      {/* PRESS / TRUST STRIP */}
+      <section style={{ padding: "24px 48px", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
+        <div className="stone" style={{ fontSize: 11, textAlign: "center", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 }}>
+          Trusted &amp; featured in
+        </div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap", opacity: 0.75 }}>
           {["The Daily Mirror", "Metro Living", "Voguelist", "TechPulse", "Herald & Co."].map((n) => (
             <PressLogo key={n} name={n} />
           ))}
@@ -251,9 +179,9 @@ export default async function HomePage() {
       </section>
 
       {/* TRUST BADGES */}
-      <section className="px-6 sm:px-12 py-12">
-        <h2 className="text-[22px] mb-4">Why members trust AMOURA</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <section style={{ padding: "50px 48px" }}>
+        <div className="section-title"><h2 style={{ fontSize: 22 }}>Why members trust AMOURA</h2></div>
+        <div className="grid g-4">
           <TrustBadge icon="shield" label="Every profile passes ID + selfie verification before going live" />
           <TrustBadge icon="lock" label="Bank-grade encryption on all personal data and payments" />
           <TrustBadge icon="bell" label="Human moderation team reviews reports within hours, not days" />
@@ -262,52 +190,60 @@ export default async function HomePage() {
       </section>
 
       {/* AUDIENCE */}
-      <section className="px-6 sm:px-12 py-4 pb-14">
-        <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-          <h2 className="text-[22px]">Who you will meet here</h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5">
-            <Icon name="shield" /> Every tier, verified
-          </span>
+      <section style={{ padding: "10px 48px 56px" }}>
+        <div className="section-title">
+          <h2 style={{ fontSize: 22 }}>Who you will meet here</h2>
+          <span className="pill gold"><Icon name="shield" /> Every tier, verified</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid g-3">
           {CATEGORIES.map((c) => (
-            <AudienceCard
-              key={c.slug}
-              href={`/browse?category=${c.slug}`}
-              icon={c.icon}
-              tone={c.tone}
-              title={c.title}
-              desc={c.desc}
-            />
+            <AudienceCard key={c.slug} href={`/browse?category=${c.slug}`}
+              icon={c.icon} tone={c.tone} title={c.title} desc={c.desc} />
           ))}
         </div>
       </section>
 
       {/* VERIFICATION PROCESS */}
-      <section className="px-6 sm:px-12 py-14 bg-surface/60 border-t border-b border-border-hair">
-        <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2 pt-4">
-          <h2 className="text-[22px]">How we keep AMOURA real</h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 border border-success/25 text-success text-[11px] font-semibold px-3 py-1.5">
-            <Icon name="shield" /> 98.6% of fake profiles caught pre-launch
-          </span>
+      <section style={{ padding: "10px 48px 56px", background: "var(--bg-surface)", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
+        <div className="section-title" style={{ paddingTop: 40 }}>
+          <h2 style={{ fontSize: 22 }}>How we keep AMOURA real</h2>
+          <span className="pill success"><Icon name="shield" /> 98.6% of fake profiles caught pre-launch</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid g-4">
           <VerificationStep n={1} icon="shield" title="Selfie match" desc="A live selfie is matched against profile photos using face verification." />
           <VerificationStep n={2} icon="check" title="ID confirmation" desc="Government ID is checked privately — never shown on your public profile." />
           <VerificationStep n={3} icon="search" title="Manual review" desc="A real reviewer checks every new profile before it appears in search." />
           <VerificationStep n={4} icon="bell" title="Ongoing moderation" desc="Our safety team monitors reports and removes bad actors around the clock." />
         </div>
-        <div className="flex gap-3 flex-wrap mt-5">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="crown" /> Optional income &amp; occupation verification for Elite members</span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="shield" /> Optional criminal background check add-on</span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="check" /> LinkedIn-verified professionals badge</span>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
+          <span className="pill gold"><Icon name="crown" /> Optional income &amp; occupation verification for Elite members</span>
+          <span className="pill gold"><Icon name="shield" /> Optional criminal background check add-on</span>
+          <span className="pill gold"><Icon name="check" /> LinkedIn-verified professionals badge</span>
         </div>
       </section>
 
+      {/* PEOPLE NEAR YOU */}
+      <section style={{ padding: "56px 48px 0" }}>
+        <div className="section-title">
+          <h2 style={{ fontSize: 22 }}>People near you</h2>
+          <Link className="stone" href="/browse" style={{ fontSize: 13 }}>Browse all →</Link>
+        </div>
+        {nearby.length > 0 ? (
+          <div className="grid g-4">
+            {nearby.map((p, i) => (
+              <ProfileCard key={p.id} id={p.id} name={p.name} age={p.age}
+                loc={p.location || "Bangladesh"} tone={TONES[i % TONES.length]} photo={p.photo ?? undefined} />
+            ))}
+          </div>
+        ) : (
+          <p className="stone" style={{ fontSize: 13 }}>New profiles are being added — check back shortly.</p>
+        )}
+      </section>
+
       {/* CITY EXPLORER */}
-      <section className="px-6 sm:px-12 pt-10">
-        <h2 className="text-[22px] mb-4">Popular cities</h2>
-        <div className="flex gap-2.5 flex-wrap">
+      <section style={{ padding: "40px 48px 0" }}>
+        <div className="section-title"><h2 style={{ fontSize: 22 }}>Popular cities</h2></div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <CityChip city="Dhaka" count="62k members" />
           <CityChip city="Chattogram" count="21k members" />
           <CityChip city="Sylhet" count="12k members" />
@@ -317,48 +253,45 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* EDITOR'S PICKS */}
-      <section className="px-6 sm:px-12 py-14">
-        <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-          <h2 className="text-[22px]">Most popular this week</h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="crown" /> Handpicked</span>
+      {/* MOST POPULAR */}
+      <section style={{ padding: "50px 48px 56px" }}>
+        <div className="section-title">
+          <h2 style={{ fontSize: 22 }}>Most popular this week</h2>
+          <span className="pill gold"><Icon name="crown" /> Handpicked</span>
         </div>
         {popular.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid g-4">
             {popular.map((p, i) => (
-              <ProfileCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                age={p.age}
-                loc={p.location || "Bangladesh"}
-                tone={TONES[(i + 2) % TONES.length]}
-                photo={p.photo ?? undefined}
-              />
+              <ProfileCard key={p.id} id={p.id} name={p.name} age={p.age}
+                loc={p.location || "Bangladesh"} tone={TONES[(i + 2) % TONES.length]} photo={p.photo ?? undefined} />
             ))}
           </div>
         ) : (
-          <p className="text-stone text-sm">Nothing to show here yet.</p>
+          <p className="stone" style={{ fontSize: 13 }}>Nothing to show here yet.</p>
         )}
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="px-6 sm:px-12 py-14 bg-surface/60 border-t border-b border-border-hair">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {STEPS.map((s) => (
-            <div key={s.n}>
-              <div className="font-mono text-rose-bright text-[13px]">{s.n}</div>
-              <h3 className="text-lg mt-2.5 mb-2">{s.title}</h3>
-              <p className="text-stone text-[13px]">{s.body}</p>
+      <section id="how-it-works" style={{ padding: "56px 48px", background: "var(--bg-surface)", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
+        <div className="grid g-3">
+          {[
+            ["01", "Create your profile", "Add photos, a short bio, and what you are looking for."],
+            ["02", "Browse & connect", "Visit profiles free, and like who catches your eye."],
+            ["03", "Message & upgrade", "Free members can message up to 5 people (5 messages total) — go Plus for unlimited chat."],
+          ].map(([n, t, d]) => (
+            <div key={n}>
+              <div className="mono" style={{ color: "var(--rose-bright)", fontSize: 13 }}>{n}</div>
+              <h3 style={{ fontSize: 19, margin: "10px 0 8px" }}>{t}</h3>
+              <p className="stone" style={{ fontSize: 13 }}>{d}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* SUCCESS STORIES */}
-      <section className="px-6 sm:px-12 py-14">
-        <h2 className="text-[22px] mb-4">Real connections, real stories</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <section style={{ padding: "56px 48px" }}>
+        <div className="section-title"><h2 style={{ fontSize: 22 }}>Real connections, real stories</h2></div>
+        <div className="grid g-3">
           <SuccessStoryCard n1="Rina" n2="Kabir" tone1="p3" tone2="p5" tag="Together 6 mo"
             quote="We matched over both hating pineapple on pizza. Six months later, still arguing about toppings — happily." />
           <SuccessStoryCard n1="Alia" n2="Noman" tone1="p1" tone2="p4" tag="Together 1 yr"
@@ -369,12 +302,12 @@ export default async function HomePage() {
       </section>
 
       {/* REVIEWS */}
-      <section id="reviews" className="px-6 sm:px-12 pb-14">
-        <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-          <h2 className="text-[22px]">What our members say</h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5">★★★★★ 4.8 · 12,400 reviews</span>
+      <section id="reviews" style={{ padding: "0 48px 56px" }}>
+        <div className="section-title">
+          <h2 style={{ fontSize: 22 }}>What our members say</h2>
+          <span className="pill gold">★★★★★ 4.8 · 12,400 reviews</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid g-3">
           <ReviewCard name="Nusrat" age={25} tone="p3" rating={5} quote="I matched with someone genuine in my first week. The verification badge actually means something here." />
           <ReviewCard name="Tanvir" age={29} tone="p5" rating={5} quote="Free browsing let me get a feel for the app before I paid for anything. No pressure, just an easy upgrade when I was ready." />
           <ReviewCard name="Meherin" age={26} tone="p1" rating={4} quote="Video profiles helped me get a real sense of personality before we even chatted." />
@@ -382,66 +315,59 @@ export default async function HomePage() {
       </section>
 
       {/* PREMIUM DEEP DIVE */}
-      <section className="px-6 sm:px-12 pb-14">
-        <h2 className="text-[22px] mb-4">See the difference Premium makes</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="rounded-[22px] border border-border-hair bg-surface p-[22px]">
-            <span className="inline-flex rounded-full border border-border-hair text-stone text-[11px] font-semibold px-3 py-1">
-              Free view
-            </span>
-            <h3 className="text-base mt-2.5 mb-3">3 of 30 photos visible</h3>
+      <section style={{ padding: "0 48px 56px" }}>
+        <div className="section-title"><h2 style={{ fontSize: 22 }}>See the difference Premium makes</h2></div>
+        <div className="grid g-2">
+          <div className="card" style={{ padding: 22 }}>
+            <span className="pill stone">Free view</span>
+            <h3 style={{ fontSize: 16, marginTop: 10 }}>3 of 30 photos visible</h3>
             <PhotoGrid unlocked={3} total={30} />
           </div>
-          <div
-            className="rounded-[22px] border bg-surface p-[22px]"
-            style={{ borderColor: "var(--gold)", boxShadow: "0 0 0 1px var(--gold)" }}
-          >
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1">
-              <Icon name="crown" /> Premium view
-            </span>
-            <h3 className="text-base mt-2.5 mb-3">All 30 photos unlocked</h3>
+          <div className="card" style={{ padding: 22, borderColor: "var(--gold)", boxShadow: "0 0 0 1px var(--gold)" }}>
+            <span className="pill gold"><Icon name="crown" /> Premium view</span>
+            <h3 style={{ fontSize: 16, marginTop: 10 }}>All 30 photos unlocked</h3>
             <PhotoGrid unlocked={8} total={30} />
           </div>
         </div>
       </section>
 
       {/* MEMBERSHIP TIERS */}
-      <section className="px-6 sm:px-12 pb-14">
-        <h2 className="text-[22px] mb-4">Choose your membership</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {TIERS.map((t) => (
-            <div key={t.name} className="relative rounded-[22px] border bg-surface p-7"
-              style={t.highlight ? { borderColor: "var(--gold)", boxShadow: "0 0 0 1px var(--gold)" } : { borderColor: "var(--border-hair)" }}>
-              {t.badge && (
-                <span className="absolute -top-3 right-5 rounded-full bg-gradient-to-b from-gold-bright to-gold text-[#2a1c05] text-[11px] font-semibold px-3 py-1">
-                  {t.badge}
-                </span>
-              )}
-              <div className="text-sm text-stone">{t.name}</div>
-              <div className="font-mono text-3xl my-2.5">{t.price}</div>
-              {t.features.map((f) => (
-                <div key={f} className="text-[12.5px] py-1.5 flex gap-2">
-                  <span className="text-gold-bright">✓</span>{f}
+      <section style={{ padding: "0 48px 56px" }}>
+        <div className="section-title"><h2 style={{ fontSize: 22 }}>Choose your membership</h2></div>
+        <div className="grid g-3">
+          {[
+            { name: "Free", price: "৳0", badge: null, highlight: false,
+              feats: ["Full profile browsing", "3 photos per profile", "1 free video per profile", "5 messages to up to 5 people"] },
+            { name: "Plus", price: "৳1,250/mo", badge: "Most popular", highlight: true,
+              feats: ["Unlimited profile visits", "Up to 15 photos", "Up to 5 videos", "Unlimited messaging", "See who liked you"] },
+            { name: "VIP", price: "৳3,500/mo", badge: "Video call", highlight: false,
+              feats: ["Everything in Plus", "All 30 photos + 10 videos", "Live video call with matches", "Profile Spotlight in search", "Dedicated relationship concierge"] },
+          ].map((t) => (
+            <div key={t.name} className={`card ${t.highlight ? "hoverable" : ""}`}
+              style={{ padding: 28, ...(t.highlight ? { borderColor: "var(--gold)", boxShadow: "0 0 0 1px var(--gold)" } : {}) }}>
+              {t.badge && <span className="pill gold" style={{ position: "absolute", top: -12, right: 20 }}>{t.badge}</span>}
+              <div style={{ fontSize: 14, color: "var(--stone)" }}>{t.name}</div>
+              <div className="mono" style={{ fontSize: 30, margin: "10px 0" }}>{t.price}</div>
+              {t.feats.map((f) => (
+                <div key={f} style={{ fontSize: 12.5, padding: "6px 0", display: "flex", gap: 8 }}>
+                  <span style={{ color: "var(--gold-bright)" }}>✓</span>{f}
                 </div>
               ))}
-              <Link href="/pricing" className={`block text-center w-full mt-4.5 mt-[18px] rounded-[14px] py-2.5 text-sm font-semibold ${
-                t.highlight ? "bg-gradient-to-b from-gold-bright to-gold text-[#2a1c05]" : "border border-border-hair"
-              }`}>
-                Choose {t.name}
-              </Link>
+              <Link href="/pricing" className={`btn ${t.highlight ? "btn-gold" : "btn-ghost"} btn-sm`}
+                style={{ width: "100%", marginTop: 18 }}>Choose {t.name}</Link>
             </div>
           ))}
         </div>
       </section>
 
       {/* COMPARISON TABLE */}
-      <section className="px-6 sm:px-12 pb-14">
-        <h2 className="text-[22px] mb-4">AMOURA vs. typical dating apps</h2>
-        <div className="rounded-[22px] border border-border-hair bg-surface p-6 sm:px-7">
-          <div className="grid grid-cols-[2fr_1fr_1fr] text-xs text-stone pb-2.5 border-b border-border-hair">
-            <span></span>
-            <span className="text-center text-gold-bright font-semibold">AMOURA</span>
-            <span className="text-center">Others</span>
+      <section style={{ padding: "0 48px 56px" }}>
+        <div className="section-title"><h2 style={{ fontSize: 22 }}>AMOURA vs. typical dating apps</h2></div>
+        <div className="card" style={{ padding: "26px 28px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", fontSize: 12, color: "var(--stone)", paddingBottom: 10, borderBottom: "1px solid var(--border-hair)" }}>
+            <span />
+            <span style={{ textAlign: "center", color: "var(--gold-bright)", fontWeight: 600 }}>AMOURA</span>
+            <span style={{ textAlign: "center" }}>Others</span>
           </div>
           <CompareRow feature="ID + selfie verification required" amoura others={false} />
           <CompareRow feature="Human-reviewed profiles" amoura others={false} />
@@ -452,118 +378,127 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* PRIVACY FAQ */}
-      <section className="px-6 sm:px-12 pb-14">
-        <div className="flex items-baseline justify-between mb-1 flex-wrap gap-2">
-          <h2 className="text-[22px]">Your privacy, our promise</h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="lock" /> Zero-knowledge on who is a member</span>
+      {/* PRIVACY & DATA PROTECTION */}
+      <section style={{ padding: "0 48px 56px" }}>
+        <div className="section-title">
+          <h2 style={{ fontSize: 22 }}>Your privacy, our promise</h2>
+          <span className="pill gold"><Icon name="lock" /> Zero-knowledge on who is a member</span>
         </div>
-        <p className="text-stone text-[13px] max-w-xl mb-5">Being on a dating platform is personal. Here is exactly how we protect that — no vague promises, just the specifics.</p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+        <p className="stone" style={{ fontSize: 13, maxWidth: 600, marginTop: -6, marginBottom: 22 }}>
+          Being on a dating platform is personal. Here is exactly how we protect that — no vague
+          promises, just the specifics.
+        </p>
+        <div className="grid g-3" style={{ marginBottom: 20 }}>
           <TrustBadge icon="lock" label="Messages are encrypted in transit — access is restricted to a small safety team for moderation only" />
           <TrustBadge icon="shield" label="One-tap block & report, reviewed by a human within hours" />
           <TrustBadge icon="check" label="You control exactly what is public vs. Premium-only" />
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid g-2">
           {[
             ["shield", "Who can actually see my profile?", "Only people actively browsing within your search preferences — your profile is never public, never indexed by Google or any search engine, and never shown to your Facebook or phone contacts."],
             ["lock", "Is my data ever sold or shared?", "Never. We do not sell or share personal data with advertisers or third parties. Your information is used only to operate and secure your account."],
             ["check", "What happens to my ID after verification?", "Your ID is used once for verification, stored encrypted, and is never shown on your public profile — matches only ever see the ✓ Verified badge, never the document itself."],
             ["search", "Can anyone find out I am on AMOURA?", "No. Membership is completely confidential. Incognito mode (Plus & VIP) lets you browse without appearing in anyone's visitor list at all."],
-            ["bell", "Can I permanently delete my data?", "Yes — one tap in Settings erases your profile, photos, videos and messages permanently. No retention tricks, no \"are you sure\" loops."],
+            ["bell", "Can I permanently delete my data?", "Yes — one tap in Settings erases your profile, photos, videos and messages permanently. No retention tricks, no \u201Care you sure\u201D loops."],
             ["video", "What about screenshots of my photos?", "Profile photos are protected from easy downloading, and repeated screenshot attempts on a conversation notify the other person, same as major messaging apps."],
           ].map(([ic, q, a]) => (
-            <div key={q} className="rounded-[18px] border border-border-hair bg-surface p-5">
-              <div className="font-semibold text-sm flex items-center gap-2"><Icon name={ic} />{q}</div>
-              <p className="text-stone text-[12.5px] mt-2 leading-relaxed">{a}</p>
+            <div key={q} className="card" style={{ padding: 20 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon name={ic} />{q}
+              </div>
+              <p className="stone" style={{ fontSize: 12.5, marginTop: 8, lineHeight: 1.6 }}>{a}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* FOUNDER NOTE */}
-      <section className="px-6 sm:px-12 pb-14">
-        <div className="max-w-xl">
-          <p className="font-serif italic text-2xl leading-relaxed">
-            &quot;We built AMOURA because we were tired of apps full of fake profiles and empty conversations. Verification is not a feature here — it is the entire point.&quot;
+      <section style={{ padding: "0 48px 56px" }}>
+        <div style={{ maxWidth: 640 }}>
+          <p style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 24, lineHeight: 1.5 }}>
+            &quot;We built AMOURA because we were tired of apps full of fake profiles and empty
+            conversations. Verification is not a feature here — it is the entire point.&quot;
           </p>
-          <div className="flex gap-3 items-center mt-4.5 mt-[18px]">
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 18 }}>
             <Avatar initial="S" tone="p4" size={40} />
             <div>
-              <div className="text-[13px] font-semibold">Sara Alam</div>
-              <div className="text-stone text-[11px]">Co-founder, AMOURA</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>Sara Alam</div>
+              <div className="stone" style={{ fontSize: 11 }}>Co-founder, AMOURA</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* REFERRAL */}
-      <section className="px-6 sm:px-12 pb-14">
-        <div className="rounded-[22px] border border-border-hair bg-surface p-7 flex gap-6 items-center flex-wrap"
-          style={{ background: "linear-gradient(135deg, rgba(201,166,107,.08), transparent)" }}>
-          <div className="w-[46px] h-[46px] rounded-[14px] bg-gold-bright/15 flex items-center justify-center text-gold-bright shrink-0">
+      <section style={{ padding: "0 48px 56px" }}>
+        <div className="card" style={{
+          padding: 30, display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap",
+          background: "linear-gradient(135deg,rgba(201,166,107,.08),transparent)",
+        }}>
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: "rgba(201,166,107,.14)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold-bright)", flexShrink: 0 }}>
             <Icon name="heart" />
           </div>
-          <div className="flex-1 min-w-[220px]">
-            <h3 className="text-lg">Invite a friend, get a free month</h3>
-            <p className="text-stone text-[12.5px] mt-1">When they verify and go Premium, you both get 1 month free.</p>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <h3 style={{ fontSize: 18 }}>Invite a friend, get a free month</h3>
+            <p className="stone" style={{ fontSize: 12.5, marginTop: 4 }}>
+              When they verify and go Premium, you both get 1 month free.
+            </p>
           </div>
-          <Link href="/register" className="rounded-[14px] bg-gradient-to-b from-gold-bright to-gold px-5 py-2.5 text-sm font-semibold text-[#2a1c05]">
-            Get my invite link
-          </Link>
+          <Link className="btn btn-gold btn-sm" href="/register">Get my invite link</Link>
         </div>
       </section>
 
       {/* FAQ TEASER */}
-      <section className="px-6 sm:px-12 pb-14">
-        <h2 className="text-[22px] mb-4">Quick answers</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <section style={{ padding: "0 48px 56px" }}>
+        <div className="section-title"><h2 style={{ fontSize: 22 }}>Quick answers</h2></div>
+        <div className="grid g-2">
           {[
             ["Is AMOURA really free to start?", "Yes — create a profile and browse free, no card required."],
             ["How is my ID kept private?", "Your ID is used only for verification and is never shown on your public profile."],
             ["Can I cancel Premium anytime?", "Yes, cancel anytime from Settings — no phone calls, no retention tricks."],
             ["What happens if I get reported?", "Our safety team reviews every report within hours and takes action fast."],
           ].map(([q, a]) => (
-            <div key={q} className="rounded-[18px] border border-border-hair bg-surface p-5">
-              <div className="font-semibold text-sm">{q}</div>
-              <p className="text-stone text-xs mt-2">{a}</p>
+            <div key={q} className="card" style={{ padding: 20 }}>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{q}</div>
+              <p className="stone" style={{ fontSize: 12, marginTop: 8 }}>{a}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* GUARANTEE + FINAL CTA */}
-      <section className="px-6 sm:px-12 pb-14">
-        <div className="rounded-[26px] border border-border-hair bg-surface/70 backdrop-blur-xl p-11 p-[44px] text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="check" /> 7-day money-back guarantee</span>
-          <h2 className="text-2xl mt-3.5">Not feeling it? Get every taka back, no questions asked.</h2>
-          <p className="text-stone text-[13px] mt-2">Try Premium risk-free — if it is not for you within 7 days, we refund you in full.</p>
-          <Link href="/pricing" className="inline-block mt-5 rounded-[14px] bg-gradient-to-b from-gold-bright to-gold px-6 py-3 text-sm font-semibold text-[#2a1c05]">
-            Try Premium risk-free
-          </Link>
+      <section style={{ padding: "0 48px 56px" }}>
+        <div className="card glass" style={{ padding: 44, textAlign: "center", borderRadius: 26 }}>
+          <span className="pill gold" style={{ marginBottom: 14 }}>
+            <Icon name="check" /> 7-day money-back guarantee
+          </span>
+          <h2 style={{ fontSize: 26 }}>Not feeling it? Get every taka back, no questions asked.</h2>
+          <p className="stone" style={{ marginTop: 8, fontSize: 13 }}>
+            Try Premium risk-free — if it is not for you within 7 days, we refund you in full.
+          </p>
+          <Link className="btn btn-gold" style={{ marginTop: 20 }} href="/pricing">Try Premium risk-free</Link>
         </div>
       </section>
 
       {/* APP / SOCIAL TRUST ROW */}
-      <section className="px-6 sm:px-12 pb-10 flex justify-between items-center flex-wrap gap-4">
-        <div className="flex gap-2.5 flex-wrap">
-          <span className="inline-flex rounded-full border border-border-hair bg-white/[0.02] text-stone text-sm px-4 py-2.5">📱 Download on the App Store</span>
-          <span className="inline-flex rounded-full border border-border-hair bg-white/[0.02] text-stone text-sm px-4 py-2.5">▶ Get it on Google Play</span>
+      <section style={{ padding: "0 48px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <span className="pill stone" style={{ padding: "9px 16px" }}>📱 Download on the App Store</span>
+          <span className="pill stone" style={{ padding: "9px 16px" }}>▶ Get it on Google Play</span>
         </div>
-        <div className="text-stone text-xs">Sign in with Google, Apple, or Facebook — verified in seconds</div>
+        <div className="stone" style={{ fontSize: 12 }}>
+          Sign in with Google, Apple, or Facebook — verified in seconds
+        </div>
       </section>
 
       {/* FINAL GENDER CTA */}
-      <section className="px-6 sm:px-12 pt-2.5 pb-16">
-        <div className="font-mono text-[11px] tracking-[2.5px] uppercase text-gold-bright text-center">Ready when you are</div>
-        <h2 className="text-xl text-center my-2">Choose who you would like to meet</h2>
-        <div className="max-w-3xl mx-auto mt-5">
-          <GenderCTA />
-        </div>
+      <section style={{ padding: "10px 48px 70px" }}>
+        <div className="eyebrow" style={{ textAlign: "center", display: "block" }}>Ready when you are</div>
+        <h2 style={{ fontSize: 22, textAlign: "center", margin: "8px 0 20px" }}>
+          Choose who you would like to meet
+        </h2>
+        <GenderCTA />
       </section>
-
     </>
   );
 }
