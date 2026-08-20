@@ -157,7 +157,7 @@ export function ProfileCard({ name, age, loc, tone, online, id, photo }: {
 }) {
   const inner = (
     <>
-      <div className="cover" style={{ height: 200, position: "relative", background: GRADIENTS[tone] }}>
+      <div className="cover" style={{ aspectRatio: "1 / 1", position: "relative", background: GRADIENTS[tone] }}>
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photo} alt={name} style={{

@@ -68,18 +68,18 @@ export default async function HomePage() {
 
   let nearbyRows = city
     ? await db.select(cols).from(users)
-        .where(and(...publicFilters, ilike(users.location, `%${city}%`))).limit(4)
+        .where(and(...publicFilters, ilike(users.location, `%${city}%`))).limit(5)
     : [];
   if (nearbyRows.length === 0) {
     nearbyRows = await db.select(cols).from(users).where(and(...publicFilters))
-      .orderBy(desc(users.createdAt)).limit(4);
+      .orderBy(desc(users.createdAt)).limit(5);
   }
 
   const popularRows = await db.select(cols).from(users).where(and(...publicFilters))
     .orderBy(
       desc(sql`CASE WHEN ${users.spotlightUntil} > now() THEN 1 ELSE 0 END`),
       desc(sql`(SELECT count(*) FROM likes WHERE likes.to_user_id = ${users.id} AND likes.liked = true)`)
-    ).limit(4);
+    ).limit(10);
 
   const shownIds = [...new Set([...nearbyRows, ...popularRows].map((r) => r.id))];
   const covers = shownIds.length
@@ -204,7 +204,7 @@ export default async function HomePage() {
           <Link className="stone" href="/browse" style={{ fontSize: 13 }}>Browse all →</Link>
         </div>
         {nearby.length > 0 ? (
-          <div className="grid g-4">
+          <div className="grid g-5">
             {nearby.map((p, i) => (
               <ProfileCard key={p.id} id={p.id} name={p.name} age={p.age}
                 loc={p.location || "Bangladesh"} tone={TONES[i % TONES.length]} photo={p.photo ?? undefined} />
@@ -235,7 +235,7 @@ export default async function HomePage() {
           <span className="pill gold"><Icon name="crown" /> Handpicked</span>
         </div>
         {popular.length > 0 ? (
-          <div className="grid g-4">
+          <div className="grid g-5">
             {popular.map((p, i) => (
               <ProfileCard key={p.id} id={p.id} name={p.name} age={p.age}
                 loc={p.location || "Bangladesh"} tone={TONES[(i + 2) % TONES.length]} photo={p.photo ?? undefined} />
@@ -243,6 +243,11 @@ export default async function HomePage() {
           </div>
         ) : (
           <p className="stone" style={{ fontSize: 13 }}>Nothing to show here yet.</p>
+        )}
+        {popular.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 26 }}>
+            <Link className="btn btn-ghost" href="/browse">View more profiles</Link>
+          </div>
         )}
       </section>
 
