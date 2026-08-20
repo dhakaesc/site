@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { and, eq, asc, ne, or, isNull, desc, inArray, sql } from "drizzle-orm";
+import { and, eq, asc, ne, desc, gte, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users, photos } from "@/lib/db/schema";
+import { users, photos, profileViews } from "@/lib/db/schema";
 import { categoryTitle } from "@/lib/categories";
 import { presenceLabel, isOnline } from "@/lib/presence";
 import { getSession } from "@/lib/auth/session";
@@ -60,6 +60,33 @@ export async function GET(
     if (me) viewerTier = effectiveTier(me.tier, me.tierExpiresAt);
   }
   const photoAllowance = limitsFor(viewerTier).photos;
+
+  // Record the visit so the free "profile visits" allowance is real. Only one
+  // row per profile per member per month, so revisits don't burn the quota.
+  if (viewer && viewer.userId !== userId) {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const [seen] = await db
+      .select({ id: profileViews.id })
+      .from(profileViews)
+      .where(
+        and(
+          eq(profileViews.viewerUserId, viewer.userId),
+          eq(profileViews.viewedUserId, userId),
+          gte(profileViews.createdAt, monthStart)
+        )
+      )
+      .limit(1);
+
+    if (!seen) {
+      await db.insert(profileViews).values({
+        viewerUserId: viewer.userId,
+        viewedUserId: userId,
+      });
+    }
+  }
 
   const theirPhotos = await db
     .select({ key: photos.key })

@@ -41,7 +41,12 @@ function BrowseInner() {
 
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [usage, setUsage] = useState<{
+    tier: string;
+    views: { used: number; limit: number | null };
+    messages: { used: number; limit: number | null };
+    people: { used: number; limit: number | null };
+  } | null>(null);
   const [fromAge, setFromAge] = useState(minAge || "18");
   const [toAge, setToAge] = useState(maxAge || "60");
   const [city, setCity] = useState(location);
@@ -78,6 +83,11 @@ function BrowseInner() {
       .then((r) => r.json())
       .then((d) => setSignedIn(Boolean(d.user)))
       .catch(() => setSignedIn(false));
+
+    fetch("/api/usage")
+      .then((r) => r.json())
+      .then((d) => setUsage(d.usage ?? null))
+      .catch(() => setUsage(null));
   }, []);
 
   const activePreset = AGE_PRESETS.find(([, lo, hi]) => lo === minAge && hi === maxAge);
@@ -117,14 +127,24 @@ function BrowseInner() {
           </span>
         )}
 
-        <button className="btn btn-ghost btn-sm" onClick={() => setShowFilters((v) => !v)}>
-          <Icon name="filter" /> More filters
-        </button>
+        {usage && usage.views.limit !== null && (
+          <Meter label={`${usage.views.used}/${usage.views.limit} free views`}
+            used={usage.views.used} limit={usage.views.limit} />
+        )}
+        {usage && usage.messages.limit !== null && (
+          <Meter
+            label={`${usage.messages.used}/${usage.messages.limit} free messages · ${usage.people.used}/${usage.people.limit} people`}
+            used={usage.messages.used} limit={usage.messages.limit} />
+        )}
+        {usage && usage.messages.limit === null && (
+          <span className="pill gold" style={{ padding: "8px 14px" }}>
+            <Icon name="crown" /> Unlimited messaging
+          </span>
+        )}
       </div>
 
       {/* Age / city filter */}
-      {showFilters && (
-        <div style={{ padding: "0 48px 20px" }}>
+      <div style={{ padding: "0 48px 20px" }}>
           <div className="card" style={{ padding: "18px 22px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
               <span style={{ color: "var(--gold-bright)" }}><Icon name="search" /></span>
@@ -180,8 +200,7 @@ function BrowseInner() {
               ))}
             </div>
           </div>
-        </div>
-      )}
+      </div>
 
       {/* Results */}
       <div style={{ padding: "0 48px 40px" }}>
@@ -228,6 +247,19 @@ function BrowseInner() {
         )}
       </div>
     </>
+  );
+}
+
+/** Prototype: usageMeter / msgMeter - a label plus a filled progress bar. */
+function Meter({ label, used, limit }: { label: string; used: number; limit: number }) {
+  const pct = Math.min(100, Math.round((used / Math.max(limit, 1)) * 100));
+  return (
+    <div className="meter">
+      <span className="stone">{label}</span>
+      <span className="meter-bar">
+        <span className="meter-fill" style={{ width: `${pct}%` }} />
+      </span>
+    </div>
   );
 }
 

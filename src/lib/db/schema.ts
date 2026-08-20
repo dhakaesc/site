@@ -111,6 +111,22 @@ export const slides = pgTable("slides", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/**
+ * One row per profile a member opens. Distinct profiles seen in the current
+ * calendar month are what count against the free "profile visits" allowance,
+ * so re-opening the same profile is free.
+ */
+export const profileViews = pgTable("profile_views", {
+  id: serial("id").primaryKey(),
+  viewerUserId: integer("viewer_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  viewedUserId: integer("viewed_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const paymentRequests = pgTable("payment_requests", {
   id: serial("id").primaryKey(),
   userId: integer("user_id")
