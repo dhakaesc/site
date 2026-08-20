@@ -21,7 +21,7 @@ export default function MessagesPage() {
   }, []);
 
   return (
-    <main className="min-h-screen px-6 py-10 max-w-2xl mx-auto">
+    <div className="px-6 py-10 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div className="font-serif italic text-xl">♥ AMOURA</div>
         <Link href="/dashboard" className="text-sm text-stone hover:text-ivory">
@@ -88,6 +88,6 @@ export default function MessagesPage() {
           </Link>
         ))}
       </div>
-    </main>
+    </div>
   );
 }

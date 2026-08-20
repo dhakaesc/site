@@ -99,29 +99,15 @@ function BrowseInner() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-6 py-10">
+    <div className="flex flex-col items-center px-6 py-10">
       <div className="w-full max-w-md flex items-center justify-between mb-6">
-        <Link href="/" className="font-serif italic text-xl">♥ AMOURA</Link>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setFiltersOpen((v) => !v)}
-            className="text-sm text-stone hover:text-ivory"
-          >
-            Filters{gender || minAge || maxAge || location ? " •" : ""}
-          </button>
-          {signedIn === false ? (
-            <Link
-              href="/register"
-              className="rounded-[12px] bg-gradient-to-b from-rose-bright to-rose px-4 py-2 text-sm font-semibold text-white"
-            >
-              Join free
-            </Link>
-          ) : (
-            <Link href="/dashboard" className="text-sm text-stone hover:text-ivory">
-              Dashboard
-            </Link>
-          )}
-        </div>
+        <h1 className="font-serif text-xl">Discover</h1>
+        <button
+          onClick={() => setFiltersOpen((v) => !v)}
+          className="text-sm text-stone hover:text-ivory"
+        >
+          Filters{gender || minAge || maxAge || location ? " •" : ""}
+        </button>
       </div>
 
       {category && (
@@ -236,7 +222,7 @@ function BrowseInner() {
           That's everyone for now — check back later for new profiles.
         </div>
       )}
-    </main>
+    </div>
   );
 }
 

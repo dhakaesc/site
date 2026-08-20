@@ -18,7 +18,7 @@ export default async function UpgradePage({
   const numbers = getPaymentNumbers();
 
   return (
-    <main className="min-h-screen px-6 py-10 max-w-xl mx-auto">
+    <div className="px-6 py-10 max-w-xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <Link href="/pricing" className="text-sm text-stone hover:text-ivory">
           ← Plans
@@ -78,7 +78,7 @@ export default async function UpgradePage({
           </li>
         </ul>
       </div>
-    </main>
+    </div>
   );
 }
 

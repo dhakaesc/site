@@ -63,7 +63,7 @@ export default async function PricingPage() {
   }
 
   return (
-    <main className="min-h-screen px-6 py-12 max-w-5xl mx-auto">
+    <div className="px-6 py-12 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-10">
         <Link href="/" className="font-serif italic text-xl">
           ♥ AMOURA
@@ -139,6 +139,6 @@ export default async function PricingPage() {
           );
         })}
       </div>
-    </main>
+    </div>
   );
 }

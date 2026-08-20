@@ -132,7 +132,7 @@ export default function ChatPage({
   }
 
   return (
-    <main className="min-h-screen flex flex-col max-w-2xl mx-auto px-6 py-6">
+    <div className="flex flex-col max-w-2xl mx-auto px-6 py-6">
       <div className="flex items-center justify-between mb-4 relative">
         <Link href="/messages" className="text-sm text-stone hover:text-ivory">
           ← Messages
@@ -280,6 +280,6 @@ export default function ChatPage({
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

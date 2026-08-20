@@ -18,7 +18,7 @@ import {
   CityChip,
   PressLogo,
   PhotoGrid,
-} from "./_home/pieces";
+} from "../_home/pieces";
 
 // Real product facts — these must stay accurate even though the marketing
 // sections below intentionally include illustrative/placeholder social proof
@@ -135,39 +135,7 @@ export default async function HomePage() {
   const popular = popularRows.map(withPhoto);
 
   return (
-    <main className="min-h-screen max-w-[1280px] mx-auto">
-      {/* TOP BANNER */}
-      <div className="bg-rose text-white text-center text-xs font-semibold py-2 px-4">
-        ✦ Limited time — 20% off your first month of Premium · ends Sunday
-      </div>
-
-      {/* NAVBAR */}
-      <header className="flex items-center gap-7 px-6 sm:px-12 py-4 sticky top-0 z-10 bg-void/80 backdrop-blur-xl border-b border-border-hair">
-        <div className="font-serif italic text-xl flex items-center gap-2">
-          <span className="text-rose-bright not-italic">♥</span> AMOURA
-        </div>
-        <nav className="hidden sm:flex items-center gap-6 text-[13px] text-stone">
-          <a href="#how-it-works" className="hover:text-ivory">How it works</a>
-          <a href="#reviews" className="hover:text-ivory">Reviews</a>
-          <Link href="/pricing" className="hover:text-ivory">Premium</Link>
-        </nav>
-        <div className="flex-1" />
-        {session ? (
-          <Link href="/dashboard" className="rounded-[12px] bg-gradient-to-b from-rose-bright to-rose px-4 py-2 text-sm font-semibold text-white">
-            Dashboard
-          </Link>
-        ) : (
-          <>
-            <Link href="/login" className="rounded-[12px] border border-border-hair px-4 py-2 text-sm">
-              Log in
-            </Link>
-            <Link href="/register" className="rounded-[12px] bg-gradient-to-b from-rose-bright to-rose px-4 py-2 text-sm font-semibold text-white">
-              Join free
-            </Link>
-          </>
-        )}
-      </header>
-
+    <>
       {session && (
         <div className="mx-6 sm:mx-12 mt-5 rounded-[18px] border border-border-hair bg-surface/60 backdrop-blur-xl px-5 py-4 flex justify-between items-center flex-wrap gap-2.5">
           <div className="text-sm">Welcome back — here is who is new since your last visit.</div>
@@ -596,17 +564,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="px-6 sm:px-12 py-12 border-t border-border-hair grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr_1fr] gap-8 text-[13px] text-stone">
-        <div>
-          <div className="font-serif italic text-xl mb-2.5">♥ AMOURA</div>
-          <p className="max-w-[280px]">A modern space to meet people who are actually looking for the same thing you are.</p>
-        </div>
-        <div><b className="text-xs text-ivory">Company</b><br /><br />About<br />Careers<br />Press</div>
-        <div><b className="text-xs text-ivory">Support</b><br /><br />Safety Tips<br />Help Center<br />Contact</div>
-        <div><b className="text-xs text-ivory">Legal</b><br /><br />Terms<br />Privacy<br />Community Guidelines</div>
-      </footer>
-      <div className="text-center text-stone-dim text-xs pb-8">© {new Date().getFullYear()} AMOURA</div>
-    </main>
+    </>
   );
 }
