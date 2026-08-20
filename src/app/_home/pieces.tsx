@@ -144,7 +144,7 @@ export function AudienceCard({ icon, title, desc, tone, href, cover }: {
   );
   const style = {
     padding: 26, position: "relative" as const, overflow: "hidden" as const,
-    minHeight: 230, display: "flex", flexDirection: "column" as const, justifyContent: "flex-end" as const,
+    aspectRatio: "1 / 1", display: "flex", flexDirection: "column" as const, justifyContent: "flex-end" as const,
     background: cover ? "var(--bg-surface)" : GRADIENTS[tone],
   };
   if (href) return <Link href={href} className="card hoverable" style={style}>{inner}</Link>;
