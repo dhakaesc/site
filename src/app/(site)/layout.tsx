@@ -2,12 +2,9 @@ import SiteHeader from "../_shared/site-header";
 import SiteFooter from "../_shared/site-footer";
 
 /**
- * Every public-facing page shares the same header and footer, so they only
- * live here rather than being repeated (and drifting) per page.
- *
- * The banner, header bar and footer rule span the full viewport width — only
- * their *contents* are constrained to the centred column, so nothing looks
- * cut off on a wide screen.
+ * Public pages share the prototype's chrome: top banner, sticky navbar and
+ * site footer. Widths come from the prototype's own CSS, not from utilities
+ * added here, so nothing drifts.
  */
 export default function SiteLayout({
   children,
@@ -15,9 +12,9 @@ export default function SiteLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="page-shell">
       <SiteHeader />
-      <main className="flex-1 w-full max-w-[1280px] mx-auto">{children}</main>
+      <main className="flex-1">{children}</main>
       <SiteFooter />
     </div>
   );

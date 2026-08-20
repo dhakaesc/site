@@ -125,8 +125,8 @@ footer.site{padding:48px; border-top:1px solid var(--border-hair); display:grid;
 #paywallModal.open{display:flex;}
 #paywallModal .box{max-width:380px; width:90%; background:var(--bg-surface); border:1px solid var(--border-hair-2); border-radius:24px; padding:32px; text-align:center;}
 
-.dash-shell{display:flex; height:82vh; min-height:640px; overflow:hidden;}
-.sidebar{width:250px; flex-shrink:0; background:var(--bg-surface); border-right:1px solid var(--border-hair); padding:22px 16px; display:flex; flex-direction:column; gap:4px; overflow-y:auto; overscroll-behavior:contain;}
+.dash-shell{display:flex; min-height:640px;}
+.sidebar{width:250px; flex-shrink:0; background:var(--bg-surface); border-right:1px solid var(--border-hair); padding:22px 16px; display:flex; flex-direction:column; gap:4px;}
 .sidebar .logo{padding:0 10px 18px; font-size:18px;}
 .side-item{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; font-size:13px; color:var(--stone); transition:.15s; position:relative;}
 .side-item:hover{background:rgba(255,255,255,0.03); color:var(--ivory);}
@@ -134,7 +134,7 @@ footer.site{padding:48px; border-top:1px solid var(--border-hair); display:grid;
 .side-item.locked{opacity:.55;}
 .side-group-label{font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--stone-dim); padding:14px 12px 4px;}
 .side-item .lockmini{margin-left:auto; opacity:.7;}
-.dmain{flex:1; min-width:0; padding:28px 36px; overflow-y:auto; overscroll-behavior:contain;}
+.dmain{flex:1; min-width:0; padding:28px 36px;}
 .dtopbar{display:flex; align-items:center; gap:16px; margin-bottom:26px; flex-wrap:wrap;}
 .tier-switch{display:flex; gap:4px; background:var(--bg-surface); border:1px solid var(--border-hair); border-radius:999px; padding:3px; margin-bottom:20px; width:fit-content;}
 .tier-switch a{padding:7px 16px; border-radius:999px; font-size:12px; color:var(--stone);}
@@ -203,7 +203,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 11V8a6 6 0 1 1 12 0v3M5 11h14v10H5zM12 15v3"/></svg>
     </div>
     <h3 style="font-size:20px">You've reached your free limit</h3>
-    <p class="stone" style="font-size:13px;margin-top:8px">Free members can send 5 messages to up to 5 people. Upgrade to message anyone, unlimited, plus unlock all photos and videos.</p>
+    <p class="stone" style="font-size:13px;margin-top:8px">Free members can send 20 messages to up to 5 people. Upgrade to message anyone, unlimited, plus unlock all photos and videos.</p>
     <button class="btn btn-gold" style="width:100%;margin-top:20px" onclick="closePaywall();render('pricing');">See Premium plans</button>
     <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="closePaywall()">Not now</button>
   </div>
@@ -275,7 +275,7 @@ const cmsContent = {
   editorsPickTitle: "Editor's picks this week",
   step1: 'Create your profile — Add photos, a short bio, and what you are looking for.',
   step2: 'Browse & connect — Visit up to 20 profiles free, and like who catches your eye.',
-  step3: 'Message & upgrade — Free members can message up to 5 people (5 messages total) — go Plus for unlimited chat.',
+  step3: 'Message & upgrade — Free members can message up to 5 people (20 messages total) — go Plus for unlimited chat.',
   successTitle: 'Real connections, real stories',
   reviewsTitle: 'What our members say', reviewsRating: '4.8 · 12,400 reviews',
   premiumDiveTitle: 'See the difference Premium makes',
@@ -939,7 +939,7 @@ ${loggedIn?`<div class="card glass" style="margin:20px 48px 0;padding:16px 22px;
   <div class="grid g-3">
     ${[['01','Create your profile','Add photos, a short bio, and what you are looking for.'],
        ['02','Browse & connect','Visit up to 20 profiles free, and like who catches your eye.'],
-       ['03','Message & upgrade','Free members can message up to 5 people (5 messages total) — go Plus for unlimited chat.']]
+       ['03','Message & upgrade','Free members can message up to 5 people (20 messages total) — go Plus for unlimited chat.']]
        .map(([n,t,d])=>`<div><div class="mono" style="color:var(--rose-bright);font-size:13px">${n}</div><h3 style="font-size:19px;margin:10px 0 8px">${t}</h3><p class="stone" style="font-size:13px">${d}</p></div>`).join('')}
   </div>
 </section>
@@ -988,7 +988,7 @@ ${loggedIn?`<div class="card glass" style="margin:20px 48px 0;padding:16px 22px;
 <section style="padding:0 48px 56px">
   <div class="section-title"><h2 style="font-size:22px">Choose your membership</h2></div>
   <div class="grid g-3">
-    ${tierCard('Free','৳0',null,['20 profile visits / month','3 photos per profile','1 free video per profile','5 messages to up to 5 people'],false)}
+    ${tierCard('Free','৳0',null,['20 profile visits / month','3 photos per profile','1 free video per profile','20 messages to up to 5 people'],false)}
     ${tierCard('Plus','৳1,250/mo','Most popular',['Unlimited profile visits','Up to 15 photos','Up to 5 videos','Unlimited messaging','See who liked you'],true)}
     ${tierCard('VIP','৳3,500/mo',`${icon('video')} Video call`,['Everything in Plus','All 30 photos + 10 videos','Live video call with matches','Profile Spotlight in search','Dedicated relationship concierge'],false)}
   </div>
@@ -1120,7 +1120,7 @@ ${loggedIn?navbarLoggedIn():navbar()}
   </div>
   <div class="spacer" style="flex:1"></div>
   ${usageMeter(14,20)}
-  ${msgMeter(3,5,3,5)}
+  ${msgMeter(12,20,3,5)}
   <button class="btn btn-ghost btn-sm">${icon('filter')} More filters</button>
 </div>
 
@@ -1190,7 +1190,7 @@ ${loggedIn?navbarLoggedIn():navbar()}
           <button class="btn btn-ghost btn-sm">${icon('heart')} Like</button>
           <button class="btn btn-rose btn-sm" onclick="openPaywall();return false;">${icon('msg')} Message</button>
         </div>
-        <div style="margin-top:8px;justify-content:flex-end">${msgMeter(3,5,3,5)}</div>
+        <div style="margin-top:8px;justify-content:flex-end">${msgMeter(12,20,3,5)}</div>
       </div>
     </div>
 
@@ -1246,7 +1246,7 @@ ${navbar()}
     <div style="font-size:14px;color:var(--stone)">Free</div>
     <div class="mono" style="font-size:30px;margin:10px 0">৳0</div>
     <p class="stone" style="font-size:12px;margin-bottom:14px">Already what you have — no card needed</p>
-    ${[['20 profile visits / month',true],['3 photos per profile',true],['1 free video per profile',true],['Like profiles',true],['5 messages, up to 5 people',true],['See full photo galleries',false],['Live video call',false]]
+    ${[['20 profile visits / month',true],['3 photos per profile',true],['1 free video per profile',true],['Like profiles',true],['20 messages, up to 5 people',true],['See full photo galleries',false],['Live video call',false]]
       .map(([f,ok])=>`<div style="font-size:12.5px;padding:6px 0;display:flex;gap:8px;color:${ok?'var(--ivory)':'var(--stone-dim)'}"><span style="color:${ok?'var(--success)':'var(--stone-dim)'}">${ok?'✓':'—'}</span>${f}</div>`).join('')}
     <button class="btn btn-ghost" style="width:100%;margin-top:20px" onclick="render('register');return false;">Continue free</button>
   </div>
@@ -1309,7 +1309,7 @@ pages['dash-free']={group:'Member',title:'Dashboard — Free', render:()=>`
 
   <div class="grid g-4">
     ${dStat('search','Profile visits left','6 / 20',false)}
-    ${dStat('msg','Messages left','2 / 5 · 3/5 people',false)}
+    ${dStat('msg','Messages left','8 / 20 · 3/5 people',false)}
     ${dStat('heart','People who liked you','8',true)}
     ${dStat('star','Matches','2',false)}
   </div>
@@ -1326,7 +1326,7 @@ pages['dash-free']={group:'Member',title:'Dashboard — Free', render:()=>`
       <h3 style="font-size:15px;margin-bottom:14px">Recent messages</h3>
       ${[['Nadia, 23','Hey! How was your weekend?','p3'],['Rafi, 26','Free coffee sometime? ☕','p4']]
         .map(([n,m,c])=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">${av(n[0],c,34)}<div><div style="font-size:12.5px;font-weight:600">${n}</div><div class="stone" style="font-size:11.5px">${m}</div></div></div>`).join('')}
-      <div class="stone" style="font-size:11px;margin-top:12px">3 of 5 free messages used this month</div>
+      <div class="stone" style="font-size:11px;margin-top:12px">8 of 20 free messages used this month</div>
     </div>
   </div>
 
@@ -1786,7 +1786,7 @@ pages['admin-settings']={group:'Admin',title:'Admin — Settings', render:()=>`
     <h3 style="font-size:15px;margin-bottom:16px">Platform</h3>
     <div class="grid g-3">
       <div class="field-wrap"><label class="field-label">Free profile visits / month</label><input value="20"></div>
-      <div class="field-wrap"><label class="field-label">Free messages / month</label><input value="5"></div>
+      <div class="field-wrap"><label class="field-label">Free messages / month</label><input value="20"></div>
       <div class="field-wrap"><label class="field-label">Free — max people messaged</label><input value="5"></div>
       <div class="field-wrap"><label class="field-label">Plus price (৳/mo)</label><input value="1250"></div>
       <div class="field-wrap"><label class="field-label">VIP price (৳/mo)</label><input value="3500"></div>
@@ -1943,7 +1943,7 @@ pages['inbox-free']={group:'Member',title:'Messages — Free', render:()=>`
 <div class="dmain">
   ${dTopbar('Tanvir Ahmed','free')}
   ${tierSwitch('free','inbox')}
-  <div style="margin-bottom:16px">${msgMeter(3,5,3,5)}</div>
+  <div style="margin-bottom:16px">${msgMeter(12,20,3,5)}</div>
 
   <div class="inbox-shell">
     <div class="convo-list">
@@ -1964,7 +1964,7 @@ pages['inbox-free']={group:'Member',title:'Messages — Free', render:()=>`
         ${chatBubble('How about this Saturday afternoon?',false,'Today 2:10pm')}
       </div>
       <div class="chat-input-row">
-        <input placeholder="Type a message… (2 of 5 free messages left)">
+        <input placeholder="Type a message… (8 of 20 free messages left)">
         <button class="btn btn-rose btn-sm">${icon('send')} Send</button>
       </div>
     </div>

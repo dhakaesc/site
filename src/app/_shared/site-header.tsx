@@ -2,64 +2,56 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 
 /**
- * The site navbar from the design prototype. Appears on every public page.
- * Shows member links when signed in, join/login when not.
+ * The prototype's `navbar()` / `navbarLoggedIn()`, using its own CSS classes
+ * (.navbar, .logo, .links, .btn) so spacing, colour and type match exactly.
  */
 export default async function SiteHeader() {
   const session = await getSession();
 
   return (
     <>
-      <div className="bg-rose text-white text-center text-xs font-semibold py-2 px-4">
+      <div className="topbanner">
         ✦ Limited time — 20% off your first month of Premium · ends Sunday
       </div>
 
-      <header className="sticky top-0 z-20 bg-void/80 backdrop-blur-xl border-b border-border-hair">
-        <div className="max-w-[1280px] mx-auto flex items-center gap-7 px-6 sm:px-12 py-4">
-        <Link href="/" className="font-serif italic text-xl flex items-center gap-2">
-          <span className="text-rose-bright not-italic">♥</span> AMOURA
+      <div className="navbar">
+        <Link href="/" className="logo">
+          <span className="dot">♥</span> AMOURA
         </Link>
 
-        <nav className="hidden sm:flex items-center gap-6 text-[13px] text-stone">
+        <div className="links">
           {session ? (
             <>
-              <Link href="/browse" className="hover:text-ivory">Discover</Link>
-              <Link href="/likes-me" className="hover:text-ivory">Matches</Link>
-              <Link href="/messages" className="hover:text-ivory">Messages</Link>
+              <Link href="/browse">Discover</Link>
+              <Link href="/likes-me">Matches</Link>
+              <Link href="/messages">Messages</Link>
             </>
           ) : (
             <>
-              <Link href="/#how-it-works" className="hover:text-ivory">How it works</Link>
-              <Link href="/#reviews" className="hover:text-ivory">Reviews</Link>
-              <Link href="/pricing" className="hover:text-ivory">Premium</Link>
+              <Link href="/#how-it-works">How it works</Link>
+              <Link href="/#reviews">Reviews</Link>
+              <Link href="/pricing">Premium</Link>
             </>
           )}
-        </nav>
+        </div>
 
-        <div className="flex-1" />
+        <div className="spacer" />
 
         {session ? (
-          <Link
-            href="/dashboard"
-            className="rounded-[12px] bg-gradient-to-b from-rose-bright to-rose px-4 py-2 text-sm font-semibold text-white"
-          >
+          <Link className="btn btn-rose btn-sm" href="/dashboard">
             Dashboard
           </Link>
         ) : (
           <>
-            <Link href="/login" className="rounded-[12px] border border-border-hair px-4 py-2 text-sm">
+            <Link className="btn btn-ghost btn-sm" href="/login">
               Log in
             </Link>
-            <Link
-              href="/register"
-              className="rounded-[12px] bg-gradient-to-b from-rose-bright to-rose px-4 py-2 text-sm font-semibold text-white"
-            >
+            <Link className="btn btn-rose btn-sm" href="/register">
               Join free
             </Link>
           </>
         )}
-        </div>
-      </header>
+      </div>
     </>
   );
 }
