@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import AuthShell from "../_shared/auth-shell";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/dashboard";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,66 +33,67 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(next);
     router.refresh();
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md rounded-[22px] border border-border-hair bg-surface/80 backdrop-blur-xl p-8">
-        <div className="mb-6 text-center">
-          <div className="font-serif italic text-2xl">♥ AMOURA</div>
-          <p className="text-stone text-sm mt-2">Welcome back</p>
+    <AuthShell title="Welcome back" sub="Sign in to continue browsing.">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs text-stone mb-1.5">Email</label>
+          <input
+            required
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="field-input"
+            placeholder="you@email.com"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block">
-            <span className="block text-xs text-stone mb-1.5">Email</span>
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="field-input"
-              placeholder="you@example.com"
-            />
-          </label>
+        <div>
+          <span className="flex items-center justify-between mb-1.5">
+            <label className="text-xs text-stone">Password</label>
+            <a href="/forgot-password" className="text-xs text-gold-bright">
+              Forgot password?
+            </a>
+          </span>
+          <input
+            required
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="field-input"
+            placeholder="••••••••"
+          />
+        </div>
 
-          <label className="block">
-            <span className="flex items-center justify-between mb-1.5">
-              <span className="text-xs text-stone">Password</span>
-              <a href="/forgot-password" className="text-xs text-gold-bright">
-                Forgot password?
-              </a>
-            </span>
-            <input
-              required
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="field-input"
-              placeholder="Your password"
-            />
-          </label>
+        {error && <p className="text-danger text-sm">{error}</p>}
 
-          {error && <p className="text-danger text-sm">{error}</p>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-[14px] bg-gradient-to-b from-rose-bright to-rose py-3 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {loading ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-[14px] bg-gradient-to-b from-rose-bright to-rose py-3 text-sm font-semibold text-white disabled:opacity-60"
-          >
-            {loading ? "Logging in…" : "Log in"}
-          </button>
-        </form>
+      <p className="text-stone text-center text-[13px] mt-5">
+        New here?{" "}
+        <a href="/register" className="text-gold-bright">
+          Create a free profile
+        </a>
+      </p>
+    </AuthShell>
+  );
+}
 
-        <p className="text-stone text-xs text-center mt-6">
-          New here?{" "}
-          <a href="/register" className="text-gold-bright">
-            Create a free profile
-          </a>
-        </p>
-      </div>
-    </main>
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

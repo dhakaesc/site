@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AuthShell from "../_shared/auth-shell";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -42,129 +43,126 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/profile/edit");
     router.refresh();
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md rounded-[22px] border border-border-hair bg-surface/80 backdrop-blur-xl p-8">
-        <div className="mb-6 text-center">
-          <div className="font-serif italic text-2xl">
-            ♥ AMOURA
+    <AuthShell
+      title="Create your profile"
+      sub="Takes about 2 minutes. Free to join."
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs text-stone mb-1.5">I am a</label>
+          <div className="flex gap-2">
+            {[
+              { v: "female", l: "Woman" },
+              { v: "male", l: "Man" },
+              { v: "other", l: "Other" },
+            ].map((o) => (
+              <button
+                key={o.v}
+                type="button"
+                onClick={() => setForm({ ...form, gender: o.v })}
+                className={`flex-1 rounded-full py-2.5 text-xs font-semibold border ${
+                  form.gender === o.v
+                    ? "bg-rose/15 border-rose/35 text-[#F3B4BE]"
+                    : "border-border-hair text-stone"
+                }`}
+              >
+                {o.l}
+              </button>
+            ))}
           </div>
-          <p className="text-stone text-sm mt-2">Create your free profile</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Field label="Name">
-            <input
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="field-input"
-              placeholder="Your name"
-            />
-          </Field>
+        <div>
+          <label className="block text-xs text-stone mb-1.5">Full name</label>
+          <input
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="field-input"
+            placeholder="Your name"
+          />
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Age">
-              <input
-                required
-                type="number"
-                min={18}
-                max={100}
-                value={form.age}
-                onChange={(e) => setForm({ ...form, age: e.target.value })}
-                className="field-input"
-                placeholder="25"
-              />
-            </Field>
-            <Field label="Gender">
-              <select
-                value={form.gender}
-                onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                className="field-input"
-              >
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-                <option value="other">Other</option>
-              </select>
-            </Field>
-          </div>
+        <div>
+          <label className="block text-xs text-stone mb-1.5">Age</label>
+          <input
+            required
+            type="number"
+            min={18}
+            max={100}
+            value={form.age}
+            onChange={(e) => setForm({ ...form, age: e.target.value })}
+            className="field-input"
+            placeholder="25"
+          />
+        </div>
 
-          <Field label="Email">
-            <input
-              required
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="field-input"
-              placeholder="you@example.com"
-            />
-          </Field>
+        <div>
+          <label className="block text-xs text-stone mb-1.5">
+            Phone number <span className="text-rose-bright">*</span>
+          </label>
+          <input
+            required
+            type="tel"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            className="field-input"
+            placeholder="+880 1XXX-XXXXXX"
+          />
+        </div>
 
-          <Field label="Phone number">
-            <input
-              required
-              type="tel"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="field-input"
-              placeholder="01XXXXXXXXX"
-            />
-          </Field>
-          <p className="text-stone-dim text-[11px] -mt-3">
-            We'll call to verify your account. Your number is never shown on your profile.
-          </p>
+        <div>
+          <label className="block text-xs text-stone mb-1.5">Email</label>
+          <input
+            required
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="field-input"
+            placeholder="you@email.com"
+          />
+        </div>
 
-          <Field label="Password">
-            <input
-              required
-              type="password"
-              minLength={8}
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="field-input"
-              placeholder="At least 8 characters"
-            />
-          </Field>
+        <div>
+          <label className="block text-xs text-stone mb-1.5">Password</label>
+          <input
+            required
+            type="password"
+            minLength={8}
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            className="field-input"
+            placeholder="Create a password"
+          />
+        </div>
 
-          {error && (
-            <p className="text-danger text-sm">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-[14px] bg-gradient-to-b from-rose-bright to-rose py-3 text-sm font-semibold text-white disabled:opacity-60"
-          >
-            {loading ? "Creating account…" : "Create free profile"}
-          </button>
-        </form>
-
-        <p className="text-stone text-xs text-center mt-6">
-          Already a member?{" "}
-          <a href="/login" className="text-gold-bright">
-            Log in
-          </a>
+        <p className="text-stone text-[11px] -mt-1">
+          Your phone number is never shown publicly — we call it once to verify
+          your account, and it is used only for account security.
         </p>
-      </div>
-    </main>
-  );
-}
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="block text-xs text-stone mb-1.5">{label}</span>
-      {children}
-    </label>
+        {error && <p className="text-danger text-sm">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-[14px] bg-gradient-to-b from-rose-bright to-rose py-3 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {loading ? "Creating account…" : "Create free profile"}
+        </button>
+      </form>
+
+      <p className="text-stone text-center text-[13px] mt-5">
+        Already a member?{" "}
+        <a href="/login" className="text-gold-bright">
+          Sign in
+        </a>
+      </p>
+    </AuthShell>
   );
 }

@@ -21,6 +21,11 @@ const ICON_PATHS: Record<string, string> = {
   dollar: "M12 2v20M17 6.5c0-1.9-2.2-3.5-5-3.5S7 4.6 7 6.5 9.2 10 12 10s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5",
   inbox: "M4 4h16v16H4zM4 14h5l1 3h4l1-3h5",
   layout: "M4 4h16v4H4zM4 12h7v8H4zM13 12h7v8h-7z",
+  grid: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
+  user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8a7 7 0 0 1 14 0",
+  logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
+  msg: "M4 5h16v11H8l-4 4z",
+  send: "M22 2 11 13M22 2l-7 20-4-9-9-4z",
 };
 
 export function Icon({ name, className = "" }: { name: string; className?: string }) {
