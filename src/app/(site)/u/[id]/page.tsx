@@ -22,7 +22,13 @@ type Profile = {
   categoryTitle: string | null;
   verified: boolean;
   spotlighted: boolean;
+  presence: string | null;
+  online: boolean;
   photos: string[];
+  totalPhotos: number;
+  photosVisible: number;
+  photoAllowance: number;
+  viewerTier: string;
 };
 
 export default function PublicProfilePage({
@@ -166,9 +172,10 @@ export default function PublicProfilePage({
                 justifyContent: "center", fontSize: 13,
               }}>No photo yet</div>
             )}
-            {profile.spotlighted && (
-              <span className="pill success" style={{ position: "absolute", top: 16, left: 16 }}>
-                ● Spotlighted
+            {profile.presence && (
+              <span className={`pill ${profile.online ? "success" : "stone"}`}
+                style={{ position: "absolute", top: 16, left: 16 }}>
+                {profile.online && <span className="pulse-dot" />} {profile.presence}
               </span>
             )}
             {profile.verified && (
@@ -246,7 +253,7 @@ export default function PublicProfilePage({
         <div className="section-title" style={{ marginTop: 32 }}>
           <h3 style={{ fontSize: 17 }}>Photos</h3>
           <span className="pill stone">
-            {profile.photos.length} {profile.photos.length === 1 ? "photo" : "photos"}
+            {profile.photosVisible} of {profile.totalPhotos} visible
           </span>
         </div>
         {profile.photos.length > 0 ? (
@@ -265,6 +272,23 @@ export default function PublicProfilePage({
                 }} />
               </button>
             ))}
+            {/* Locked placeholders for the photos this tier can't see yet. */}
+            {Array.from({ length: Math.max(profile.totalPhotos - profile.photosVisible, 0) })
+              .slice(0, 8)
+              .map((_, i) => (
+                <div key={`locked-${i}`} className="photo-tile locked"
+                  style={{ background: "var(--bg-surface-2)" }}>
+                  {i === 0 && (
+                    <div className="lockbadge">
+                      <Icon name="lock" />
+                      <b style={{ fontFamily: "var(--sans)", fontSize: 12 }}>
+                        +{profile.totalPhotos - profile.photosVisible} more
+                      </b>
+                      <span>Unlock with Premium</span>
+                    </div>
+                  )}
+                </div>
+              ))}
           </div>
         ) : (
           <PhotoGrid unlocked={0} total={30} />
@@ -352,6 +376,23 @@ export default function PublicProfilePage({
             <span>{v}</span>
           </div>
         ))}
+
+        {profile.viewerTier === "free" && profile.totalPhotos > profile.photosVisible && (
+          <div className="card" style={{
+            marginTop: 20, padding: 16,
+            background: "rgba(201,166,107,.06)", borderColor: "rgba(201,166,107,.3)",
+          }}>
+            <span className="pill gold"><Icon name="crown" /> Premium</span>
+            <p style={{ fontSize: 12, marginTop: 10, lineHeight: 1.6 }}>
+              Unlock all {profile.totalPhotos} photos of {firstName}, and message
+              without limits.
+            </p>
+            <Link href="/pricing" className="btn btn-gold btn-sm"
+              style={{ width: "100%", marginTop: 12 }}>
+              Upgrade now
+            </Link>
+          </div>
+        )}
 
         {!signedIn && (
           <div

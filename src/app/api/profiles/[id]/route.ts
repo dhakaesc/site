@@ -3,6 +3,9 @@ import { and, eq, asc, ne, or, isNull, desc, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users, photos } from "@/lib/db/schema";
 import { categoryTitle } from "@/lib/categories";
+import { presenceLabel, isOnline } from "@/lib/presence";
+import { getSession } from "@/lib/auth/session";
+import { limitsFor, effectiveTier } from "@/lib/plans";
 
 /**
  * Public profile view. No session required - someone arriving from an ad
@@ -30,6 +33,7 @@ export async function GET(
       category: users.category,
       identityStatus: users.identityStatus,
       spotlightUntil: users.spotlightUntil,
+      lastSeenAt: users.lastSeenAt,
     })
     .from(users)
     .where(
@@ -43,6 +47,19 @@ export async function GET(
   if (!profile) {
     return NextResponse.json({ error: "Profile not found." }, { status: 404 });
   }
+
+  // What the *viewer* is entitled to see. Free members get a small preview,
+  // which is the main reason to upgrade.
+  const viewer = await getSession();
+  let viewerTier = "free";
+  if (viewer) {
+    const [me] = await db
+      .select({ tier: users.tier, tierExpiresAt: users.tierExpiresAt })
+      .from(users)
+      .where(eq(users.id, viewer.userId));
+    if (me) viewerTier = effectiveTier(me.tier, me.tierExpiresAt);
+  }
+  const photoAllowance = limitsFor(viewerTier).photos;
 
   const theirPhotos = await db
     .select({ key: photos.key })
@@ -100,7 +117,13 @@ export async function GET(
       spotlighted: Boolean(
         profile.spotlightUntil && profile.spotlightUntil.getTime() > Date.now()
       ),
-      photos: theirPhotos.map((p) => `/api/media/${p.key}`),
+      presence: presenceLabel(profile.lastSeenAt),
+      online: isOnline(profile.lastSeenAt),
+      totalPhotos: theirPhotos.length,
+      photos: theirPhotos.slice(0, photoAllowance).map((p) => `/api/media/${p.key}`),
+      photosVisible: Math.min(theirPhotos.length, photoAllowance),
+      photoAllowance,
+      viewerTier,
     },
   });
 }

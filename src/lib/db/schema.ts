@@ -48,6 +48,9 @@ export const users = pgTable("users", {
   isPublished: boolean("is_published").notNull().default(true),
   // When a VIP's "spotlight" boost expires. Null = not currently spotlighted.
   spotlightUntil: timestamp("spotlight_until"),
+  // Refreshed as the member uses the site; drives the "Online now" /
+  // "Active 5m ago" indicator on profiles.
+  lastSeenAt: timestamp("last_seen_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
