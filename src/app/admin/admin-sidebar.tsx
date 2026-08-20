@@ -6,11 +6,17 @@ const GROUPS: {
 }[] = [
   {
     label: "Overview",
-    items: [{ label: "Dashboard", href: "/admin" }],
+    items: [
+      { label: "Dashboard", href: "/admin" },
+      { label: "Analytics", href: "/admin/analytics" },
+    ],
   },
   {
     label: "Content",
-    items: [{ label: "Users Profile", href: "/admin" }],
+    items: [
+      { label: "Model Profiles", href: "/admin/model-profiles" },
+      { label: "Users Profile", href: "/admin" },
+    ],
   },
   {
     label: "Trust & Safety",
@@ -18,28 +24,31 @@ const GROUPS: {
       { label: "Reports & Moderation", href: "/admin/reports" },
       { label: "Banned Users", href: "/admin/banned" },
       { label: "Open Inbox", href: "/admin/inbox" },
-      { label: "Verification" },
+      { label: "Verification", href: "/admin/verification" },
     ],
   },
   {
     label: "Support",
-    items: [{ label: "Support Tickets" }],
+    items: [{ label: "Support Tickets", href: "/admin/tickets" }],
   },
   {
     label: "Money",
-    items: [{ label: "Payments & Coupons", href: "/admin" }],
+    items: [
+      { label: "Payments & Coupons", href: "/admin" },
+      { label: "Coupons", href: "/admin/coupons" },
+    ],
   },
   {
     label: "Marketing",
-    items: [{ label: "Notifications & Campaigns" }],
+    items: [{ label: "Notifications & Campaigns", href: "/admin/campaigns" }],
   },
   {
     label: "Team & System",
     items: [
-      { label: "Admin Team & Roles" },
-      { label: "Security Logs" },
-      { label: "Edit Site (CMS)" },
-      { label: "Settings" },
+      { label: "Admin Team & Roles", href: "/admin/team" },
+      { label: "Security Logs", href: "/admin/logs" },
+      { label: "Edit Site (CMS)", href: "/admin/cms" },
+      { label: "Settings", href: "/admin/settings" },
     ],
   },
 ];
