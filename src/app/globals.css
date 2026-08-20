@@ -206,9 +206,9 @@ tr:hover td{background:rgba(255,255,255,.015);}
 .field-input::placeholder { color: var(--stone-dim); }
 .field-input:focus { outline: none; border-color: var(--border-hair-2); }
 
-/* The prototype renders inside a fixed-width preview frame (#frame,
-   max-width:1440px). Reproduced here as the page shell so line lengths and
-   column widths match the prototype exactly. */
+/* Full-bleed layout: the page uses the whole viewport width at every size.
+   (The prototype was previewed inside a fixed 1440px frame, but that was the
+   preview tool's own chrome, not part of the design.) */
 .page-shell {
   min-height: 100vh;
   display: flex;
@@ -216,19 +216,9 @@ tr:hover td{background:rgba(255,255,255,.015);}
 }
 .page-shell > .topbanner,
 .page-shell > .navbar,
+.page-shell > main,
 .page-shell > footer.site {
   width: 100%;
-}
-.page-shell > main {
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-}
-.navbar,
-footer.site {
-  max-width: 1440px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 /* ---------------------------------------------------------------------------
