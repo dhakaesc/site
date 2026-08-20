@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { and, eq, or, desc, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { messages, users, photos, likes } from "@/lib/db/schema";
+import { messages, users, photos, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 
 /**
@@ -28,9 +28,26 @@ export async function GET() {
     .where(and(eq(likes.toUserId, me), eq(likes.liked, true)));
 
   const likedMeSet = new Set(likedMe.map((r) => r.fromUserId));
-  const matchIds = iLiked
+  let matchIds = iLiked
     .map((r) => r.toUserId)
     .filter((id) => likedMeSet.has(id));
+
+  if (matchIds.length === 0) {
+    return NextResponse.json({ conversations: [] });
+  }
+
+  const blockRows = await db
+    .select({
+      blockerUserId: blocks.blockerUserId,
+      blockedUserId: blocks.blockedUserId,
+    })
+    .from(blocks)
+    .where(or(eq(blocks.blockerUserId, me), eq(blocks.blockedUserId, me)));
+
+  const blockedIds = new Set(
+    blockRows.map((r) => (r.blockerUserId === me ? r.blockedUserId : r.blockerUserId))
+  );
+  matchIds = matchIds.filter((id) => !blockedIds.has(id));
 
   if (matchIds.length === 0) {
     return NextResponse.json({ conversations: [] });

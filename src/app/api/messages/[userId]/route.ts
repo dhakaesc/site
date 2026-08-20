@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { and, eq, or, asc, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { messages, users, likes } from "@/lib/db/schema";
+import { messages, users, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { limitsFor, effectiveTier } from "@/lib/plans";
 
@@ -23,6 +23,21 @@ async function areMatched(a: number, b: number) {
   return rows.length === 2;
 }
 
+/** True if either user has blocked the other. */
+async function isBlocked(a: number, b: number) {
+  const rows = await db
+    .select({ id: blocks.id })
+    .from(blocks)
+    .where(
+      or(
+        and(eq(blocks.blockerUserId, a), eq(blocks.blockedUserId, b)),
+        and(eq(blocks.blockerUserId, b), eq(blocks.blockedUserId, a))
+      )
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
@@ -41,6 +56,13 @@ export async function GET(
   if (!(await areMatched(session.userId, otherId))) {
     return NextResponse.json(
       { error: "You can only message people you've matched with." },
+      { status: 403 }
+    );
+  }
+
+  if (await isBlocked(session.userId, otherId)) {
+    return NextResponse.json(
+      { error: "This conversation is no longer available." },
       { status: 403 }
     );
   }
@@ -125,6 +147,13 @@ export async function POST(
   if (!(await areMatched(session.userId, otherId))) {
     return NextResponse.json(
       { error: "You can only message people you've matched with." },
+      { status: 403 }
+    );
+  }
+
+  if (await isBlocked(session.userId, otherId)) {
+    return NextResponse.json(
+      { error: "This conversation is no longer available." },
       { status: 403 }
     );
   }

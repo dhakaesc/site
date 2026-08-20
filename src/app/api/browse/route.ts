@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { and, eq, notInArray, inArray } from "drizzle-orm";
+import { and, eq, notInArray, inArray, or } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users, photos, likes } from "@/lib/db/schema";
+import { users, photos, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 
 export async function GET() {
@@ -15,9 +15,28 @@ export async function GET() {
     .from(likes)
     .where(eq(likes.fromUserId, session.userId));
 
+  // Hide anyone in a block relationship with me, in either direction.
+  const blockRows = await db
+    .select({
+      blockerUserId: blocks.blockerUserId,
+      blockedUserId: blocks.blockedUserId,
+    })
+    .from(blocks)
+    .where(
+      or(
+        eq(blocks.blockerUserId, session.userId),
+        eq(blocks.blockedUserId, session.userId)
+      )
+    );
+
+  const blockedIds = blockRows.map((r) =>
+    r.blockerUserId === session.userId ? r.blockedUserId : r.blockerUserId
+  );
+
   const excludeIds = [
     session.userId,
     ...alreadyDecided.map((r) => r.toUserId),
+    ...blockedIds,
   ];
 
   const candidates = await db
