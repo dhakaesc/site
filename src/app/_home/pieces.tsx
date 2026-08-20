@@ -272,7 +272,8 @@ export function PhotoGrid({ unlocked, total, images }: {
             {src && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={src} alt="" loading="lazy" decoding="async" style={{
-                position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+                position: "absolute", inset: 0, width: "100%", height: "100%",
+                objectFit: "cover", zIndex: 0,
               }} />
             )}
             {i === unlocked && (

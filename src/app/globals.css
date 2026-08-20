@@ -251,3 +251,8 @@ section { position: relative; }
   .glass[style*="margin"] { margin-left: 20px !important; margin-right: 20px !important; }
   .card[style*="padding: 44px"] { padding: 28px !important; }
 }
+
+/* The prototype's lock overlay is a ::before with no stacking context, so an
+   absolutely-positioned <img> added inside the tile paints on top of it and the
+   blur disappears. Lifting the overlay above the photo restores it. */
+.photo-tile.locked::before { z-index: 1; }
