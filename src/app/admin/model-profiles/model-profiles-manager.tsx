@@ -27,6 +27,8 @@ export default function ModelProfilesManager() {
   const [busyId, setBusyId] = useState<number | null>(null);
 
   const [editing, setEditing] = useState<Profile | null>(null);
+  const [uploadBusy, setUploadBusy] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     age: "",
@@ -141,16 +143,31 @@ export default function ModelProfilesManager() {
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !newProfileId) return;
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0 || !newProfileId) return;
     setUploading(true);
+    setUploadError(null);
 
-    const body = new FormData();
-    body.append("file", file);
-    await fetch(`/api/admin/model-profiles/${newProfileId}/photos`, {
-      method: "POST",
-      body,
-    });
+    for (const file of files) {
+      const body = new FormData();
+      body.append("file", file);
+      try {
+        const res = await fetch(`/api/admin/model-profiles/${newProfileId}/photos`, {
+          method: "POST",
+          body,
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          setUploadError(`${file.name}: ${d.error ?? `Upload failed (${res.status})`}`);
+          break;
+        }
+      } catch (err) {
+        setUploadError(
+          `${file.name}: ${err instanceof Error ? err.message : "Upload failed"}`
+        );
+        break;
+      }
+    }
 
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -366,6 +383,7 @@ export default function ModelProfilesManager() {
                   ref={fileInputRef}
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
+                  multiple
                   onChange={handlePhotoUpload}
                   disabled={uploading}
                   className="hidden"
@@ -465,21 +483,46 @@ export default function ModelProfilesManager() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img key={url} src={url} alt="" className="aspect-square rounded-[10px] object-cover" />
                 ))}
-                <label className="aspect-square rounded-[10px] border border-dashed border-border-hair-2 flex items-center justify-center text-stone-dim text-[10px] cursor-pointer hover:text-stone">
-                  ↑ Add
+                <label className="aspect-square rounded-[10px] border border-dashed border-border-hair-2 flex items-center justify-center text-stone-dim text-[10px] cursor-pointer hover:text-stone text-center px-1">
+                  {uploadBusy ? uploadBusy : "↑ Add"}
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
+                    multiple
                     className="hidden"
+                    disabled={Boolean(uploadBusy)}
                     onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file || !editing) return;
-                      const body = new FormData();
-                      body.append("file", file);
-                      await fetch(`/api/admin/model-profiles/${editing.id}/photos`, {
-                        method: "POST",
-                        body,
-                      });
+                      const files = Array.from(e.target.files ?? []);
+                      if (files.length === 0 || !editing) return;
+                      setUploadError(null);
+
+                      for (let i = 0; i < files.length; i++) {
+                        setUploadBusy(`${i + 1}/${files.length}`);
+                        const body = new FormData();
+                        body.append("file", files[i]);
+                        try {
+                          const res = await fetch(
+                            `/api/admin/model-profiles/${editing.id}/photos`,
+                            { method: "POST", body }
+                          );
+                          if (!res.ok) {
+                            const d = await res.json().catch(() => ({}));
+                            setUploadError(
+                              `${files[i].name}: ${d.error ?? `Upload failed (${res.status})`}`
+                            );
+                            break;
+                          }
+                        } catch (err) {
+                          setUploadError(
+                            `${files[i].name}: ${err instanceof Error ? err.message : "Upload failed"}`
+                          );
+                          break;
+                        }
+                      }
+
+                      setUploadBusy(null);
+                      e.target.value = "";
+
                       const res = await fetch("/api/admin/model-profiles");
                       const d = await res.json();
                       setProfiles(d.profiles ?? []);
@@ -489,6 +532,13 @@ export default function ModelProfilesManager() {
                   />
                 </label>
               </div>
+              {uploadError && (
+                <p className="text-danger text-xs mt-2">{uploadError}</p>
+              )}
+              <p className="text-stone-dim text-[11px] mt-2">
+                You can select several photos at once. JPEG, PNG or WebP, up to 8MB each.
+                The first photo is used as the cover.
+              </p>
             </div>
 
             <div className="flex gap-2 pt-1">
