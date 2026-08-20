@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     ...blockedIds,
   ];
 
-  const filters = [eq(users.isBanned, false), notInArray(users.id, excludeIds)];
+  const filters = [eq(users.isBanned, false), eq(users.isPublished, true), notInArray(users.id, excludeIds)];
   if (gender === "male" || gender === "female" || gender === "other") {
     filters.push(eq(users.gender, gender));
   }

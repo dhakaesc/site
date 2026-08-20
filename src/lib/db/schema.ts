@@ -34,6 +34,15 @@ export const users = pgTable("users", {
   identityStatus: varchar("identity_status", { length: 20 }).notNull().default("pending"), // pending | verified | rejected
   identityVerifiedAt: timestamp("identity_verified_at"),
   identityVerifiedByUserId: integer("identity_verified_by_user_id").references((): AnyPgColumn => users.id),
+  // "self" = normal signup. "admin" = admin created this profile on behalf
+  // of a real person who already has a paying relationship with us (per
+  // business decision - not for impersonating public figures).
+  profileSource: varchar("profile_source", { length: 20 }).notNull().default("self"),
+  adminCategory: varchar("admin_category", { length: 20 }), // model | influencer | other, admin-created only
+  adminNote: text("admin_note").default(""), // internal note, e.g. how/when they paid
+  // Admin-created profiles start unpublished (draft) until an admin
+  // flips them live. Self-signups are published immediately.
+  isPublished: boolean("is_published").notNull().default(true),
   // When a VIP's "spotlight" boost expires. Null = not currently spotlighted.
   spotlightUntil: timestamp("spotlight_until"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

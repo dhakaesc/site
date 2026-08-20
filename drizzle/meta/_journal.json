@@ -57,6 +57,13 @@
       "when": 1787243314002,
       "tag": "0007_messy_spiral",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787244244057,
+      "tag": "0008_fancy_spectrum",
+      "breakpoints": true
     }
   ]
 }
