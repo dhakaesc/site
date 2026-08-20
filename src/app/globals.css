@@ -17,6 +17,7 @@
   --stone-dim: #7A5A54;
   --success: #8FBF9F;
   --danger: #E08585;
+  --info: #B7A7D9;
 }
 
 @theme inline {
@@ -36,6 +37,7 @@
   --color-stone-dim: var(--stone-dim);
   --color-success: var(--success);
   --color-danger: var(--danger);
+  --color-info: var(--info);
   --font-serif: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-inter), -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains), monospace;
