@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { Icon, PhotoGrid } from "../../../_home/pieces";
+import PhotoLightbox from "../../../_home/photo-lightbox";
 
 type Profile = {
   id: number;
@@ -26,7 +27,7 @@ export default function PublicProfilePage({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const [active, setActive] = useState(0);
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`/api/profiles/${id}`)
@@ -56,98 +57,110 @@ export default function PublicProfilePage({
   }
 
   const firstName = profile.name.split(" ")[0];
-  const cover = profile.photos[active] ?? profile.photos[0];
+  // First photo is the profile picture; the next one (when there is one) makes
+  // a better cover so the two are not identical.
+  const avatarPhoto = profile.photos[0];
+  const coverPhoto = profile.photos[1] ?? profile.photos[0];
 
   return (
+    <>
     <div className="px-6 sm:px-12 pb-16 pt-6 flex gap-8 flex-wrap items-start">
       {/* MAIN COLUMN */}
       <div className="flex-[2] min-w-[340px]">
-        {/* Cover */}
-        <div className="h-[280px] rounded-[22px] relative overflow-hidden bg-surface-2">
-          {cover ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={cover} alt={profile.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-stone-dim text-sm">
-              No photo yet
-            </div>
-          )}
-          {profile.spotlighted && (
-            <span className="absolute top-4 left-4 rounded-full bg-success/10 border border-success/25 text-success text-[11px] font-semibold px-3 py-1">
-              ● Spotlighted
-            </span>
-          )}
-          {profile.verified && (
-            <span className="absolute top-4 right-4 inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1">
-              <Icon name="shield" /> Verified
-            </span>
-          )}
-        </div>
-
-        {/* Name + actions */}
-        <div className="flex justify-between items-start mt-5 flex-wrap gap-3">
-          <div>
-            <h1 className="font-serif text-[28px]">
-              {profile.name}, {profile.age}
-            </h1>
-            <div className="text-stone text-[13px] mt-1 flex items-center gap-1.5">
-              <Icon name="map" /> {profile.location || "Bangladesh"}
-            </div>
-          </div>
-          <div className="flex gap-2.5">
-            {signedIn ? (
-              <>
-                <Link
-                  href="/browse"
-                  className="inline-flex items-center gap-1.5 rounded-[14px] border border-border-hair px-4 py-2 text-sm font-semibold"
-                >
-                  <Icon name="heart" /> Like
-                </Link>
-                <Link
-                  href="/messages"
-                  className="inline-flex items-center gap-1.5 rounded-[14px] bg-gradient-to-b from-rose-bright to-rose px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Message
-                </Link>
-              </>
+        {/* Cover photo with the profile picture sitting over its bottom-left */}
+        <div style={{ position: "relative", marginBottom: 58 }}>
+          <div className="cover" style={{
+            height: 280, borderRadius: 22, position: "relative", overflow: "hidden",
+            background: "var(--bg-surface-2)",
+          }}>
+            {coverPhoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={coverPhoto} alt="" style={{
+                width: "100%", height: "100%", objectFit: "cover",
+              }} />
             ) : (
-              <>
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-1.5 rounded-[14px] border border-border-hair px-4 py-2 text-sm font-semibold"
-                >
-                  <Icon name="heart" /> Like
-                </Link>
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-1.5 rounded-[14px] bg-gradient-to-b from-rose-bright to-rose px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Message
-                </Link>
-              </>
+              <div className="stone" style={{
+                height: "100%", display: "flex", alignItems: "center",
+                justifyContent: "center", fontSize: 13,
+              }}>No photo yet</div>
+            )}
+            {profile.spotlighted && (
+              <span className="pill success" style={{ position: "absolute", top: 16, left: 16 }}>
+                ● Spotlighted
+              </span>
+            )}
+            {profile.verified && (
+              <span className="pill gold" style={{ position: "absolute", top: 16, right: 16 }}>
+                <Icon name="shield" /> Verified
+              </span>
+            )}
+          </div>
+
+          {/* Round profile picture */}
+          <div style={{
+            position: "absolute", left: 28, bottom: -46,
+            width: 116, height: 116, borderRadius: "50%", overflow: "hidden",
+            border: "4px solid var(--bg-void)", background: "var(--bg-surface-2)",
+            boxShadow: "0 12px 30px -10px rgba(0,0,0,.7)",
+          }}>
+            {avatarPhoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarPhoto} alt={profile.name} style={{
+                width: "100%", height: "100%", objectFit: "cover",
+              }} />
+            ) : (
+              <div className="stone" style={{
+                height: "100%", display: "flex", alignItems: "center",
+                justifyContent: "center", fontFamily: "var(--serif)", fontSize: 34,
+              }}>{profile.name[0]}</div>
             )}
           </div>
         </div>
 
+        {/* Name + actions */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+          flexWrap: "wrap", gap: 12,
+        }}>
+          <div>
+            <h1 style={{ fontSize: 28 }}>{profile.name}, {profile.age}</h1>
+            <div className="stone" style={{
+              fontSize: 13, marginTop: 4, display: "flex", alignItems: "center", gap: 6,
+            }}>
+              <Icon name="map" /> {profile.location || "Bangladesh"}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Link className="btn btn-ghost btn-sm" href={signedIn ? "/browse" : "/register"}>
+              <Icon name="heart" /> Like
+            </Link>
+            <Link className="btn btn-rose btn-sm" href={signedIn ? "/messages" : "/register"}>
+              <Icon name="msg" /> Message
+            </Link>
+          </div>
+        </div>
+
         {/* Photos */}
-        <div className="flex items-baseline justify-between mt-8 mb-3">
-          <h3 className="text-[17px]">Photos</h3>
-          <span className="rounded-full border border-border-hair text-stone text-[11px] px-2.5 py-1">
+        <div className="section-title" style={{ marginTop: 32 }}>
+          <h3 style={{ fontSize: 17 }}>Photos</h3>
+          <span className="pill stone">
             {profile.photos.length} {profile.photos.length === 1 ? "photo" : "photos"}
           </span>
         </div>
         {profile.photos.length > 0 ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+          <div className="photo-grid">
             {profile.photos.map((url, i) => (
               <button
                 key={url}
-                onClick={() => setActive(i)}
-                className={`aspect-square rounded-[14px] overflow-hidden border ${
-                  i === active ? "border-gold-bright" : "border-transparent"
-                }`}
+                onClick={() => setLightbox(i)}
+                className="photo-tile"
+                aria-label={`Open photo ${i + 1}`}
+                style={{ border: "none", padding: 0, cursor: "pointer", background: "var(--bg-surface-2)" }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="w-full h-full object-cover" />
+                <img src={url} alt="" loading="lazy" style={{
+                  position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+                }} />
               </button>
             ))}
           </div>
@@ -155,16 +168,32 @@ export default function PublicProfilePage({
           <PhotoGrid unlocked={0} total={30} />
         )}
 
+        {/* Videos */}
+        <div className="section-title" style={{ marginTop: 32 }}>
+          <h3 style={{ fontSize: 17 }}>Videos</h3>
+          <span className="pill stone">Coming soon</span>
+        </div>
+        <div className="video-row">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="video-tile locked" style={{ background: "var(--bg-surface-2)" }}>
+              <div className="lockbadge">
+                <Icon name="video" />
+                <span>Video profiles<br />coming soon</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* About */}
-        <h3 className="text-[17px] mt-8 mb-3">About</h3>
-        <p className="text-stone text-sm leading-relaxed">
+        <div className="section-title" style={{ marginTop: 32 }}>
+          <h3 style={{ fontSize: 17 }}>About</h3>
+        </div>
+        <p className="stone" style={{ fontSize: 14, lineHeight: 1.7 }}>
           {profile.bio || `${firstName} hasn't added a bio yet.`}
         </p>
         {profile.categoryTitle && (
-          <div className="flex gap-2 flex-wrap mt-4">
-            <span className="rounded-full border border-border-hair bg-white/[0.02] text-stone text-[11px] px-3 py-1.5">
-              {profile.categoryTitle}
-            </span>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
+            <span className="pill stone">{profile.categoryTitle}</span>
           </div>
         )}
       </div>
@@ -209,5 +238,16 @@ export default function PublicProfilePage({
         )}
       </div>
     </div>
+
+    {lightbox !== null && profile.photos.length > 0 && (
+      <PhotoLightbox
+        photos={profile.photos}
+        index={lightbox}
+        name={profile.name}
+        onClose={() => setLightbox(null)}
+        onIndexChange={setLightbox}
+      />
+    )}
+    </>
   );
 }
