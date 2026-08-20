@@ -15,7 +15,7 @@ export const SUBSCRIPTION_DAYS = 30;
  */
 export function getPaymentNumbers() {
   return {
-    bkash: process.env.BKASH_NUMBER ?? "Not configured yet",
+    bkash: process.env.BKASH_NUMBER ?? "01726844679",
     nagad: process.env.NAGAD_NUMBER ?? "Not configured yet",
   };
 }
