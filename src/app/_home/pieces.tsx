@@ -254,15 +254,27 @@ export function PressLogo({ name }: { name: string }) {
   );
 }
 
-/** Prototype: photoGrid(unlocked, total, …) */
-export function PhotoGrid({ unlocked, total }: { unlocked: number; total: number }) {
+/** Prototype: photoGrid(unlocked, total, …).
+ *  Real photos are passed in so the free-vs-Premium difference is actually
+ *  visible, rather than being demonstrated with flat colour swatches. */
+export function PhotoGrid({ unlocked, total, images }: {
+  unlocked: number; total: number; images?: string[];
+}) {
   const tones = ["p1", "p3", "p5", "p2", "p4", "p6", "p1", "p3"];
   return (
     <div className="photo-grid">
       {tones.map((tone, i) => {
         const locked = i >= unlocked;
+        const src = images?.[i % (images?.length || 1)];
         return (
-          <div key={i} className={`photo-tile ${locked ? "locked" : ""}`} style={{ background: GRADIENTS[tone] }}>
+          <div key={i} className={`photo-tile ${locked ? "locked" : ""}`}
+            style={{ background: GRADIENTS[tone] }}>
+            {src && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={src} alt="" loading="lazy" decoding="async" style={{
+                position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+              }} />
+            )}
             {i === unlocked && (
               <div className="lockbadge">
                 <Icon name="lock" />

@@ -12,6 +12,17 @@ import {
 
 const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
 
+// Used only to illustrate the free-vs-Premium photo difference on the
+// marketing page - these are the same stock category covers, not members.
+const SAMPLE_PHOTOS = [
+  "/categories/drama-models.webp",
+  "/categories/influencers.webp",
+  "/categories/students.webp",
+  "/categories/news-presenters.webp",
+  "/categories/single-parents.webp",
+  "/categories/professionals.webp",
+];
+
 /** Prototype: genderCTA() */
 function GenderCTA() {
   return (
@@ -149,23 +160,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* COMPATIBILITY QUIZ */}
-      <section className="glass" style={{
-        margin: "0 48px 40px", padding: "26px 30px", borderRadius: 20,
-        display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap",
-      }}>
-        <div style={{ width: 46, height: 46, borderRadius: 14, background: "rgba(201,166,107,.14)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold-bright)", flexShrink: 0 }}>
-          <Icon name="bolt" />
-        </div>
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <div style={{ fontWeight: 600, fontSize: 15 }}>Take the 2-minute compatibility quiz</div>
-          <div className="stone" style={{ fontSize: 12, marginTop: 2 }}>
-            Get a smart match score with every profile you visit — free.
-          </div>
-        </div>
-        <Link className="btn btn-gold btn-sm" href="/register">Start the quiz →</Link>
-      </section>
-
       {/* PRESS / TRUST STRIP */}
       <section style={{ padding: "24px 48px", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
         <div className="stone" style={{ fontSize: 11, textAlign: "center", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 }}>
@@ -203,25 +197,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* VERIFICATION PROCESS */}
-      <section style={{ padding: "10px 48px 56px", background: "var(--bg-surface)", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
-        <div className="section-title" style={{ paddingTop: 40 }}>
-          <h2 style={{ fontSize: 22 }}>How we keep AMOURA real</h2>
-          <span className="pill success"><Icon name="shield" /> 98.6% of fake profiles caught pre-launch</span>
-        </div>
-        <div className="grid g-4">
-          <VerificationStep n={1} icon="shield" title="Selfie match" desc="A live selfie is matched against profile photos using face verification." />
-          <VerificationStep n={2} icon="check" title="ID confirmation" desc="Government ID is checked privately — never shown on your public profile." />
-          <VerificationStep n={3} icon="search" title="Manual review" desc="A real reviewer checks every new profile before it appears in search." />
-          <VerificationStep n={4} icon="bell" title="Ongoing moderation" desc="Our safety team monitors reports and removes bad actors around the clock." />
-        </div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
-          <span className="pill gold"><Icon name="crown" /> Optional income &amp; occupation verification for Elite members</span>
-          <span className="pill gold"><Icon name="shield" /> Optional criminal background check add-on</span>
-          <span className="pill gold"><Icon name="check" /> LinkedIn-verified professionals badge</span>
-        </div>
-      </section>
-
       {/* PEOPLE NEAR YOU */}
       <section style={{ padding: "56px 48px 0" }}>
         <div className="section-title">
@@ -253,10 +228,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* MOST POPULAR */}
+      {/* FIND YOUR FAVOURITE */}
       <section style={{ padding: "50px 48px 56px" }}>
         <div className="section-title">
-          <h2 style={{ fontSize: 22 }}>Most popular this week</h2>
+          <h2 style={{ fontSize: 22 }}>Find your favourite here</h2>
           <span className="pill gold"><Icon name="crown" /> Handpicked</span>
         </div>
         {popular.length > 0 ? (
@@ -288,6 +263,25 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* VERIFICATION PROCESS */}
+      <section style={{ padding: "10px 48px 56px", background: "var(--bg-surface)", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
+        <div className="section-title" style={{ paddingTop: 40 }}>
+          <h2 style={{ fontSize: 22 }}>How we keep AMOURA real</h2>
+          <span className="pill success"><Icon name="shield" /> 98.6% of fake profiles caught pre-launch</span>
+        </div>
+        <div className="grid g-4">
+          <VerificationStep n={1} icon="shield" title="Selfie match" desc="A live selfie is matched against profile photos using face verification." />
+          <VerificationStep n={2} icon="check" title="ID confirmation" desc="Government ID is checked privately — never shown on your public profile." />
+          <VerificationStep n={3} icon="search" title="Manual review" desc="A real reviewer checks every new profile before it appears in search." />
+          <VerificationStep n={4} icon="bell" title="Ongoing moderation" desc="Our safety team monitors reports and removes bad actors around the clock." />
+        </div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
+          <span className="pill gold"><Icon name="crown" /> Optional income &amp; occupation verification for Elite members</span>
+          <span className="pill gold"><Icon name="shield" /> Optional criminal background check add-on</span>
+          <span className="pill gold"><Icon name="check" /> LinkedIn-verified professionals badge</span>
+        </div>
+      </section>
+
       {/* SUCCESS STORIES */}
       <section style={{ padding: "56px 48px" }}>
         <div className="section-title"><h2 style={{ fontSize: 22 }}>Real connections, real stories</h2></div>
@@ -316,17 +310,28 @@ export default async function HomePage() {
 
       {/* PREMIUM DEEP DIVE */}
       <section style={{ padding: "0 48px 56px" }}>
-        <div className="section-title"><h2 style={{ fontSize: 22 }}>See the difference Premium makes</h2></div>
+        <div className="section-title">
+          <h2 style={{ fontSize: 22 }}>See the difference Premium makes</h2>
+          <span className="pill stone">Same profile, two views</span>
+        </div>
         <div className="grid g-2">
           <div className="card" style={{ padding: 22 }}>
             <span className="pill stone">Free view</span>
             <h3 style={{ fontSize: 16, marginTop: 10 }}>3 of 30 photos visible</h3>
-            <PhotoGrid unlocked={3} total={30} />
+            <p className="stone" style={{ fontSize: 12.5, margin: "6px 0 14px", lineHeight: 1.6 }}>
+              You see the first three photos. The rest stay blurred, and you can send
+              5 messages to up to 5 people in total.
+            </p>
+            <PhotoGrid unlocked={3} total={30} images={SAMPLE_PHOTOS} />
           </div>
           <div className="card" style={{ padding: 22, borderColor: "var(--gold)", boxShadow: "0 0 0 1px var(--gold)" }}>
             <span className="pill gold"><Icon name="crown" /> Premium view</span>
             <h3 style={{ fontSize: 16, marginTop: 10 }}>All 30 photos unlocked</h3>
-            <PhotoGrid unlocked={8} total={30} />
+            <p className="stone" style={{ fontSize: 12.5, margin: "6px 0 14px", lineHeight: 1.6 }}>
+              Every photo is visible in full, messaging is unlimited, and you can see
+              exactly who has already liked you.
+            </p>
+            <PhotoGrid unlocked={8} total={30} images={SAMPLE_PHOTOS} />
           </div>
         </div>
       </section>
