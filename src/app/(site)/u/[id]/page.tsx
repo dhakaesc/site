@@ -337,60 +337,6 @@ export default function PublicProfilePage({
 
       {/* SIDEBAR */}
       <div className="flex-1 min-w-[260px] rounded-[22px] border border-border-hair bg-surface/60 backdrop-blur-xl p-6 sticky top-[90px]">
-        {/* Message panel - opens in place rather than navigating away */}
-        {chatOpen && (
-          <div className="card" style={{ padding: 16, marginBottom: 18 }}>
-            <div className="section-title" style={{ marginBottom: 10 }}>
-              <h3 style={{ fontSize: 14 }}>Message {firstName}</h3>
-              <button type="button" onClick={() => setChatOpen(false)}
-                className="stone" style={{ background: "none", border: "none", fontSize: 16, lineHeight: 1 }}
-                aria-label="Close conversation">×</button>
-            </div>
-
-            <div style={{
-              maxHeight: 260, overflowY: "auto", display: "flex",
-              flexDirection: "column", gap: 8, marginBottom: 10,
-            }}>
-              {messages.length === 0 && !chatError && (
-                <p className="stone" style={{ fontSize: 12 }}>
-                  No messages yet — say hello.
-                </p>
-              )}
-              {messages.map((m) => (
-                <div key={m.id} style={{ display: "flex", justifyContent: m.fromMe ? "flex-end" : "flex-start" }}>
-                  <div className="bubble" style={{
-                    background: m.fromMe
-                      ? "linear-gradient(180deg,var(--rose-bright),var(--rose))"
-                      : "var(--bg-surface-2)",
-                    color: m.fromMe ? "#fff" : "var(--ivory)",
-                  }}>
-                    {m.body}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {chatError && (
-              <p style={{ color: "var(--danger)", fontSize: 12, marginBottom: 8 }}>{chatError}</p>
-            )}
-
-            <form onSubmit={sendMessage} style={{ display: "flex", gap: 8 }}>
-              <input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="Type a message…"
-                className="field-input"
-                maxLength={2000}
-                style={{ flex: 1 }}
-              />
-              <button type="submit" disabled={sending || !draft.trim()}
-                className="btn btn-rose btn-sm">
-                <Icon name="send" />
-              </button>
-            </form>
-          </div>
-        )}
-
         <h3 className="text-[15px] mb-3.5">Basics</h3>
         {[
           ["Age", String(profile.age)],
@@ -429,6 +375,61 @@ export default function PublicProfilePage({
         )}
       </div>
     </div>
+
+    {/* Message panel - opens in place rather than navigating away */}
+    {chatOpen && (
+      <div className="chat-popup card" style={{ padding: 16 }}>
+        <div className="section-title" style={{ marginBottom: 10 }}>
+          <h3 style={{ fontSize: 14 }}>Message {firstName}</h3>
+          <button type="button" onClick={() => setChatOpen(false)}
+            className="stone" style={{ background: "none", border: "none", fontSize: 16, lineHeight: 1 }}
+            aria-label="Close conversation">×</button>
+        </div>
+
+        <div style={{
+          maxHeight: 260, overflowY: "auto", display: "flex",
+          flexDirection: "column", gap: 8, marginBottom: 10,
+        }}>
+          {messages.length === 0 && !chatError && (
+            <p className="stone" style={{ fontSize: 12 }}>
+              No messages yet — say hello.
+            </p>
+          )}
+          {messages.map((m) => (
+            <div key={m.id} style={{ display: "flex", justifyContent: m.fromMe ? "flex-end" : "flex-start" }}>
+              <div className="bubble" style={{
+                background: m.fromMe
+                  ? "linear-gradient(180deg,var(--rose-bright),var(--rose))"
+                  : "var(--bg-surface-2)",
+                color: m.fromMe ? "#fff" : "var(--ivory)",
+              }}>
+                {m.body}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {chatError && (
+          <p style={{ color: "var(--danger)", fontSize: 12, marginBottom: 8 }}>{chatError}</p>
+        )}
+
+        <form onSubmit={sendMessage} style={{ display: "flex", gap: 8 }}>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Type a message…"
+            className="field-input"
+            maxLength={2000}
+            style={{ flex: 1 }}
+          />
+          <button type="submit" disabled={sending || !draft.trim()}
+            className="btn btn-rose btn-sm">
+            <Icon name="send" />
+          </button>
+        </form>
+      </div>
+    )}
+
 
     {lightbox !== null && profile.photos.length > 0 && (
       <PhotoLightbox

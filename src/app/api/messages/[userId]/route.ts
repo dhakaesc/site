@@ -7,21 +7,6 @@ import { getSession } from "@/lib/auth/session";
 import { limitsFor, effectiveTier } from "@/lib/plans";
 
 /** Two users may chat only if they have both liked each other. */
-async function areMatched(a: number, b: number) {
-  const rows = await db
-    .select({ fromUserId: likes.fromUserId })
-    .from(likes)
-    .where(
-      and(
-        eq(likes.liked, true),
-        or(
-          and(eq(likes.fromUserId, a), eq(likes.toUserId, b)),
-          and(eq(likes.fromUserId, b), eq(likes.toUserId, a))
-        )
-      )
-    );
-  return rows.length === 2;
-}
 
 /** True if either user has blocked the other. */
 async function isBlocked(a: number, b: number) {
@@ -51,13 +36,6 @@ export async function GET(
   const otherId = Number(userId);
   if (!Number.isInteger(otherId)) {
     return NextResponse.json({ error: "Invalid user." }, { status: 400 });
-  }
-
-  if (!(await areMatched(session.userId, otherId))) {
-    return NextResponse.json(
-      { error: "You can only message people you've matched with." },
-      { status: 403 }
-    );
   }
 
   if (await isBlocked(session.userId, otherId)) {
@@ -141,13 +119,6 @@ export async function POST(
     return NextResponse.json(
       { error: "Message can't be empty." },
       { status: 400 }
-    );
-  }
-
-  if (!(await areMatched(session.userId, otherId))) {
-    return NextResponse.json(
-      { error: "You can only message people you've matched with." },
-      { status: 403 }
     );
   }
 

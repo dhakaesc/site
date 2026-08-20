@@ -16,7 +16,13 @@ export async function GET() {
 
   const me = session.userId;
 
-  // Mutual matches: I liked them AND they liked me.
+  // Anyone I've exchanged messages with, plus anyone I've matched with even
+  // if nobody has written yet. Matching is no longer required to message.
+  const talkedTo = await db
+    .select({ fromUserId: messages.fromUserId, toUserId: messages.toUserId })
+    .from(messages)
+    .where(or(eq(messages.fromUserId, me), eq(messages.toUserId, me)));
+
   const iLiked = await db
     .select({ toUserId: likes.toUserId })
     .from(likes)
@@ -28,9 +34,14 @@ export async function GET() {
     .where(and(eq(likes.toUserId, me), eq(likes.liked, true)));
 
   const likedMeSet = new Set(likedMe.map((r) => r.fromUserId));
-  let matchIds = iLiked
-    .map((r) => r.toUserId)
-    .filter((id) => likedMeSet.has(id));
+  const matched = iLiked.map((r) => r.toUserId).filter((id) => likedMeSet.has(id));
+
+  let matchIds = [
+    ...new Set([
+      ...talkedTo.map((r) => (r.fromUserId === me ? r.toUserId : r.fromUserId)),
+      ...matched,
+    ]),
+  ];
 
   if (matchIds.length === 0) {
     return NextResponse.json({ conversations: [] });
