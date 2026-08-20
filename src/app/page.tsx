@@ -164,6 +164,20 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* PEOPLE NEAR YOU */}
+      <section className="px-6 sm:px-12 pt-14">
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="text-[22px]">People near you</h2>
+          <Link href="/browse" className="text-stone text-[13px] hover:text-ivory">Browse all →</Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <ProfileCard name="Ayesha" age={24} loc="Dhaka" tone="p1" online />
+          <ProfileCard name="Farhan" age={27} loc="Chattogram" tone="p5" />
+          <ProfileCard name="Nadia" age={23} loc="Dhaka" tone="p3" online />
+          <ProfileCard name="Rafi" age={26} loc="Sylhet" tone="p4" />
+        </div>
+      </section>
+
       {/* COMPATIBILITY QUIZ */}
       <section className="mx-6 sm:mx-12 mb-10 rounded-[20px] border border-border-hair bg-surface/60 backdrop-blur-xl p-6 sm:px-[30px] flex gap-4 items-center flex-wrap">
         <div className="w-[46px] h-[46px] rounded-[14px] bg-gold-bright/15 flex items-center justify-center text-gold-bright shrink-0">
@@ -235,20 +249,6 @@ export default async function HomePage() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="crown" /> Optional income &amp; occupation verification for Elite members</span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="shield" /> Optional criminal background check add-on</span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-bright/15 border border-gold-bright/35 text-gold-bright text-[11px] font-semibold px-3 py-1.5"><Icon name="check" /> LinkedIn-verified professionals badge</span>
-        </div>
-      </section>
-
-      {/* PEOPLE NEAR YOU */}
-      <section className="px-6 sm:px-12 pt-14">
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-[22px]">People near you</h2>
-          <Link href="/browse" className="text-stone text-[13px] hover:text-ivory">Browse all →</Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <ProfileCard name="Ayesha" age={24} loc="Dhaka" tone="p1" online />
-          <ProfileCard name="Farhan" age={27} loc="Chattogram" tone="p5" />
-          <ProfileCard name="Nadia" age={23} loc="Dhaka" tone="p3" online />
-          <ProfileCard name="Rafi" age={26} loc="Sylhet" tone="p4" />
         </div>
       </section>
 
