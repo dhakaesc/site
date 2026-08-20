@@ -256,3 +256,19 @@ section { position: relative; }
    absolutely-positioned <img> added inside the tile paints on top of it and the
    blur disappears. Lifting the overlay above the photo restores it. */
 .photo-tile.locked::before { z-index: 1; }
+
+/* Hero slider */
+.slide-title { font-size: clamp(28px, 4.2vw, 46px); }
+.slide-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 40px; border-radius: 999px;
+  background: rgba(20,6,9,.55); border: 1px solid var(--border-hair);
+  color: var(--ivory); font-size: 22px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px); transition: .15s;
+}
+.slide-arrow:hover { background: rgba(20,6,9,.8); border-color: var(--border-hair-2); }
+@media (max-width: 700px) {
+  .slide-body { padding: 36px 22px !important; }
+  .slide-arrow { display: none; }
+}

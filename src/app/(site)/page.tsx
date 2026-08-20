@@ -5,12 +5,40 @@ import { db } from "@/lib/db";
 import { users, photos } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { CATEGORIES } from "@/lib/categories";
+import HeroSlider, { type Slide } from "../_home/hero-slider";
 import {
   Icon, Avatar, TrustBadge, VerificationStep, AudienceCard, ProfileCard,
   SuccessStoryCard, ReviewCard, CompareRow, CityChip, PressLogo, PhotoGrid,
 } from "../_home/pieces";
 
 const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
+
+const SLIDES: Slide[] = [
+  {
+    image: "/categories/drama-models.webp",
+    eyebrow: "Real people. Real matches.",
+    title: "Find someone worth texting back.",
+    desc: "Genuine, verified profiles and conversations that actually go somewhere — not endless swiping into the void.",
+    href: "/register",
+    cta: "Create free profile",
+  },
+  {
+    image: "/categories/influencers.webp",
+    eyebrow: "100% ID-verified community",
+    title: "Every profile checked before it goes live.",
+    desc: "We call every new member to confirm they are real, so you are talking to the person in the photos.",
+    href: "/browse",
+    cta: "Start browsing",
+  },
+  {
+    image: "/categories/professionals.webp",
+    eyebrow: "Free to look around",
+    title: "Browse free. Upgrade when you are ready to talk.",
+    desc: "See profiles and photos without an account. Create one only when you want to message someone.",
+    href: "/pricing",
+    cta: "See Premium",
+  },
+];
 
 // Used only to illustrate the free-vs-Premium photo difference on the
 // marketing page - these are the same stock category covers, not members.
@@ -106,6 +134,8 @@ export default async function HomePage() {
         </div>
       )}
 
+      <HeroSlider slides={SLIDES} />
+
       {/* START HERE */}
       <section style={{ padding: "26px 48px 10px" }}>
         <div className="eyebrow" style={{ textAlign: "center", display: "block" }}>Start here</div>
@@ -122,40 +152,6 @@ export default async function HomePage() {
               <Link key={l} href={`/browse?minAge=${min}${max ? `&maxAge=${max}` : ""}`}
                 className="pill stone" style={{ padding: "8px 18px", cursor: "pointer" }}>{l}</Link>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HERO */}
-      <section style={{ padding: "70px 48px 30px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: -100, right: -100, width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle,rgba(166,38,57,.16),transparent 70%)" }} />
-        <div style={{ position: "absolute", top: 120, left: -80, width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle,rgba(201,166,107,.10),transparent 70%)" }} />
-        <span className="pill gold" style={{ marginBottom: 16 }}>
-          <Icon name="shield" /> 100% ID-verified community
-        </span>
-        <div className="eyebrow" style={{ marginTop: 10 }}>Real people. Real matches.</div>
-        <h1 style={{ fontSize: "clamp(34px,5.5vw,58px)", maxWidth: 760, marginTop: 12 }}>
-          Find someone worth <em>texting back.</em>
-        </h1>
-        <p className="stone" style={{ maxWidth: 520, marginTop: 16, fontSize: 15 }}>
-          AMOURA is built around genuine, verified profiles and conversations that actually go
-          somewhere — not endless swiping into the void.
-        </p>
-        <div style={{ display: "flex", gap: 14, marginTop: 28, flexWrap: "wrap" }}>
-          <Link className="btn btn-rose" href={session ? "/browse" : "/register"}>
-            {session ? "Browse profiles" : "Create free profile"}
-          </Link>
-          <Link className="btn btn-ghost" href="/pricing">See Premium</Link>
-        </div>
-        <div style={{ display: "flex", gap: 28, marginTop: 32, flexWrap: "wrap", alignItems: "center" }}>
-          {[["210k+", "active members"], ["18k", "matches this week"], ["4.8★", "app rating"]].map(([v, l]) => (
-            <div key={l}>
-              <span className="mono" style={{ color: "var(--gold-bright)", fontSize: 17 }}>{v}</span>{" "}
-              <span className="stone" style={{ fontSize: 12 }}>{l}</span>
-            </div>
-          ))}
-          <div className="stone" style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 12 }}>
-            <span className="pulse-dot" /> 1,204 people online right now
           </div>
         </div>
       </section>
