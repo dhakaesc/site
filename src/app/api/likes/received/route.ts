@@ -5,6 +5,7 @@ import { users, photos, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { effectiveTier, isPaid } from "@/lib/plans";
 import { or } from "drizzle-orm";
+import { pickProfilePhoto } from "@/lib/photos";
 
 export async function GET() {
   const session = await getSession();
@@ -83,10 +84,9 @@ export async function GET() {
     .where(inArray(photos.userId, candidateIds));
 
   const photoByUser = new Map<number, string>();
-  for (const p of allPhotos) {
-    if (!photoByUser.has(p.userId)) {
-      photoByUser.set(p.userId, `/api/media/${p.key}`);
-    }
+  for (const id of candidateIds) {
+    const pick = pickProfilePhoto(allPhotos.filter((p) => p.userId === id));
+    if (pick) photoByUser.set(id, `/api/media/${pick.key}`);
   }
 
   return NextResponse.json({

@@ -3,6 +3,7 @@ import { and, eq, or, desc, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { messages, users, photos, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
+import { pickProfilePhoto } from "@/lib/photos";
 
 /**
  * Returns the people this user can chat with (mutual matches), each with
@@ -75,10 +76,9 @@ export async function GET() {
     .where(inArray(photos.userId, matchIds));
 
   const avatarByUser = new Map<number, string>();
-  for (const p of matchPhotos) {
-    if (!avatarByUser.has(p.userId)) {
-      avatarByUser.set(p.userId, `/api/media/${p.key}`);
-    }
+  for (const id of matchIds) {
+    const pick = pickProfilePhoto(matchPhotos.filter((p) => p.userId === id));
+    if (pick) avatarByUser.set(id, `/api/media/${pick.key}`);
   }
 
   const allMessages = await db

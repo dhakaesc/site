@@ -25,6 +25,8 @@ type Profile = {
   presence: string | null;
   online: boolean;
   photos: string[];
+  profilePhoto: string | null;
+  coverPhoto: string | null;
   totalPhotos: number;
   photosVisible: number;
   photoAllowance: number;
@@ -147,8 +149,8 @@ export default function PublicProfilePage({
   const firstName = profile.name.split(" ")[0];
   // First photo is the profile picture; the next one (when there is one) makes
   // a better cover so the two are not identical.
-  const avatarPhoto = profile.photos[0];
-  const coverPhoto = profile.photos[1] ?? profile.photos[0];
+  const avatarPhoto = profile.profilePhoto ?? profile.photos[0];
+  const coverPhoto = profile.coverPhoto ?? avatarPhoto;
 
   return (
     <>

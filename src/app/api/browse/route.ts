@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { users, photos, likes, blocks } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { CATEGORY_SLUGS } from "@/lib/categories";
+import { pickProfilePhoto } from "@/lib/photos";
 
 export async function GET(req: NextRequest) {
   // Browsing is public - a visitor arriving from an ad can look around
@@ -99,10 +100,13 @@ export async function GET(req: NextRequest) {
     .where(inArray(photos.userId, candidateIds));
 
   const photosByUser = new Map<number, string[]>();
-  for (const p of allPhotos) {
-    const list = photosByUser.get(p.userId) ?? [];
-    list.push(`/api/media/${p.key}`);
-    photosByUser.set(p.userId, list);
+  for (const id of candidateIds) {
+    const mine = allPhotos.filter((p) => p.userId === id);
+    // Avatar first: browse cards show photo[0], and that must be the photo
+    // marked as the profile photo, not whatever row the query returned first.
+    const avatar = pickProfilePhoto(mine);
+    const ordered = avatar ? [avatar, ...mine.filter((p) => p.key !== avatar.key)] : mine;
+    photosByUser.set(id, ordered.map((p) => `/api/media/${p.key}`));
   }
 
   const profiles = candidates.map((c) => ({

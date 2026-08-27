@@ -6,6 +6,7 @@ import { users, photos } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
 import { getMediaBucket } from "@/lib/media";
+import { pickProfilePhoto, pickCoverPhoto, pickAlbumPhotos } from "@/lib/photos";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -39,18 +40,30 @@ export async function GET() {
     return NextResponse.json({ profiles: [] });
   }
 
-  const ids = rows.map((r) => r.id);
+  const ids = new Set(rows.map((r) => r.id));
   const allPhotos = await db.select().from(photos);
-  const photosByUser = new Map<number, string[]>();
+  const byUser = new Map<number, typeof allPhotos>();
   for (const p of allPhotos) {
-    if (!ids.includes(p.userId)) continue;
-    const list = photosByUser.get(p.userId) ?? [];
-    list.push(`/api/media/${p.key}`);
-    photosByUser.set(p.userId, list);
+    if (!ids.has(p.userId)) continue;
+    byUser.set(p.userId, [...(byUser.get(p.userId) ?? []), p]);
   }
 
+  const url = (p: { key: string }) => `/api/media/${p.key}`;
+  const asSlot = (p?: { id: number; key: string }) =>
+    p ? { id: p.id, url: url(p) } : null;
+
   return NextResponse.json({
-    profiles: rows.map((r) => ({ ...r, photos: photosByUser.get(r.id) ?? [] })),
+    profiles: rows.map((r) => {
+      const mine = byUser.get(r.id) ?? [];
+      return {
+        ...r,
+        profilePhoto: asSlot(pickProfilePhoto(mine)),
+        coverPhoto: asSlot(pickCoverPhoto(mine)),
+        album: pickAlbumPhotos(mine).map((p) => ({ id: p.id, url: url(p) })),
+        // Kept so anything still reading a flat list does not break.
+        photos: mine.map(url),
+      };
+    }),
   });
 }
 

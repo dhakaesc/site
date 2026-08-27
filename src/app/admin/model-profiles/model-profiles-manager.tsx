@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { CATEGORIES } from "@/lib/categories";
 
 type Profile = {
@@ -15,7 +15,13 @@ type Profile = {
   isPublished: boolean;
   createdAt: string;
   photos: string[];
+  profilePhoto: Slot | null;
+  coverPhoto: Slot | null;
+  album: Slot[];
 };
+
+type Slot = { id: number; url: string };
+type PhotoRole = "profile" | "cover" | "album";
 
 const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(
   CATEGORIES.map((c) => [c.slug, c.title])
@@ -42,8 +48,6 @@ export default function ModelProfilesManager() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newProfileId, setNewProfileId] = useState<number | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function load() {
     fetch("/api/admin/model-profiles")
@@ -142,38 +146,59 @@ export default function ModelProfilesManager() {
     load();
   }
 
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0 || !newProfileId) return;
-    setUploading(true);
+  /** One upload path for every slot, used by both the create form and the
+   *  edit modal, so the two can never drift apart again. */
+  async function uploadPhoto(profileId: number, file: File, role: PhotoRole) {
     setUploadError(null);
-
-    for (const file of files) {
+    setUploadBusy(role);
+    try {
       const body = new FormData();
       body.append("file", file);
-      try {
-        const res = await fetch(`/api/admin/model-profiles/${newProfileId}/photos`, {
-          method: "POST",
-          body,
-        });
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
-          setUploadError(`${file.name}: ${d.error ?? `Upload failed (${res.status})`}`);
-          break;
-        }
-      } catch (err) {
-        setUploadError(
-          `${file.name}: ${err instanceof Error ? err.message : "Upload failed"}`
-        );
-        break;
+      body.append("role", role);
+      const res = await fetch(`/api/admin/model-profiles/${profileId}/photos`, {
+        method: "POST",
+        body,
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setUploadError(`${file.name}: ${d.error ?? `Upload failed (${res.status})`}`);
+        return false;
       }
+      return true;
+    } catch (err) {
+      setUploadError(
+        `${file.name}: ${err instanceof Error ? err.message : "Upload failed"}`
+      );
+      return false;
+    } finally {
+      setUploadBusy(null);
+      load();
     }
-
-    setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    load();
   }
 
+  async function deletePhoto(profileId: number, photoId: number) {
+    setUploadError(null);
+    try {
+      const res = await fetch(
+        `/api/admin/model-profiles/${profileId}/photos?photoId=${photoId}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setUploadError(d.error ?? `Delete failed (${res.status})`);
+      }
+    } finally {
+      load();
+    }
+  }
+
+  /** Re-fetch one profile so the open modal shows the new slot immediately. */
+  async function reloadProfile(profileId: number): Promise<Profile | null> {
+    const res = await fetch("/api/admin/model-profiles");
+    const d = await res.json().catch(() => ({}));
+    setProfiles(d.profiles ?? []);
+    return (d.profiles ?? []).find((x: Profile) => x.id === profileId) ?? null;
+  }
   const visible = profiles?.filter((p) => (filter === "all" ? true : p.category === filter));
 
   const activeProfile = profiles?.find((p) => p.id === newProfileId);
@@ -369,27 +394,16 @@ export default function ModelProfilesManager() {
 
         {activeProfile && (
           <div className="mt-6 pt-6 border-t border-border-hair">
-            <label className="block text-xs text-stone mb-2">
-              Photos for {activeProfile.name} (up to 30)
+            <label className="block text-xs text-stone mb-3">
+              Photos for {activeProfile.name}
             </label>
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-              {activeProfile.photos.map((url) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={url} src={url} alt="" className="aspect-square rounded-[12px] object-cover" />
-              ))}
-              <label className="aspect-square rounded-[12px] border border-dashed border-border-hair-2 flex flex-col items-center justify-center text-stone-dim text-xs cursor-pointer hover:text-stone">
-                {uploading ? "…" : "↑ Upload"}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
-                  onChange={handlePhotoUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              </label>
-            </div>
+            <PhotoSlots
+              profile={activeProfile}
+              busy={uploadBusy}
+              onUpload={async (file, role) => { await uploadPhoto(activeProfile.id, file, role); }}
+              onDelete={(photoId) => deletePhoto(activeProfile.id, photoId)}
+            />
+            {uploadError && <p className="text-danger text-xs mt-2">{uploadError}</p>}
           </div>
         )}
       </div>
@@ -477,67 +491,27 @@ export default function ModelProfilesManager() {
             </div>
 
             <div>
-              <label className="block text-xs text-stone mb-2">Photos</label>
-              <div className="grid grid-cols-5 gap-2">
-                {editing.photos.map((url) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={url} src={url} alt="" className="aspect-square rounded-[10px] object-cover" />
-                ))}
-                <label className="aspect-square rounded-[10px] border border-dashed border-border-hair-2 flex items-center justify-center text-stone-dim text-[10px] cursor-pointer hover:text-stone text-center px-1">
-                  {uploadBusy ? uploadBusy : "↑ Add"}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    className="hidden"
-                    disabled={Boolean(uploadBusy)}
-                    onChange={async (e) => {
-                      const files = Array.from(e.target.files ?? []);
-                      if (files.length === 0 || !editing) return;
-                      setUploadError(null);
-
-                      for (let i = 0; i < files.length; i++) {
-                        setUploadBusy(`${i + 1}/${files.length}`);
-                        const body = new FormData();
-                        body.append("file", files[i]);
-                        try {
-                          const res = await fetch(
-                            `/api/admin/model-profiles/${editing.id}/photos`,
-                            { method: "POST", body }
-                          );
-                          if (!res.ok) {
-                            const d = await res.json().catch(() => ({}));
-                            setUploadError(
-                              `${files[i].name}: ${d.error ?? `Upload failed (${res.status})`}`
-                            );
-                            break;
-                          }
-                        } catch (err) {
-                          setUploadError(
-                            `${files[i].name}: ${err instanceof Error ? err.message : "Upload failed"}`
-                          );
-                          break;
-                        }
-                      }
-
-                      setUploadBusy(null);
-                      e.target.value = "";
-
-                      const res = await fetch("/api/admin/model-profiles");
-                      const d = await res.json();
-                      setProfiles(d.profiles ?? []);
-                      const fresh = (d.profiles ?? []).find((x: Profile) => x.id === editing.id);
-                      if (fresh) setEditing(fresh);
-                    }}
-                  />
-                </label>
-              </div>
+              <label className="block text-xs text-stone mb-3">Photos</label>
+              <PhotoSlots
+                profile={editing}
+                busy={uploadBusy}
+                onUpload={async (file, role) => {
+                  await uploadPhoto(editing.id, file, role);
+                  const fresh = await reloadProfile(editing.id);
+                  if (fresh) setEditing(fresh);
+                }}
+                onDelete={async (photoId) => {
+                  await deletePhoto(editing.id, photoId);
+                  const fresh = await reloadProfile(editing.id);
+                  if (fresh) setEditing(fresh);
+                }}
+              />
               {uploadError && (
                 <p className="text-danger text-xs mt-2">{uploadError}</p>
               )}
               <p className="text-stone-dim text-[11px] mt-2">
-                You can select several photos at once. JPEG, PNG or WebP, up to 8MB each.
-                The first photo is used as the cover.
+                JPEG, PNG or WebP, up to 8MB each. Profile and cover hold one
+                photo each — uploading a new one replaces it.
               </p>
             </div>
 
@@ -580,6 +554,152 @@ function LabeledInput({
         placeholder={placeholder}
         className="field-input"
       />
+    </div>
+  );
+}
+
+/**
+ * Three independent upload targets. Before this, every photo went into one
+ * flat list and the avatar/cover were just whichever happened to be first and
+ * second - so adding a gallery photo could change the profile's face.
+ */
+function PhotoSlots({
+  profile,
+  busy,
+  onUpload,
+  onDelete,
+}: {
+  profile: Profile;
+  busy: string | null;
+  onUpload: (file: File, role: PhotoRole) => void | Promise<void>;
+  onDelete: (photoId: number) => void | Promise<void>;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <SingleSlot
+          label="Profile photo"
+          hint="Square. Shown as the avatar everywhere."
+          aspect="aspect-square"
+          slot={profile.profilePhoto}
+          busy={busy === "profile"}
+          onPick={(f) => onUpload(f, "profile")}
+          onDelete={onDelete}
+        />
+        <SingleSlot
+          label="Cover photo"
+          hint="Wide (16:7). The banner on the profile page."
+          aspect="aspect-[16/7]"
+          slot={profile.coverPhoto}
+          busy={busy === "cover"}
+          onPick={(f) => onUpload(f, "cover")}
+          onDelete={onDelete}
+        />
+      </div>
+
+      <div>
+        <div className="flex items-baseline justify-between mb-2">
+          <span className="text-xs text-stone">Album</span>
+          <span className="text-[11px] text-stone-dim">
+            {profile.album.length}/30
+          </span>
+        </div>
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+          {profile.album.map((p) => (
+            <div key={p.id} className="relative group">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url} alt="" className="aspect-square w-full rounded-[10px] object-cover" />
+              <button
+                type="button"
+                onClick={() => onDelete(p.id)}
+                className="absolute top-1 right-1 rounded-full bg-black/70 w-5 h-5 text-[11px] leading-none text-ivory opacity-0 group-hover:opacity-100 transition"
+                aria-label="Remove photo"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <label className="aspect-square rounded-[10px] border border-dashed border-border-hair-2 flex items-center justify-center text-stone-dim text-[10px] cursor-pointer hover:text-stone text-center px-1">
+            {busy === "album" ? "…" : "↑ Add"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              className="hidden"
+              disabled={Boolean(busy)}
+              onChange={async (e) => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = "";
+                for (const f of files) await onUpload(f, "album");
+              }}
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SingleSlot({
+  label,
+  hint,
+  aspect,
+  slot,
+  busy,
+  onPick,
+  onDelete,
+}: {
+  label: string;
+  hint: string;
+  aspect: string;
+  slot: Slot | null;
+  busy: boolean;
+  onPick: (file: File) => void | Promise<void>;
+  onDelete: (photoId: number) => void | Promise<void>;
+}) {
+  return (
+    <div>
+      <div className="text-xs text-stone mb-1">{label}</div>
+      <label
+        className={`${aspect} w-full block rounded-[12px] border border-dashed border-border-hair-2 overflow-hidden relative cursor-pointer hover:border-ivory/40`}
+      >
+        {slot ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={slot.url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <span className="absolute inset-0 flex items-center justify-center text-stone-dim text-[11px]">
+            {busy ? "…" : "↑ Upload"}
+          </span>
+        )}
+        {slot && busy && (
+          <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-[11px] text-ivory">
+            …
+          </span>
+        )}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          disabled={busy}
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) await onPick(f);
+          }}
+        />
+      </label>
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-stone-dim text-[10px]">{hint}</span>
+        {slot && (
+          <button
+            type="button"
+            onClick={() => onDelete(slot.id)}
+            className="text-danger text-[10px] hover:underline"
+          >
+            Remove
+          </button>
+        )}
+      </div>
     </div>
   );
 }

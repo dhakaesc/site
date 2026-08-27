@@ -61,6 +61,12 @@ export const photos = pgTable("photos", {
     .references(() => users.id, { onDelete: "cascade" }),
   // Object key inside the R2 bucket, e.g. "users/12/photo-<uuid>.jpg"
   key: varchar("key", { length: 500 }).notNull(),
+  // What the photo is FOR: "profile" (avatar), "cover" (banner) or "album".
+  // Before this column existed the role was inferred from position - photo 0
+  // was the avatar, photo 1 the cover - so uploading in the wrong order
+  // silently changed someone's avatar. At most one profile and one cover row
+  // per user; uploading a new one replaces the old.
+  role: varchar("role", { length: 10 }).notNull().default("album"),
   position: integer("position").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

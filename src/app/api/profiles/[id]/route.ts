@@ -6,6 +6,7 @@ import { categoryTitle } from "@/lib/categories";
 import { presenceLabel, isOnline } from "@/lib/presence";
 import { getSession } from "@/lib/auth/session";
 import { limitsFor, effectiveTier } from "@/lib/plans";
+import { pickProfilePhoto, pickCoverPhoto, pickAlbumPhotos } from "@/lib/photos";
 
 /**
  * Public profile view. No session required - someone arriving from an ad
@@ -89,10 +90,17 @@ export async function GET(
   }
 
   const theirPhotos = await db
-    .select({ key: photos.key })
+    .select({ key: photos.key, role: photos.role, position: photos.position })
     .from(photos)
     .where(eq(photos.userId, userId))
     .orderBy(asc(photos.position));
+
+  const mediaUrl = (p?: { key: string }) => (p ? `/api/media/${p.key}` : null);
+  // Avatar and cover identify the profile, so they are never tier-gated - only
+  // the album is. Both fall back to the old positional rule for legacy rows.
+  const profilePhoto = mediaUrl(pickProfilePhoto(theirPhotos));
+  const coverPhoto = mediaUrl(pickCoverPhoto(theirPhotos)) ?? profilePhoto;
+  const albumPhotos = pickAlbumPhotos(theirPhotos);
 
   // A few other profiles to look at next: same category first, then anyone else.
   const relatedRows = await db
@@ -116,14 +124,19 @@ export async function GET(
 
   const relatedPhotos = relatedRows.length
     ? await db
-        .select({ userId: photos.userId, key: photos.key, position: photos.position })
+        .select({
+          userId: photos.userId, key: photos.key,
+          role: photos.role, position: photos.position,
+        })
         .from(photos)
         .where(inArray(photos.userId, relatedRows.map((r) => r.id)))
         .orderBy(asc(photos.position))
     : [];
   const coverFor = new Map<number, string>();
-  for (const ph of relatedPhotos) {
-    if (!coverFor.has(ph.userId)) coverFor.set(ph.userId, `/api/media/${ph.key}`);
+  for (const r of relatedRows) {
+    const mine = relatedPhotos.filter((p) => p.userId === r.id);
+    const pick = pickProfilePhoto(mine);
+    if (pick) coverFor.set(r.id, `/api/media/${pick.key}`);
   }
 
   return NextResponse.json({
@@ -146,9 +159,11 @@ export async function GET(
       ),
       presence: presenceLabel(profile.lastSeenAt),
       online: isOnline(profile.lastSeenAt),
-      totalPhotos: theirPhotos.length,
-      photos: theirPhotos.slice(0, photoAllowance).map((p) => `/api/media/${p.key}`),
-      photosVisible: Math.min(theirPhotos.length, photoAllowance),
+      profilePhoto,
+      coverPhoto,
+      totalPhotos: albumPhotos.length,
+      photos: albumPhotos.slice(0, photoAllowance).map((p) => `/api/media/${p.key}`),
+      photosVisible: Math.min(albumPhotos.length, photoAllowance),
       photoAllowance,
       viewerTier,
     },
