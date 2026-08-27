@@ -455,7 +455,7 @@ export default function PublicProfilePage({
           <p style={{ color: "var(--danger)", fontSize: 12, marginBottom: 8 }}>{chatError}</p>
         )}
 
-        <form onSubmit={sendMessage} style={{ display: "flex", gap: 8 }}>
+        <form onSubmit={sendMessage} style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

@@ -193,6 +193,26 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/**
+ * Who did what in the admin panel. The privacy page tells members that access
+ * to their messages is "restricted to a small safety team for moderation
+ * only" — that promise is only meaningful if every read leaves a record.
+ * Written to on admin thread reads today; extend it to bans, tier changes and
+ * payment approvals so the same trail covers every admin action.
+ */
+export const adminAuditLogs = pgTable("admin_audit_logs", {
+  id: serial("id").primaryKey(),
+  adminUserId: integer("admin_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  action: varchar("action", { length: 60 }).notNull(), // e.g. read_conversation
+  // Free-form target so one table can cover conversations, users, payments.
+  targetType: varchar("target_type", { length: 40 }).notNull().default(""),
+  targetId: varchar("target_id", { length: 80 }).notNull().default(""),
+  detail: text("detail").default(""),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Photo = typeof photos.$inferSelect;
@@ -203,3 +223,4 @@ export type VerificationToken = typeof verificationTokens.$inferSelect;
 export type Block = typeof blocks.$inferSelect;
 export type Report = typeof reports.$inferSelect;
 export type Slide = typeof slides.$inferSelect;
+export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
