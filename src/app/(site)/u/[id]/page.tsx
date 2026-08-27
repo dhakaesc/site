@@ -25,6 +25,9 @@ type Profile = {
   presence: string | null;
   online: boolean;
   photos: string[];
+  videos: { id: number; src: string; contentType: string }[];
+  totalVideos: number;
+  videoAllowance: number;
   profilePhoto: string | null;
   coverPhoto: string | null;
   totalPhotos: number;
@@ -299,20 +302,42 @@ export default function PublicProfilePage({
         )}
 
         {/* Videos */}
-        <div className="section-title" style={{ marginTop: 32 }}>
-          <h3 style={{ fontSize: 17 }}>Videos</h3>
-          <span className="pill stone">Coming soon</span>
-        </div>
-        <div className="video-row">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="video-tile locked" style={{ background: "var(--bg-surface-2)" }}>
-              <div className="lockbadge">
-                <Icon name="video" />
-                <span>Video profiles<br />coming soon</span>
-              </div>
+        {profile.totalVideos > 0 && (
+          <>
+            <div className="section-title" style={{ marginTop: 32 }}>
+              <h3 style={{ fontSize: 17 }}>Videos</h3>
+              <span className="pill stone">
+                {profile.videos.length} of {profile.totalVideos} visible
+              </span>
             </div>
-          ))}
-        </div>
+            <div className="video-row">
+              {profile.videos.map((v) => (
+                <video
+                  key={v.id}
+                  className="video-tile"
+                  src={v.src}
+                  controls
+                  preload="metadata"
+                  playsInline
+                  style={{ background: "#000" }}
+                />
+              ))}
+              {/* Videos beyond the viewer's plan show as locked tiles, the
+                  same way the photo album does. */}
+              {Array.from({
+                length: Math.max(0, profile.totalVideos - profile.videos.length),
+              }).map((_, i) => (
+                <Link key={`locked-${i}`} href="/pricing" className="video-tile locked"
+                  style={{ background: "var(--bg-surface-2)" }}>
+                  <div className="lockbadge">
+                    <Icon name="video" />
+                    <span>Upgrade to<br />watch</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* About */}
         <div className="section-title" style={{ marginTop: 32 }}>

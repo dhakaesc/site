@@ -21,6 +21,7 @@ const TIERS = [
     features: [
       { text: "20 profile visits / month" },
       { text: "3 photos per profile" },
+      { text: "1 profile video" },
       { text: "5 messages to up to 5 people" },
     ],
   },
@@ -32,6 +33,7 @@ const TIERS = [
     features: [
       { text: "Unlimited profile visits" },
       { text: "Up to 15 photos" },
+      { text: "Up to 5 videos" },
       { text: "Unlimited messaging" },
       { text: "See who liked you" },
     ],
@@ -43,7 +45,7 @@ const TIERS = [
     badge: null,
     features: [
       { text: "Everything in Plus" },
-      { text: "All 30 photos" },
+      { text: "All 30 photos + 10 videos" },
       { text: "Profile Spotlight in search" },
       { text: "Dedicated relationship concierge" },
       { text: "Live video call with matches", soon: true },

@@ -71,6 +71,26 @@ export const photos = pgTable("photos", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/**
+ * Profile videos. Stored in the same private R2 bucket as photos and served
+ * through /api/media/[...key], which supports HTTP Range requests - without
+ * Range, iOS Safari refuses to play a video at all.
+ *
+ * There is no transcoding step: whatever the member uploads is what everyone
+ * else downloads. That is why the upload route only accepts MP4 and WebM.
+ */
+export const videos = pgTable("videos", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  key: varchar("key", { length: 500 }).notNull(),
+  contentType: varchar("content_type", { length: 60 }).notNull(),
+  sizeBytes: integer("size_bytes").notNull().default(0),
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const likes = pgTable(
   "likes",
   {
@@ -216,6 +236,7 @@ export const adminAuditLogs = pgTable("admin_audit_logs", {
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Photo = typeof photos.$inferSelect;
+export type Video = typeof videos.$inferSelect;
 export type Like = typeof likes.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type PaymentRequest = typeof paymentRequests.$inferSelect;

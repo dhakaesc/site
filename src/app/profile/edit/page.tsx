@@ -4,9 +4,14 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 
 type Photo = { id: number; key: string };
+type Video = { id: number; key: string; contentType: string };
 
 export default function EditProfilePage() {
   const [photos, setPhotos] = useState<Photo[] | null>(null);
+  const [videos, setVideos] = useState<Video[] | null>(null);
+  const [videoLimit, setVideoLimit] = useState<number | null>(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -17,6 +22,41 @@ export default function EditProfilePage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSaved, setProfileSaved] = useState(false);
 
+  function loadVideos() {
+    fetch("/api/profile/videos")
+      .then((r) => r.json())
+      .then((d) => {
+        setVideos(d.videos ?? []);
+        setVideoLimit(d.limit ?? null);
+      })
+      .catch(() => setVideos([]));
+  }
+
+  async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVideoUploading(true);
+    setVideoError(null);
+
+    const body = new FormData();
+    body.append("file", file);
+    const res = await fetch("/api/profile/videos", { method: "POST", body });
+    const data = await res.json().catch(() => ({}));
+
+    setVideoUploading(false);
+    e.target.value = "";
+    if (!res.ok) {
+      setVideoError(data.error ?? "Upload failed.");
+      return;
+    }
+    loadVideos();
+  }
+
+  async function handleVideoDelete(id: number) {
+    await fetch(`/api/profile/videos/${id}`, { method: "DELETE" });
+    loadVideos();
+  }
+
   function loadPhotos() {
     fetch("/api/profile/photos")
       .then((r) => r.json())
@@ -24,6 +64,7 @@ export default function EditProfilePage() {
   }
 
   useEffect(loadPhotos, []);
+  useEffect(loadVideos, []);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -193,6 +234,63 @@ export default function EditProfilePage() {
 
         <p className="text-stone-dim text-xs">
           JPEG, PNG, or WebP. Up to 8MB per photo.
+        </p>
+      </div>
+
+      <div className="rounded-[22px] border border-border-hair bg-surface p-8 mt-6">
+        <h1 className="font-serif text-2xl mb-1">Your videos</h1>
+        <p className="text-stone text-sm mb-6">
+          A short clip gets far more replies than photos alone.
+          {videoLimit !== null && (
+            <> Your plan allows {videoLimit} video{videoLimit === 1 ? "" : "s"}.</>
+          )}
+        </p>
+
+        {videoError && <p className="text-danger text-sm mb-4">{videoError}</p>}
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+          {videos?.map((v) => (
+            <div key={v.id} className="relative aspect-video rounded-[14px] overflow-hidden bg-black">
+              <video
+                src={`/api/media/${v.key}`}
+                controls
+                preload="metadata"
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              <button
+                onClick={() => handleVideoDelete(v.id)}
+                className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 text-white text-xs z-10"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+
+          {(videoLimit === null || (videos?.length ?? 0) < videoLimit) && (
+            <label className="aspect-video rounded-[14px] border border-dashed border-border-hair-2 flex items-center justify-center text-stone text-xs cursor-pointer hover:text-ivory text-center px-2">
+              {videoUploading ? "Uploading…" : "+ Add video"}
+              <input
+                type="file"
+                accept="video/mp4,video/webm"
+                onChange={handleVideoUpload}
+                disabled={videoUploading}
+                className="hidden"
+              />
+            </label>
+          )}
+        </div>
+
+        {videoLimit !== null && (videos?.length ?? 0) >= videoLimit && (
+          <p className="text-stone text-xs mb-3">
+            You have used all {videoLimit} video slot{videoLimit === 1 ? "" : "s"} on your plan.{" "}
+            <Link href="/pricing" className="text-gold-bright">Upgrade for more</Link>.
+          </p>
+        )}
+
+        <p className="text-stone-dim text-xs">
+          MP4 or WebM, up to 50MB. iPhone clips need exporting as MP4 first —
+          &quot;.mov&quot; files will not play for everyone.
         </p>
       </div>
     </main>

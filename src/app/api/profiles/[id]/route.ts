@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { and, eq, asc, ne, desc, gte, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users, photos, profileViews } from "@/lib/db/schema";
+import { users, photos, videos, profileViews } from "@/lib/db/schema";
 import { categoryTitle } from "@/lib/categories";
 import { presenceLabel, isOnline } from "@/lib/presence";
 import { getSession } from "@/lib/auth/session";
@@ -61,6 +61,7 @@ export async function GET(
     if (me) viewerTier = effectiveTier(me.tier, me.tierExpiresAt);
   }
   const photoAllowance = limitsFor(viewerTier).photos;
+  const videoAllowance = limitsFor(viewerTier).videos;
 
   // Record the visit so the free "profile visits" allowance is real. Only one
   // row per profile per member per month, so revisits don't burn the quota.
@@ -94,6 +95,12 @@ export async function GET(
     .from(photos)
     .where(eq(photos.userId, userId))
     .orderBy(asc(photos.position));
+
+  const theirVideos = await db
+    .select({ id: videos.id, key: videos.key, contentType: videos.contentType })
+    .from(videos)
+    .where(eq(videos.userId, userId))
+    .orderBy(asc(videos.position));
 
   const mediaUrl = (p?: { key: string }) => (p ? `/api/media/${p.key}` : null);
   // Avatar and cover identify the profile, so they are never tier-gated - only
@@ -165,6 +172,14 @@ export async function GET(
       photos: albumPhotos.slice(0, photoAllowance).map((p) => `/api/media/${p.key}`),
       photosVisible: Math.min(albumPhotos.length, photoAllowance),
       photoAllowance,
+      // Videos follow the viewer's own plan allowance, same as the album.
+      totalVideos: theirVideos.length,
+      videos: theirVideos.slice(0, videoAllowance).map((v) => ({
+        id: v.id,
+        src: `/api/media/${v.key}`,
+        contentType: v.contentType,
+      })),
+      videoAllowance,
       viewerTier,
     },
   });
