@@ -2,225 +2,437 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-type Person = {
+type Profile = {
   id: number;
   name: string;
-  email: string;
+  gender: string;
   tier: string;
   isBanned: boolean;
   isModelProfile: boolean;
+  messageCount: number;
+  unread: number;
+  lastMessageAt: string | null;
+  avatar: string | null;
 };
 
-type ConversationSummary = {
-  userA: Person;
-  userB: Person;
-  lastMessageAt: string;
+type Conversation = {
+  id: number;
+  name: string;
+  age: number | null;
+  tier: string;
+  isBanned: boolean;
   messageCount: number;
   unread: number;
   lastMessage: string;
-  lastMessageFromUserId: number | null;
+  lastMessageMine: boolean;
+  lastMessageAt: string;
+};
+
+type Contact = {
+  id: number;
+  name: string;
+  age: number | null;
+  email: string;
+  phone: string;
+  location: string | null;
+  tier: string;
+  isBanned: boolean;
+  verified: boolean;
+  createdAt: string;
+  lastSeenAt: string | null;
+  ip: string | null;
 };
 
 type ThreadMessage = {
   id: number;
   body: string;
-  fromUserId: number;
-  toUserId: number;
-  fromName: string;
-  toName: string;
+  mine: boolean;
   read: boolean;
   createdAt: string;
 };
 
-function PersonTag({ p }: { p: Person }) {
+function initial(name: string) {
+  return (name.trim()[0] ?? "?").toUpperCase();
+}
+
+function shortTime(iso: string | null) {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  const mins = Math.floor((Date.now() - then) / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  return days < 30 ? `${days}d` : new Date(iso).toLocaleDateString();
+}
+
+function Avatar({ src, name, size }: { src: string | null; name: string; size: number }) {
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt=""
+        style={{ width: size, height: size }}
+        className="rounded-full object-cover shrink-0"
+      />
+    );
+  }
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="font-semibold">{p.name}</span>
-      {p.isModelProfile && (
-        <span className="rounded-full border border-gold-bright/35 text-gold-bright text-[10px] px-1.5 py-0.5">
-          model
-        </span>
-      )}
-      {p.tier !== "free" && (
-        <span className="rounded-full border border-border-hair text-stone text-[10px] px-1.5 py-0.5 uppercase">
-          {p.tier}
-        </span>
-      )}
-      {p.isBanned && (
-        <span className="rounded-full border border-danger/40 text-danger text-[10px] px-1.5 py-0.5">
-          banned
-        </span>
-      )}
-    </span>
+    <div
+      style={{ width: size, height: size, fontSize: size * 0.4 }}
+      className="rounded-full bg-surface-2 border border-border-hair flex items-center justify-center font-semibold shrink-0"
+    >
+      {initial(name)}
+    </div>
   );
 }
 
 export default function InboxBrowser() {
-  const [conversations, setConversations] = useState<ConversationSummary[] | null>(null);
-  const [selected, setSelected] = useState<ConversationSummary | null>(null);
-  const [thread, setThread] = useState<ThreadMessage[] | null>(null);
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+  const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [genderTab, setGenderTab] = useState<"all" | "female" | "male">("all");
+  const [search, setSearch] = useState("");
 
-  const load = useCallback((q: string, p: number) => {
-    setConversations(null);
-    setError(null);
-    fetch(`/api/admin/inbox?q=${encodeURIComponent(q)}&page=${p}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) { setError(d.error); setConversations([]); return; }
-        setConversations(d.conversations ?? []);
-        setHasMore(Boolean(d.hasMore));
+  const [openProfile, setOpenProfile] = useState<Profile | null>(null);
+  const [conversations, setConversations] = useState<Conversation[] | null>(null);
+  const [activeId, setActiveId] = useState<number | null>(null);
+  const [thread, setThread] = useState<ThreadMessage[] | null>(null);
+  const [contact, setContact] = useState<Contact | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/inbox")
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error ?? `Request failed (${r.status})`);
+        return d;
       })
-      .catch(() => { setError("Couldn't load conversations."); setConversations([]); });
+      .then((d) => setProfiles(d.profiles ?? []))
+      .catch((e) => {
+        setError(e.message ?? "Couldn't load profiles.");
+        setProfiles([]);
+      });
   }, []);
 
-  // Debounced so typing a name does not fire a query per keystroke.
-  useEffect(() => {
-    const t = setTimeout(() => load(query, page), query ? 300 : 0);
-    return () => clearTimeout(t);
-  }, [query, page, load]);
+  const openConversation = useCallback(
+    (profileId: number, otherId: number) => {
+      setActiveId(otherId);
+      setThread(null);
+      setContact(null);
+      fetch(`/api/admin/inbox?profile=${profileId}&with=${otherId}`)
+        .then((r) => r.json())
+        .then((d) => {
+          setThread(d.thread ?? []);
+          setContact(d.contact ?? null);
+        })
+        .catch(() => setThread([]));
+    },
+    []
+  );
 
-  function openThread(c: ConversationSummary) {
-    setSelected(c);
+  function openInbox(p: Profile) {
+    setOpenProfile(p);
+    setConversations(null);
     setThread(null);
-    fetch(`/api/admin/inbox?userA=${c.userA.id}&userB=${c.userB.id}`)
+    setContact(null);
+    setActiveId(null);
+    fetch(`/api/admin/inbox?profile=${p.id}`)
       .then((r) => r.json())
-      .then((d) => setThread(d.thread ?? []))
-      .catch(() => setThread([]));
+      .then((d) => {
+        const list: Conversation[] = d.conversations ?? [];
+        setConversations(list);
+        if (list.length > 0) openConversation(p.id, list[0].id);
+      })
+      .catch(() => setConversations([]));
   }
 
-  // ---- Thread view ---------------------------------------------------------
-  if (selected) {
+  // ---- Level 2: one profile's inbox ---------------------------------------
+  if (openProfile) {
     return (
       <div>
         <button
-          onClick={() => { setSelected(null); setThread(null); }}
-          className="text-stone text-sm hover:text-ivory mb-4"
+          onClick={() => setOpenProfile(null)}
+          className="btn btn-ghost btn-sm"
         >
-          ← All conversations
+          ← Back to all profiles
         </button>
 
-        <div className="flex items-center gap-2 text-sm mb-1">
-          <PersonTag p={selected.userA} />
-          <span className="text-stone-dim">↔</span>
-          <PersonTag p={selected.userB} />
-        </div>
-        <p className="text-stone-dim text-[11px] mb-4">
-          {selected.userA.email || "no email"} · {selected.userB.email || "no email"}
-        </p>
+        <div className="inbox-shell" style={{ marginTop: 16 }}>
+          <div className="convo-list">
+            {!conversations && <p className="text-stone text-sm p-4">Loading…</p>}
+            {conversations?.length === 0 && (
+              <p className="text-stone text-sm text-center px-4 py-8">
+                No conversations yet
+              </p>
+            )}
+            {conversations?.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => openConversation(openProfile.id, c.id)}
+                className={`convo-item${activeId === c.id ? " active" : ""}`}
+              >
+                <Avatar src={null} name={c.name} size={38} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="cname">
+                    <span className="truncate">
+                      {c.name}
+                      {c.age ? `, ${c.age}` : ""}
+                    </span>
+                    <span className="text-stone-dim text-[11px] shrink-0">
+                      {shortTime(c.lastMessageAt)}
+                    </span>
+                  </div>
+                  <div className="cpreview">
+                    {c.lastMessageMine ? "" : "↩ "}
+                    {c.lastMessage}
+                  </div>
+                </div>
+                {c.unread > 0 && <span className="unread-dot" />}
+              </div>
+            ))}
+          </div>
 
-        {!thread && <p className="text-stone text-sm">Loading…</p>}
+          <div className="chat-pane">
+            {contact && (
+              <div className="chat-header">
+                <Avatar src={null} name={contact.name} size={42} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>
+                    {contact.name}
+                    {contact.age ? `, ${contact.age}` : ""}
+                  </div>
+                  <div className="stone truncate" style={{ fontSize: 11 }}>
+                    {contact.email}
+                    {contact.phone ? ` · ${contact.phone}` : ""}
+                  </div>
+                </div>
+                <span className="pill stone">messaging {openProfile.name}</span>
+              </div>
+            )}
 
-        <div className="rounded-[16px] border border-border-hair bg-surface p-4 space-y-3 max-h-[65vh] overflow-y-auto">
-          {thread?.map((m) => (
-            <div key={m.id} className="text-sm">
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="font-semibold">{m.fromName}</span>
-                <span className="text-stone-dim text-[11px]">→ {m.toName}</span>
-                <span className="text-stone-dim text-[11px]">
-                  {new Date(m.createdAt).toLocaleString()}
-                </span>
-                {!m.read && (
-                  <span className="rounded-full border border-border-hair text-stone-dim text-[10px] px-1.5">
-                    unread
+            <div className="chat-messages">
+              {!thread && activeId !== null && (
+                <p className="text-stone text-sm">Loading…</p>
+              )}
+              {activeId === null && conversations?.length === 0 && (
+                <p className="text-stone text-sm">
+                  Nobody has messaged {openProfile.name} yet.
+                </p>
+              )}
+              {thread?.map((m) => (
+                <div key={m.id} className={`bubble ${m.mine ? "me" : "them"}`}>
+                  {m.body}
+                  <div
+                    className="bubble-time"
+                    style={{ color: m.mine ? "rgba(255,255,255,.7)" : "var(--stone-dim)" }}
+                  >
+                    {new Date(m.createdAt).toLocaleString()}
+                    {!m.read && !m.mine ? " · unread" : ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="chat-input-row">
+              <input
+                className="field-input"
+                placeholder="Admin view is read-only"
+                disabled
+              />
+              <button className="btn btn-ghost btn-sm" disabled style={{ opacity: 0.4 }}>
+                Send
+              </button>
+            </div>
+          </div>
+
+          <div className="contact-panel">
+            {contact ? (
+              <>
+                <div style={{ textAlign: "center", marginBottom: 14 }}>
+                  <div className="flex justify-center">
+                    <Avatar src={null} name={contact.name} size={54} />
+                  </div>
+                  <div style={{ fontWeight: 600, fontSize: 13, marginTop: 8 }}>
+                    {contact.name}
+                  </div>
+                  <div className="stone break-all" style={{ fontSize: 11 }}>
+                    {contact.email}
+                  </div>
+                </div>
+                <div className="divider" />
+
+                <Field label="Phone" value={contact.phone || "Not provided"} mono />
+                <Field label="Location" value={contact.location || "Not provided"} />
+                <Field
+                  label="IP address"
+                  value="Not recorded"
+                  mono
+                  note="Sign-in IPs are not stored anywhere yet."
+                />
+                <Field label="Plan" value={contact.tier.toUpperCase()} />
+                <Field
+                  label="Verified"
+                  value={contact.verified ? "Yes" : "No"}
+                />
+                <Field
+                  label="Joined"
+                  value={new Date(contact.createdAt).toLocaleDateString()}
+                />
+                <Field
+                  label="Last seen"
+                  value={
+                    contact.lastSeenAt
+                      ? new Date(contact.lastSeenAt).toLocaleString()
+                      : "Never"
+                  }
+                />
+                {contact.isBanned && (
+                  <span className="pill" style={{ background: "rgba(220,60,80,.15)", color: "var(--danger)" }}>
+                    Banned
                   </span>
                 )}
-              </div>
-              <p className="text-ivory/90 mt-0.5 whitespace-pre-wrap break-words">{m.body}</p>
-            </div>
-          ))}
-          {thread?.length === 0 && (
-            <p className="text-stone text-sm">No messages in this thread.</p>
-          )}
+              </>
+            ) : (
+              <p className="text-stone text-xs">Select a conversation.</p>
+            )}
+          </div>
         </div>
 
         <p className="text-stone-dim text-[11px] mt-3">
-          This read was recorded in the admin audit log.
+          Opening a conversation is recorded in the admin audit log.
         </p>
       </div>
     );
   }
 
-  // ---- List view -----------------------------------------------------------
+  // ---- Level 1: profile grid ----------------------------------------------
+  const visible = (profiles ?? []).filter((p) => {
+    const genderOk =
+      genderTab === "all" ||
+      p.gender === genderTab ||
+      (genderTab === "male" && p.gender === "man") ||
+      (genderTab === "female" && p.gender === "woman");
+    const searchOk =
+      search.trim() === "" ||
+      p.name.toLowerCase().includes(search.trim().toLowerCase());
+    return genderOk && searchOk;
+  });
+
   return (
     <div>
+      <div className="section-title">
+        <h3 style={{ fontSize: 15 }}>All profiles</h3>
+        <div
+          style={{
+            display: "flex",
+            gap: 4,
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-hair)",
+            borderRadius: 999,
+            padding: 3,
+          }}
+        >
+          {(["all", "female", "male"] as const).map((g) => (
+            <span
+              key={g}
+              onClick={() => setGenderTab(g)}
+              className={`pill ${genderTab === g ? "rose" : "stone"}`}
+              style={{ padding: "8px 16px", cursor: "pointer", textTransform: "capitalize" }}
+            >
+              {g}
+            </span>
+          ))}
+        </div>
+      </div>
+
       <input
-        value={query}
-        onChange={(e) => { setQuery(e.target.value); setPage(0); }}
-        placeholder="Search by name or email…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search profiles by name…"
         className="w-full mb-4 rounded-[12px] border border-border-hair bg-surface px-4 py-2.5 text-sm outline-none focus:border-border-hair-2"
       />
 
       {error && <p className="text-danger text-sm mb-3">{error}</p>}
+      {!profiles && <p className="text-stone text-sm">Loading…</p>}
+      {profiles && visible.length === 0 && !error && (
+        <p className="text-stone text-sm">No profiles match that filter.</p>
+      )}
 
-      <div className="rounded-[16px] border border-border-hair bg-surface overflow-hidden">
-        {!conversations && <p className="text-stone text-sm p-4">Loading…</p>}
-        {conversations?.length === 0 && !error && (
-          <p className="text-stone text-sm p-4">
-            {query ? "No conversations match that search." : "No conversations yet."}
-          </p>
-        )}
-
-        {conversations && conversations.length > 0 && (
-          <table className="w-full text-sm">
-            <tbody>
-              {conversations.map((c) => {
-                const senderIsA = c.lastMessageFromUserId === c.userA.id;
-                const sender = senderIsA ? c.userA.name : c.userB.name;
-                return (
-                  <tr
-                    key={`${c.userA.id}-${c.userB.id}`}
-                    onClick={() => openThread(c)}
-                    className="border-b border-border-hair last:border-0 cursor-pointer hover:bg-surface-2 align-top"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <PersonTag p={c.userA} />
-                        <span className="text-stone-dim">↔</span>
-                        <PersonTag p={c.userB} />
-                      </div>
-                      <p className="text-stone text-xs mt-1 truncate max-w-[46ch]">
-                        <span className="text-stone-dim">{sender}:</span> {c.lastMessage}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3 text-stone text-xs whitespace-nowrap">
-                      {c.messageCount} {c.messageCount === 1 ? "message" : "messages"}
-                      {c.unread > 0 && (
-                        <span className="ml-2 text-gold-bright">{c.unread} unread</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-stone-dim text-xs text-right whitespace-nowrap">
-                      {new Date(c.lastMessageAt).toLocaleString()}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+      <div className="grid g-4">
+        {visible.map((p) => (
+          <div
+            key={p.id}
+            onClick={() => openInbox(p)}
+            className="card hoverable profile-inbox-card"
+          >
+            <div style={{ position: "relative", display: "inline-block" }}>
+              <Avatar src={p.avatar} name={p.name} size={56} />
+              {p.messageCount > 0 && (
+                <span className="badge-count">
+                  {p.messageCount > 99 ? "99+" : p.messageCount}
+                </span>
+              )}
+            </div>
+            <div style={{ fontWeight: 600, fontSize: 13, marginTop: 10 }}>
+              {p.name}
+            </div>
+            <div className="stone" style={{ fontSize: 11 }}>
+              {p.messageCount} message{p.messageCount === 1 ? "" : "s"}
+              {p.unread > 0 && (
+                <span style={{ color: "var(--gold-bright)" }}> · {p.unread} unread</span>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 5, justifyContent: "center", marginTop: 8, flexWrap: "wrap" }}>
+              {p.isModelProfile && <span className="pill gold" style={{ fontSize: 10 }}>model</span>}
+              {p.tier !== "free" && (
+                <span className="pill stone" style={{ fontSize: 10, textTransform: "uppercase" }}>
+                  {p.tier}
+                </span>
+              )}
+              {p.isBanned && (
+                <span className="pill" style={{ fontSize: 10, background: "rgba(220,60,80,.15)", color: "var(--danger)" }}>
+                  banned
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
+    </div>
+  );
+}
 
-      {(page > 0 || hasMore) && (
-        <div className="flex justify-between mt-4">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            className="text-sm text-stone hover:text-ivory disabled:opacity-30"
-          >
-            ← Previous
-          </button>
-          <button
-            disabled={!hasMore}
-            onClick={() => setPage((p) => p + 1)}
-            className="text-sm text-stone hover:text-ivory disabled:opacity-30"
-          >
-            Next →
-          </button>
+function Field({
+  label,
+  value,
+  mono,
+  note,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  note?: string;
+}) {
+  return (
+    <>
+      <div
+        className="stone"
+        style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}
+      >
+        {label}
+      </div>
+      <div
+        className={mono ? "mono break-all" : "break-words"}
+        style={{ fontSize: 12.5, marginBottom: note ? 2 : 14 }}
+      >
+        {value}
+      </div>
+      {note && (
+        <div className="stone-dim" style={{ fontSize: 10, marginBottom: 14, color: "var(--stone-dim)" }}>
+          {note}
         </div>
       )}
-    </div>
+    </>
   );
 }

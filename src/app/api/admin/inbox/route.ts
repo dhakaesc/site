@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { and, eq, or, asc, sql as raw } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { messages, users, adminAuditLogs } from "@/lib/db/schema";
+import { messages, users, photos, adminAuditLogs } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth/session";
+import { pickProfilePhoto } from "@/lib/photos";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -10,38 +11,25 @@ async function requireAdmin() {
   return session;
 }
 
-const PAGE_SIZE = 50;
-
-type PairRow = {
-  user_a: number;
-  user_b: number;
-  a_name: string | null;
-  a_email: string | null;
-  a_tier: string | null;
-  a_banned: boolean | null;
-  a_source: string | null;
-  b_name: string | null;
-  b_email: string | null;
-  b_tier: string | null;
-  b_banned: boolean | null;
-  b_source: string | null;
-  message_count: number;
-  unread: number;
-  last_message_at: string;
-  last_message: string;
-  last_from_user_id: number;
-};
+type Row = Record<string, unknown>;
+function rowsOf(result: unknown): Row[] {
+  if (Array.isArray(result)) return result as Row[];
+  const r = result as { rows?: Row[] };
+  return r?.rows ?? [];
+}
 
 /**
- * Read-only view of member conversations, for safety review.
+ * Admin Open Inbox, shaped like the prototype: a grid of every profile with
+ * its message count, then a three-pane view of one profile's inbox.
  *
- * The pair list is aggregated in Postgres. The previous version pulled every
- * row of `messages` AND every row of `users` into the worker on each page
- * load and grouped them in JS - fine at four test messages, dead well before
- * this is a real business.
+ * Three modes:
+ *   (no params)            -> profile grid
+ *   ?profile=ID            -> that profile's conversation list
+ *   ?profile=ID&with=ID    -> one thread + the other party's contact details
  *
- * least()/greatest() collapses (a to b) and (b to a) into one conversation
- * key; DISTINCT ON pulls each pair's newest line for the list preview.
+ * Aggregation happens in Postgres. Reading a thread writes an audit row: the
+ * privacy page promises members that message access is limited to moderation,
+ * which only means anything if each read is attributable.
  */
 export async function GET(req: Request) {
   const session = await requireAdmin();
@@ -50,152 +38,229 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
-  const userA = Number(searchParams.get("userA"));
-  const userB = Number(searchParams.get("userB"));
+  const profileId = Number(searchParams.get("profile"));
+  const withId = Number(searchParams.get("with"));
+  const hasProfile = Number.isInteger(profileId) && profileId > 0;
+  const hasWith = Number.isInteger(withId) && withId > 0;
 
-  // ---- One thread ---------------------------------------------------------
-  if (Number.isInteger(userA) && Number.isInteger(userB) && userA > 0 && userB > 0) {
+  // ---- Mode 3: one thread --------------------------------------------------
+  if (hasProfile && hasWith) {
     const thread = await db
       .select({
         id: messages.id,
         body: messages.body,
         fromUserId: messages.fromUserId,
-        toUserId: messages.toUserId,
         readAt: messages.readAt,
         createdAt: messages.createdAt,
       })
       .from(messages)
       .where(
         or(
-          and(eq(messages.fromUserId, userA), eq(messages.toUserId, userB)),
-          and(eq(messages.fromUserId, userB), eq(messages.toUserId, userA))
+          and(eq(messages.fromUserId, profileId), eq(messages.toUserId, withId)),
+          and(eq(messages.fromUserId, withId), eq(messages.toUserId, profileId))
         )
       )
       .orderBy(asc(messages.createdAt));
 
-    const people = await db
+    const [other] = await db
       .select({
         id: users.id,
         name: users.name,
+        age: users.age,
         email: users.email,
+        phone: users.phone,
+        location: users.location,
         tier: users.tier,
         isBanned: users.isBanned,
-        profileSource: users.profileSource,
+        identityStatus: users.identityStatus,
+        createdAt: users.createdAt,
+        lastSeenAt: users.lastSeenAt,
       })
       .from(users)
-      .where(or(eq(users.id, userA), eq(users.id, userB)));
+      .where(eq(users.id, withId))
+      .limit(1);
 
-    const byId = new Map(people.map((p) => [p.id, p]));
+    const [owner] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, profileId))
+      .limit(1);
 
-    // Best-effort: a logging failure must never block a moderator mid-review.
     try {
       await db.insert(adminAuditLogs).values({
         adminUserId: session.userId,
         action: "read_conversation",
         targetType: "conversation",
-        targetId: `${Math.min(userA, userB)}-${Math.max(userA, userB)}`,
-        detail: `${byId.get(userA)?.name ?? userA} / ${byId.get(userB)?.name ?? userB} - ${thread.length} messages`,
+        targetId: `${Math.min(profileId, withId)}-${Math.max(profileId, withId)}`,
+        detail: `${owner?.name ?? profileId} / ${other?.name ?? withId} - ${thread.length} messages`,
       });
     } catch (err) {
       console.error("audit log write failed", err);
     }
 
     return NextResponse.json({
-      participants: [userA, userB].map((id) => {
-        const p = byId.get(id);
-        return {
-          id,
-          name: p?.name ?? "Deleted user",
-          email: p?.email ?? "",
-          tier: p?.tier ?? "free",
-          isBanned: p?.isBanned ?? false,
-          isModelProfile: p?.profileSource === "admin",
-        };
-      }),
+      contact: other
+        ? {
+            ...other,
+            verified: other.identityStatus === "verified",
+            // No IP is recorded anywhere at present - see the note in the UI.
+            ip: null,
+          }
+        : null,
+      ownerName: owner?.name ?? "",
+      // "mine" = sent BY the profile whose inbox we are looking at, so the
+      // bubbles read the same way they do for that member.
       thread: thread.map((m) => ({
         id: m.id,
         body: m.body,
-        fromUserId: m.fromUserId,
-        toUserId: m.toUserId,
-        fromName: byId.get(m.fromUserId)?.name ?? "Unknown",
-        toName: byId.get(m.toUserId)?.name ?? "Unknown",
+        mine: m.fromUserId === profileId,
         read: Boolean(m.readAt),
         createdAt: m.createdAt,
       })),
     });
   }
 
-  // ---- Conversation list --------------------------------------------------
-  const q = (searchParams.get("q") ?? "").trim();
-  const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0);
-  const like = `%${q}%`;
+  // ---- Mode 2: one profile's conversations ---------------------------------
+  if (hasProfile) {
+    const result = await db.execute(raw`
+      -- other_id is computed once in \`base\` so both the GROUP BY and the
+      -- DISTINCT ON can refer to it as a plain column. Repeating the CASE
+      -- expression instead fails with 42P10: the driver turns each
+      -- occurrence into a different bind parameter ($1 vs $5), so Postgres
+      -- does not consider them the same expression.
+      with base as (
+        select
+          case when from_user_id = ${profileId} then to_user_id else from_user_id end as other_id,
+          from_user_id, to_user_id, body, read_at, created_at
+        from messages
+        where from_user_id = ${profileId} or to_user_id = ${profileId}
+      ),
+      convo as (
+        select
+          other_id,
+          count(*)::int                                                    as message_count,
+          max(created_at)                                                  as last_message_at
+        from base
+        group by other_id
+      ),
+      unread_counts as (
+        select other_id, count(*)::int as unread
+        from base
+        where read_at is null and from_user_id = other_id
+        group by other_id
+      ),
+      latest as (
+        select distinct on (other_id)
+          other_id, body as last_message, from_user_id as last_from_user_id
+        from base
+        order by other_id, created_at desc
+      )
+      select c.other_id, c.message_count, coalesce(uc.unread, 0) as unread,
+             c.last_message_at, l.last_message, l.last_from_user_id,
+             u.name, u.age, u.is_banned, u.tier
+      from convo c
+      join latest l on l.other_id = c.other_id
+      left join unread_counts uc on uc.other_id = c.other_id
+      left join users u on u.id = c.other_id
+      order by c.last_message_at desc
+      limit 200
+    `);
 
+    const rows = rowsOf(result);
+    const [profile] = await db
+      .select({ id: users.id, name: users.name, gender: users.gender })
+      .from(users)
+      .where(eq(users.id, profileId))
+      .limit(1);
+
+    return NextResponse.json({
+      profile: profile ?? null,
+      conversations: rows.map((r) => ({
+        id: Number(r.other_id),
+        name: (r.name as string) ?? "Deleted user",
+        age: r.age as number | null,
+        tier: (r.tier as string) ?? "free",
+        isBanned: Boolean(r.is_banned),
+        messageCount: Number(r.message_count),
+        unread: Number(r.unread),
+        lastMessage: (r.last_message as string) ?? "",
+        lastMessageMine: Number(r.last_from_user_id) === profileId,
+        lastMessageAt: r.last_message_at,
+      })),
+    });
+  }
+
+  // ---- Mode 1: profile grid ------------------------------------------------
+  // Every member, with how many messages their inbox holds. Profiles with
+  // traffic float to the top; quiet ones still appear so a moderator can go
+  // looking rather than only reacting.
   const result = await db.execute(raw`
-    with pairs as (
-      select
-        least(from_user_id, to_user_id)                          as user_a,
-        greatest(from_user_id, to_user_id)                       as user_b,
-        count(*)::int                                            as message_count,
-        count(*) filter (where read_at is null)::int             as unread,
-        max(created_at)                                          as last_message_at
-      from messages
-      group by 1, 2
-    ),
-    latest as (
-      select distinct on (least(from_user_id, to_user_id), greatest(from_user_id, to_user_id))
-        least(from_user_id, to_user_id)    as user_a,
-        greatest(from_user_id, to_user_id) as user_b,
-        body                               as last_message,
-        from_user_id                       as last_from_user_id
-      from messages
-      order by 1, 2, created_at desc
-    )
     select
-      p.user_a, p.user_b, p.message_count, p.unread, p.last_message_at,
-      l.last_message, l.last_from_user_id,
-      a.name as a_name, a.email as a_email, a.tier as a_tier,
-      a.is_banned as a_banned, a.profile_source as a_source,
-      b.name as b_name, b.email as b_email, b.tier as b_tier,
-      b.is_banned as b_banned, b.profile_source as b_source
-    from pairs p
-    join latest l on l.user_a = p.user_a and l.user_b = p.user_b
-    left join users a on a.id = p.user_a
-    left join users b on b.id = p.user_b
-    where ${q === ""} or (
-      a.name ilike ${like} or a.email ilike ${like} or
-      b.name ilike ${like} or b.email ilike ${like}
-    )
-    order by p.last_message_at desc
-    limit ${PAGE_SIZE + 1}
-    offset ${page * PAGE_SIZE}
+      u.id, u.name, u.gender, u.tier, u.is_banned, u.profile_source,
+      coalesce(m.total, 0)::int  as message_count,
+      coalesce(m.unread, 0)::int as unread,
+      m.last_message_at
+    from users u
+    left join (
+      -- Each message counts towards both participants' inboxes, so unnest
+      -- sender and recipient into one row per side and group by that.
+      select
+        t.uid,
+        count(*)::int                                        as total,
+        count(*) filter (where read_at is null
+                         and to_user_id = t.uid)::int        as unread,
+        max(created_at)                                      as last_message_at
+      from messages
+      cross join lateral (values (from_user_id), (to_user_id)) as t(uid)
+      group by t.uid
+    ) m on m.uid = u.id
+    where u.is_admin = false
+    order by coalesce(m.total,0) desc, u.name asc
+    limit 300
   `);
 
-  const rows = (Array.isArray(result) ? result : result.rows) as unknown as PairRow[];
-  const hasMore = rows.length > PAGE_SIZE;
+  const rows = rowsOf(result);
+  const ids = rows.map((r) => Number(r.id));
 
-  const conversations = rows.slice(0, PAGE_SIZE).map((r) => ({
-    userA: {
-      id: r.user_a,
-      name: r.a_name ?? "Deleted user",
-      email: r.a_email ?? "",
-      tier: r.a_tier ?? "free",
-      isBanned: r.a_banned ?? false,
-      isModelProfile: r.a_source === "admin",
-    },
-    userB: {
-      id: r.user_b,
-      name: r.b_name ?? "Deleted user",
-      email: r.b_email ?? "",
-      tier: r.b_tier ?? "free",
-      isBanned: r.b_banned ?? false,
-      isModelProfile: r.b_source === "admin",
-    },
-    messageCount: r.message_count,
-    unread: r.unread,
-    lastMessageAt: r.last_message_at,
-    lastMessage: r.last_message,
-    lastMessageFromUserId: r.last_from_user_id,
-  }));
+  // One photo query for the whole grid rather than one per card.
+  const allPhotos =
+    ids.length > 0
+      ? await db
+          .select({
+            userId: photos.userId,
+            key: photos.key,
+            role: photos.role,
+            position: photos.position,
+          })
+          .from(photos)
+          .orderBy(asc(photos.position))
+      : [];
 
-  return NextResponse.json({ conversations, hasMore });
+  const photosByUser = new Map<number, typeof allPhotos>();
+  for (const p of allPhotos) {
+    if (!ids.includes(p.userId)) continue;
+    photosByUser.set(p.userId, [...(photosByUser.get(p.userId) ?? []), p]);
+  }
+
+  const profiles = [];
+  for (const r of rows) {
+    const id = Number(r.id);
+    const avatar = pickProfilePhoto(photosByUser.get(id) ?? []);
+    profiles.push({
+      id,
+      name: (r.name as string) ?? "",
+      gender: ((r.gender as string) ?? "").toLowerCase(),
+      tier: (r.tier as string) ?? "free",
+      isBanned: Boolean(r.is_banned),
+      isModelProfile: r.profile_source === "admin",
+      messageCount: Number(r.message_count),
+      unread: Number(r.unread),
+      lastMessageAt: r.last_message_at ?? null,
+      avatar: avatar ? `/api/media/${avatar.key}` : null,
+    });
+  }
+
+  return NextResponse.json({ profiles });
 }
+
+export const dynamic = "force-dynamic";

@@ -13,9 +13,14 @@ export default async function AdminInboxPage() {
       <AdminSidebar active="Open Inbox" />
       <main className="flex-1 min-w-0 overflow-y-auto p-8">
         <h1 className="font-serif text-2xl mb-1">Open Inbox</h1>
-        <p className="text-stone text-sm mb-6">
-          Read-only view of member conversations, for safety review only.
-        </p>
+        <div className="card glass mb-5" style={{ padding: "16px 20px", display: "flex", gap: 12, alignItems: "center" }}>
+          <span style={{ color: "var(--gold-bright)" }}>&#9679;</span>
+          <span style={{ fontSize: 12.5 }}>
+            Every profile&apos;s inbox in one place. Click a profile to see
+            everyone messaging them. Read-only, and every conversation you open
+            is logged.
+          </span>
+        </div>
         <InboxBrowser />
       </main>
     </div>
