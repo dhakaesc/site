@@ -253,26 +253,11 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" style={{ padding: "56px 48px", background: "var(--bg-surface)", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
-        <div className="grid g-3">
-          {[
-            ["01", "Create your profile", "Add photos, a short bio, and what you are looking for."],
-            ["02", "Browse & connect", "Visit profiles free, and like who catches your eye."],
-            ["03", "Message & upgrade", "Free members can message up to 5 people (5 messages total) — go Plus for unlimited chat."],
-          ].map(([n, t, d]) => (
-            <div key={n}>
-              <div className="mono" style={{ color: "var(--rose-bright)", fontSize: 13 }}>{n}</div>
-              <h3 style={{ fontSize: 19, margin: "10px 0 8px" }}>{t}</h3>
-              <p className="stone" style={{ fontSize: 13 }}>{d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* HOW IT WORKS lives on its own page now: /how-it-works */}
 
       {/* VERIFICATION PROCESS */}
-      <section style={{ padding: "10px 48px 56px", background: "var(--bg-surface)", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
-        <div className="section-title" style={{ paddingTop: 40 }}>
+      <section style={{ padding: "56px 48px", background: "var(--bg-surface)", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
+        <div className="section-title">
           <h2 style={{ fontSize: 22 }}>How we keep AMOURA real</h2>
           <span className="pill success"><Icon name="shield" /> 98.6% of fake profiles caught pre-launch</span>
         </div>
@@ -390,39 +375,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* PRIVACY & DATA PROTECTION */}
-      <section style={{ padding: "0 48px 56px" }}>
-        <div className="section-title">
-          <h2 style={{ fontSize: 22 }}>Your privacy, our promise</h2>
-          <span className="pill gold"><Icon name="lock" /> Zero-knowledge on who is a member</span>
-        </div>
-        <p className="stone" style={{ fontSize: 13, maxWidth: 600, marginTop: -6, marginBottom: 22 }}>
-          Being on a dating platform is personal. Here is exactly how we protect that — no vague
-          promises, just the specifics.
-        </p>
-        <div className="grid g-3" style={{ marginBottom: 20 }}>
-          <TrustBadge icon="lock" label="Messages are encrypted in transit — access is restricted to a small safety team for moderation only" />
-          <TrustBadge icon="shield" label="One-tap block & report, reviewed by a human within hours" />
-          <TrustBadge icon="check" label="You control exactly what is public vs. Premium-only" />
-        </div>
-        <div className="grid g-2">
-          {[
-            ["shield", "Who can actually see my profile?", "Only people actively browsing within your search preferences — your profile is never public, never indexed by Google or any search engine, and never shown to your Facebook or phone contacts."],
-            ["lock", "Is my data ever sold or shared?", "Never. We do not sell or share personal data with advertisers or third parties. Your information is used only to operate and secure your account."],
-            ["check", "What happens to my ID after verification?", "Your ID is used once for verification, stored encrypted, and is never shown on your public profile — matches only ever see the ✓ Verified badge, never the document itself."],
-            ["search", "Can anyone find out I am on AMOURA?", "No. Membership is completely confidential. Incognito mode (Plus & VIP) lets you browse without appearing in anyone's visitor list at all."],
-            ["bell", "Can I permanently delete my data?", "Yes — one tap in Settings erases your profile, photos, videos and messages permanently. No retention tricks, no \u201Care you sure\u201D loops."],
-            ["video", "What about screenshots of my photos?", "Profile photos are protected from easy downloading, and repeated screenshot attempts on a conversation notify the other person, same as major messaging apps."],
-          ].map(([ic, q, a]) => (
-            <div key={q} className="card" style={{ padding: 20 }}>
-              <div style={{ fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
-                <Icon name={ic} />{q}
-              </div>
-              <p className="stone" style={{ fontSize: 12.5, marginTop: 8, lineHeight: 1.6 }}>{a}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* PRIVACY & DATA PROTECTION lives on its own page now: /privacy */}
 
       {/* FOUNDER NOTE */}
       <section style={{ padding: "0 48px 56px" }}>
@@ -478,30 +431,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* GUARANTEE + FINAL CTA */}
-      <section style={{ padding: "0 48px 56px" }}>
-        <div className="card glass" style={{ padding: 44, textAlign: "center", borderRadius: 26 }}>
-          <span className="pill gold" style={{ marginBottom: 14 }}>
-            <Icon name="check" /> 7-day money-back guarantee
-          </span>
-          <h2 style={{ fontSize: 26 }}>Not feeling it? Get every taka back, no questions asked.</h2>
-          <p className="stone" style={{ marginTop: 8, fontSize: 13 }}>
-            Try Premium risk-free — if it is not for you within 7 days, we refund you in full.
-          </p>
-          <Link className="btn btn-gold" style={{ marginTop: 20 }} href="/pricing">Try Premium risk-free</Link>
-        </div>
-      </section>
-
-      {/* APP / SOCIAL TRUST ROW */}
-      <section style={{ padding: "0 48px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <span className="pill stone" style={{ padding: "9px 16px" }}>📱 Download on the App Store</span>
-          <span className="pill stone" style={{ padding: "9px 16px" }}>▶ Get it on Google Play</span>
-        </div>
-        <div className="stone" style={{ fontSize: 12 }}>
-          Sign in with Google, Apple, or Facebook — verified in seconds
-        </div>
-      </section>
+      {/* Removed: 7-day money-back guarantee (no refund policy is offered),
+          app-store badges and social sign-in row (no mobile app, and Google /
+          Apple / Facebook sign-in is not implemented). Do not re-add until
+          those things actually exist. */}
 
       {/* FINAL GENDER CTA */}
       <section style={{ padding: "10px 48px 70px" }}>

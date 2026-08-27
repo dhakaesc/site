@@ -39,7 +39,7 @@ export default function SiteFooter() {
         <br />
         Terms
         <br />
-        Privacy
+        <Link href="/privacy">Privacy</Link>
         <br />
         <Link href="/pricing">Community Guidelines</Link>
       </div>

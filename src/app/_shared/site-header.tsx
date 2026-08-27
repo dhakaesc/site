@@ -28,7 +28,7 @@ export default async function SiteHeader() {
             </>
           ) : (
             <>
-              <Link href="/#how-it-works">How it works</Link>
+              <Link href="/how-it-works">How it works</Link>
               <Link href="/#reviews">Reviews</Link>
               <Link href="/pricing">Premium</Link>
             </>
