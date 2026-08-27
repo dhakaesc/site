@@ -15,6 +15,10 @@
   --ivory:#F3E6E1; --stone:#C9A79E; --stone-dim:#7A5A54;
   --success:#8FBF9F; --danger:#E08585; --info:#B7A7D9;
   --radius:22px; --radius-sm:14px; --radius-pill:999px;
+  /* Centred content band, Facebook-style: content stops growing past
+     --shell-max and the extra space becomes margin, so proportions are
+     identical at every window width. --shell-pad is the gutter inside it. */
+  --shell-max:1240px; --shell-pad:48px;
   --serif:var(--font-playfair),'Playfair Display',Georgia,serif; --sans:var(--font-inter),'Inter',-apple-system,sans-serif; --mono:var(--font-jetbrains),'JetBrains Mono',monospace;
 }
 *{box-sizing:border-box;}
@@ -211,9 +215,10 @@ tr:hover td{background:rgba(255,255,255,.015);}
 .field-input::placeholder { color: var(--stone-dim); }
 .field-input:focus { outline: none; border-color: var(--border-hair-2); }
 
-/* Full-bleed layout: the page uses the whole viewport width at every size.
-   (The prototype was previewed inside a fixed 1440px frame, but that was the
-   preview tool's own chrome, not part of the design.) */
+/* Centred layout. Bars (banner, navbar, footer border) still span the full
+   viewport, but their CONTENT - and all page content - is capped at
+   --shell-max and centred. Past that width the page gains margin, not size,
+   so a maximised window and a half window render at the same proportions. */
 .page-shell {
   min-height: 100vh;
   display: flex;
@@ -224,6 +229,16 @@ tr:hover td{background:rgba(255,255,255,.015);}
 .page-shell > main,
 .page-shell > footer.site {
   width: 100%;
+}
+.page-shell > main {
+  max-width: var(--shell-max);
+  margin-inline: auto;
+}
+/* Full-width background, shell-aligned content, with no extra wrapper div:
+   the gutter grows to absorb whatever is left over past --shell-max. */
+.page-shell > .navbar,
+.page-shell > footer.site {
+  padding-inline: max(var(--shell-pad), calc((100% - var(--shell-max)) / 2));
 }
 
 /* ---------------------------------------------------------------------------
@@ -240,10 +255,13 @@ section { position: relative; }
 .hero-slider-section { z-index: 1; }
 
 @media (max-width: 900px) {
-  .navbar { flex-wrap: wrap; gap: 12px; padding: 14px 20px; }
+  /* Shrink the gutter through the token, not a `padding` shorthand - the
+     shorthand would beat the shell rule on specificity and kill the cap. */
+  :root { --shell-pad: 20px; }
+  .navbar { flex-wrap: wrap; gap: 12px; padding-block: 14px; }
   .navbar .links { gap: 16px; margin-left: 0; order: 3; width: 100%; }
   .navbar .spacer { display: none; }
-  footer.site { padding: 32px 20px; }
+  footer.site { padding-block: 32px; }
   .grid.g-2 { grid-template-columns: 1fr; }
 }
 

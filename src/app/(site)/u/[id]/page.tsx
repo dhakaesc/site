@@ -158,7 +158,9 @@ export default function PublicProfilePage({
         {/* Cover photo with the profile picture sitting over its bottom-left */}
         <div style={{ position: "relative", marginBottom: 58 }}>
           <div className="cover" style={{
-            height: 280, borderRadius: 22, position: "relative", overflow: "hidden",
+            // Ratio, not a fixed height: a fixed height gets wider and wider
+            // relative to itself as the window grows, which crops the subject.
+            aspectRatio: "16 / 7", borderRadius: 22, position: "relative", overflow: "hidden",
             background: "var(--bg-surface-2)",
           }}>
             {coverPhoto ? (
