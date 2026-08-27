@@ -424,17 +424,14 @@ export default function PublicProfilePage({
     {/* Message panel - opens in place rather than navigating away */}
     {chatOpen && (
       <div className="chat-popup card" style={{ padding: 16 }}>
-        <div className="section-title" style={{ marginBottom: 10 }}>
+        <div className="section-title" style={{ marginBottom: 10, flexShrink: 0 }}>
           <h3 style={{ fontSize: 14 }}>Message {firstName}</h3>
           <button type="button" onClick={() => setChatOpen(false)}
             className="stone" style={{ background: "none", border: "none", fontSize: 16, lineHeight: 1 }}
             aria-label="Close conversation">×</button>
         </div>
 
-        <div style={{
-          maxHeight: 260, overflowY: "auto", display: "flex",
-          flexDirection: "column", gap: 8, marginBottom: 10,
-        }}>
+        <div className="chat-popup-log">
           {messages.length === 0 && !chatError && (
             <p className="stone" style={{ fontSize: 12 }}>
               No messages yet — say hello.

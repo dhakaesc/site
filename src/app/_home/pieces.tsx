@@ -246,15 +246,6 @@ export function CityChip({ city, count }: { city: string; count: string }) {
   );
 }
 
-/** Prototype: pressLogo(name) */
-export function PressLogo({ name }: { name: string }) {
-  return (
-    <span style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 17, color: "var(--stone)", opacity: 0.8 }}>
-      {name}
-    </span>
-  );
-}
-
 /** Prototype: photoGrid(unlocked, total, …).
  *  Real photos are passed in so the free-vs-Premium difference is actually
  *  visible, rather than being demonstrated with flat colour swatches. */

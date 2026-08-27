@@ -300,15 +300,37 @@ section { position: relative; }
 @media (max-width: 700px) { .hero-slider { aspect-ratio: 4 / 5; } }
 
 /* Message popup, docked bottom-right like a chat window. */
+/* Sized like a Messenger desktop chat window: a fixed-height panel so the
+   message list has room to grow instead of collapsing around one line. */
 .chat-popup {
   position: fixed;
   right: 24px;
   bottom: 24px;
-  width: 340px;
+  width: 400px;
+  height: 520px;
   max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
   z-index: 40;
   box-shadow: 0 24px 60px -20px rgba(0,0,0,.75);
 }
+/* The message list is the only part that flexes; header and composer stay put. */
+.chat-popup-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
 @media (max-width: 700px) {
-  .chat-popup { right: 12px; bottom: 12px; left: 12px; width: auto; }
+  .chat-popup {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    width: auto;
+    height: 72vh;
+  }
 }

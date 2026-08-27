@@ -8,7 +8,7 @@ import { CATEGORIES } from "@/lib/categories";
 import HeroSlider, { type Slide } from "../_home/hero-slider";
 import {
   Icon, Avatar, TrustBadge, VerificationStep, AudienceCard, ProfileCard,
-  SuccessStoryCard, ReviewCard, CompareRow, CityChip, PressLogo, PhotoGrid,
+  SuccessStoryCard, ReviewCard, CompareRow, CityChip, PhotoGrid,
 } from "../_home/pieces";
 
 const TONES = ["p1", "p5", "p3", "p4", "p6", "p2"] as const;
@@ -162,17 +162,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* PRESS / TRUST STRIP */}
-      <section style={{ padding: "24px 48px", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
-        <div className="stone" style={{ fontSize: 11, textAlign: "center", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 }}>
-          Trusted &amp; featured in
-        </div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap", opacity: 0.75 }}>
-          {["The Daily Mirror", "Metro Living", "Voguelist", "TechPulse", "Herald & Co."].map((n) => (
-            <PressLogo key={n} name={n} />
-          ))}
-        </div>
-      </section>
+      {/* PRESS / TRUST STRIP removed - we have no real press coverage to cite. */}
 
       {/* TRUST BADGES */}
       <section style={{ padding: "50px 48px" }}>
@@ -197,6 +187,29 @@ export default async function HomePage() {
               icon={c.icon} tone={c.tone} title={c.title} desc={c.desc} cover={c.cover} />
           ))}
         </div>
+      </section>
+
+      {/* FIND YOUR FAVOURITE */}
+      <section style={{ padding: "0 48px 8px" }}>
+        <div className="section-title">
+          <h2 style={{ fontSize: 22 }}>Find your favourite here</h2>
+          <span className="pill gold"><Icon name="crown" /> Handpicked</span>
+        </div>
+        {popular.length > 0 ? (
+          <div className="grid g-5">
+            {popular.map((p, i) => (
+              <ProfileCard key={p.id} id={p.id} name={p.name} age={p.age}
+                loc={p.location || "Bangladesh"} tone={TONES[(i + 2) % TONES.length]} photo={p.photo ?? undefined} />
+            ))}
+          </div>
+        ) : (
+          <p className="stone" style={{ fontSize: 13 }}>Nothing to show here yet.</p>
+        )}
+        {popular.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 26 }}>
+            <Link className="btn btn-ghost" href="/browse">View more profiles</Link>
+          </div>
+        )}
       </section>
 
       {/* PEOPLE NEAR YOU */}
@@ -230,47 +243,29 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FIND YOUR FAVOURITE */}
-      <section style={{ padding: "50px 48px 56px" }}>
-        <div className="section-title">
-          <h2 style={{ fontSize: 22 }}>Find your favourite here</h2>
-          <span className="pill gold"><Icon name="crown" /> Handpicked</span>
-        </div>
-        {popular.length > 0 ? (
-          <div className="grid g-5">
-            {popular.map((p, i) => (
-              <ProfileCard key={p.id} id={p.id} name={p.name} age={p.age}
-                loc={p.location || "Bangladesh"} tone={TONES[(i + 2) % TONES.length]} photo={p.photo ?? undefined} />
-            ))}
-          </div>
-        ) : (
-          <p className="stone" style={{ fontSize: 13 }}>Nothing to show here yet.</p>
-        )}
-        {popular.length > 0 && (
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 26 }}>
-            <Link className="btn btn-ghost" href="/browse">View more profiles</Link>
-          </div>
-        )}
-      </section>
-
       {/* HOW IT WORKS lives on its own page now: /how-it-works */}
 
-      {/* VERIFICATION PROCESS */}
-      <section style={{ padding: "56px 48px", background: "var(--bg-surface)", borderTop: "1px solid var(--border-hair)", borderBottom: "1px solid var(--border-hair)" }}>
+      {/* VERIFICATION PROCESS
+          Uses the same 48px gutter and rounded .card shell as the other
+          sections, so it reads as part of the page instead of a full-bleed
+          square band cutting across it. */}
+      <section style={{ padding: "56px 48px" }}>
         <div className="section-title">
           <h2 style={{ fontSize: 22 }}>How we keep AMOURA real</h2>
           <span className="pill success"><Icon name="shield" /> 98.6% of fake profiles caught pre-launch</span>
         </div>
-        <div className="grid g-4">
-          <VerificationStep n={1} icon="shield" title="Selfie match" desc="A live selfie is matched against profile photos using face verification." />
-          <VerificationStep n={2} icon="check" title="ID confirmation" desc="Government ID is checked privately — never shown on your public profile." />
-          <VerificationStep n={3} icon="search" title="Manual review" desc="A real reviewer checks every new profile before it appears in search." />
-          <VerificationStep n={4} icon="bell" title="Ongoing moderation" desc="Our safety team monitors reports and removes bad actors around the clock." />
-        </div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
-          <span className="pill gold"><Icon name="crown" /> Optional income &amp; occupation verification for Elite members</span>
-          <span className="pill gold"><Icon name="shield" /> Optional criminal background check add-on</span>
-          <span className="pill gold"><Icon name="check" /> LinkedIn-verified professionals badge</span>
+        <div className="card" style={{ padding: 28 }}>
+          <div className="grid g-4">
+            <VerificationStep n={1} icon="shield" title="Selfie match" desc="A live selfie is matched against profile photos using face verification." />
+            <VerificationStep n={2} icon="check" title="ID confirmation" desc="Government ID is checked privately — never shown on your public profile." />
+            <VerificationStep n={3} icon="search" title="Manual review" desc="A real reviewer checks every new profile before it appears in search." />
+            <VerificationStep n={4} icon="bell" title="Ongoing moderation" desc="Our safety team monitors reports and removes bad actors around the clock." />
+          </div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
+            <span className="pill gold"><Icon name="crown" /> Optional income &amp; occupation verification for Elite members</span>
+            <span className="pill gold"><Icon name="shield" /> Optional criminal background check add-on</span>
+            <span className="pill gold"><Icon name="check" /> LinkedIn-verified professionals badge</span>
+          </div>
         </div>
       </section>
 
