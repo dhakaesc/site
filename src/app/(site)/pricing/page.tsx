@@ -6,6 +6,12 @@ import { users } from "@/lib/db/schema";
 import { effectiveTier } from "@/lib/plans";
 import UpgradeButton from "./upgrade-button";
 
+/**
+ * Every bullet here is something the product actually does today, except the
+ * ones flagged `soon` — those render as "Coming soon" rather than a tick, so
+ * nobody pays for a feature that does not exist yet. If you add a bullet,
+ * point at the code that delivers it first.
+ */
 const TIERS = [
   {
     id: "free",
@@ -13,10 +19,9 @@ const TIERS = [
     price: "৳0",
     badge: null,
     features: [
-      "20 profile visits / month",
-      "3 photos per profile",
-      "1 free video per profile",
-      "5 messages to up to 5 people",
+      { text: "20 profile visits / month" },
+      { text: "3 photos per profile" },
+      { text: "5 messages to up to 5 people" },
     ],
   },
   {
@@ -25,24 +30,23 @@ const TIERS = [
     price: "৳1,250/mo",
     badge: "Most popular",
     features: [
-      "Unlimited profile visits",
-      "Up to 15 photos",
-      "Up to 5 videos",
-      "Unlimited messaging",
-      "See who liked you",
+      { text: "Unlimited profile visits" },
+      { text: "Up to 15 photos" },
+      { text: "Unlimited messaging" },
+      { text: "See who liked you" },
     ],
   },
   {
     id: "vip",
     name: "VIP",
     price: "৳3,500/mo",
-    badge: "Video call",
+    badge: null,
     features: [
-      "Everything in Plus",
-      "All 30 photos + 10 videos",
-      "Live video call with matches",
-      "Profile Spotlight in search",
-      "Dedicated relationship concierge",
+      { text: "Everything in Plus" },
+      { text: "All 30 photos" },
+      { text: "Profile Spotlight in search" },
+      { text: "Dedicated relationship concierge" },
+      { text: "Live video call with matches", soon: true },
     ],
   },
 ] as const;
@@ -109,12 +113,27 @@ export default async function PricingPage() {
               <div className="font-mono text-3xl my-3">{tier.price}</div>
 
               <ul className="space-y-2 mb-6 flex-1">
-                {tier.features.map((f) => (
-                  <li key={f} className="text-[13px] flex gap-2">
-                    <span className="text-success">✓</span>
-                    <span>{f}</span>
-                  </li>
-                ))}
+                {tier.features.map((f) => {
+                  const soon = "soon" in f && f.soon;
+                  return (
+                    <li
+                      key={f.text}
+                      className={`text-[13px] flex gap-2 ${soon ? "text-stone" : ""}`}
+                    >
+                      <span className={soon ? "text-stone-dim" : "text-success"}>
+                        {soon ? "○" : "✓"}
+                      </span>
+                      <span>
+                        {f.text}
+                        {soon && (
+                          <span className="ml-1.5 text-[10px] rounded-full border border-border-hair px-1.5 py-0.5 text-stone-dim align-middle">
+                            Coming soon
+                          </span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
 
               {isCurrent ? (

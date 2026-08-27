@@ -4,6 +4,11 @@ export type Tier = "free" | "plus" | "vip";
  * Free members get a deliberately small allowance — the product strategy is
  * to convert them to a paid plan, so these limits are the main upgrade lever.
  */
+/**
+ * NOTE: `videos` is a placeholder for a feature that is NOT built — there is no
+ * video table, upload route or player anywhere in the app. Nothing reads it.
+ * Do not advertise video on the pricing page until that changes.
+ */
 export const PLAN_LIMITS = {
   free: {
     messages: 5,

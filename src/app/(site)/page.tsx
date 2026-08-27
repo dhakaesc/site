@@ -333,12 +333,14 @@ export default async function HomePage() {
         <div className="section-title"><h2 style={{ fontSize: 22 }}>Choose your membership</h2></div>
         <div className="grid g-3">
           {[
+            // Keep these in sync with src/app/(site)/pricing/page.tsx — and only
+            // list things the product actually does today.
             { name: "Free", price: "৳0", badge: null, highlight: false,
-              feats: ["Full profile browsing", "3 photos per profile", "1 free video per profile", "5 messages to up to 5 people"] },
+              feats: ["Full profile browsing", "3 photos per profile", "5 messages to up to 5 people"] },
             { name: "Plus", price: "৳1,250/mo", badge: "Most popular", highlight: true,
-              feats: ["Unlimited profile visits", "Up to 15 photos", "Up to 5 videos", "Unlimited messaging", "See who liked you"] },
-            { name: "VIP", price: "৳3,500/mo", badge: "Video call", highlight: false,
-              feats: ["Everything in Plus", "All 30 photos + 10 videos", "Live video call with matches", "Profile Spotlight in search", "Dedicated relationship concierge"] },
+              feats: ["Unlimited profile visits", "Up to 15 photos", "Unlimited messaging", "See who liked you"] },
+            { name: "VIP", price: "৳3,500/mo", badge: null, highlight: false,
+              feats: ["Everything in Plus", "All 30 photos", "Profile Spotlight in search", "Dedicated relationship concierge"] },
           ].map((t) => (
             <div key={t.name} className={`card ${t.highlight ? "hoverable" : ""}`}
               style={{ padding: 28, ...(t.highlight ? { borderColor: "var(--gold)", boxShadow: "0 0 0 1px var(--gold)" } : {}) }}>
@@ -366,12 +368,13 @@ export default async function HomePage() {
             <span style={{ textAlign: "center", color: "var(--gold-bright)", fontWeight: 600 }}>AMOURA</span>
             <span style={{ textAlign: "center" }}>Others</span>
           </div>
-          <CompareRow feature="ID + selfie verification required" amoura others={false} />
+          {/* Only claim what we can point at in the product. */}
+          <CompareRow feature="Identity checked by a real phone call" amoura others={false} />
           <CompareRow feature="Human-reviewed profiles" amoura others={false} />
           <CompareRow feature="Free profile browsing" amoura others />
           <CompareRow feature="Discreet billing" amoura others={false} />
-          <CompareRow feature="Video profiles" amoura others={false} />
-          <CompareRow feature="Active 24/7 moderation team" amoura others={false} />
+          <CompareRow feature="Report and block on every profile" amoura others />
+          <CompareRow feature="No ID documents stored, ever" amoura others={false} />
         </div>
       </section>
 

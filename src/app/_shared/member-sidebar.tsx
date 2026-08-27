@@ -31,7 +31,8 @@ export default function MemberSidebar({
       href: "/likes-me",
       locked: tier === "free",
     },
-    { label: "Video Call", icon: "video", locked: tier !== "vip" },
+    // Video Call is not built yet, so it is not in the nav. Add it back with
+    // an href the day the feature actually ships.
     { label: "My Profile", icon: "user", href: "/profile/edit" },
     { label: "Subscription", icon: "crown", href: "/pricing" },
   ];
